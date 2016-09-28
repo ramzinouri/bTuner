@@ -30,7 +30,7 @@
 *.db
 *.opendb
 *.aps
-/bTuner_app/build/
+/bTuner_app/build/**
 *.filters
 *.user
 .vs/
