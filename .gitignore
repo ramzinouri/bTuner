@@ -11,7 +11,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+
 
 # Fortran module files
 *.mod
@@ -30,6 +30,8 @@
 *.db
 *.opendb
 *.aps
-/bTuner_app/build
-/bTuner_app/bTuner_app.vcxproj.filters
-/bTuner_app/bTuner_app.vcxproj.user
+/bTuner_app/build/
+*.filters
+*.user
+.vs/
+.gitignore
