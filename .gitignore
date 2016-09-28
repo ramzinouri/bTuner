@@ -27,3 +27,9 @@
 *.exe
 *.out
 *.app
+*.db
+*.opendb
+*.aps
+/bTuner_app/build
+/bTuner_app/bTuner_app.vcxproj.filters
+/bTuner_app/bTuner_app.vcxproj.user
