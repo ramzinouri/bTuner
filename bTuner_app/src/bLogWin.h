@@ -26,7 +26,7 @@ protected:
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void PreRegisterClass(WNDCLASS &wc);
 	void PreCreate(CREATESTRUCT &cs);
-	int  OnCreate(LPCREATESTRUCT pcs);
+	int  OnCreate(CREATESTRUCT& cs);
 	bLogList _bLogList;
 };
 

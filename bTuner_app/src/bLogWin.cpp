@@ -30,7 +30,7 @@ void bLogWin::PreCreate(CREATESTRUCT &cs)
 	cs.style= WS_TILEDWINDOW |WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 };
 
-int  bLogWin::OnCreate(LPCREATESTRUCT pcs)
+int  bLogWin::OnCreate(CREATESTRUCT& cs)
 {
 	_bLogList.Create(this->GetHwnd());
 	HFONT _font;
@@ -61,7 +61,9 @@ LRESULT bLogWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		this->CloseWindow();
 		break;
 	case WM_SIZE:
-		_bLogList.MoveWindow(1, 1, this->GetWindowRect().Width()-17, this->GetWindowRect().Height()-37, 1);
+		if (::IsWindow(_bLogList) != NULL)
+			_bLogList.MoveWindow(1, 1, this->GetWindowRect().Width() - 17, this->GetWindowRect().Height() - 37, 1);
+		
 		break;
 	}
 

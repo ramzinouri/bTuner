@@ -4,7 +4,11 @@
 
 bTuner::bTuner()
 {
+#ifdef NDEBUG
+	bDebug = false;
+#else
 	bDebug = true;
+#endif
 };
 
 bTuner::~bTuner()
@@ -23,7 +27,7 @@ BOOL bTuner::InitInstance()
 	if (bDebug)
 	{
 		_bLogWin = new bLogWin;
-		_bLogWin->Create(NULL);
+		_bLogWin->Create();
 		_bLogWin->MoveWindow(1050,150,400,600);
 	}
 

@@ -38,8 +38,6 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 void bTWin::OnDraw(CDC* pDC)
 {
 	Graphics myGraphics(*pDC);
-	CListBox _list;
-	_list.Create();
 
 	//TuneIn _tunein;
 	//_tunein.Tune("s53927");
