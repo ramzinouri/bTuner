@@ -19,6 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bLog.cpp" />
+    <ClCompile Include="src\bLogWin.cpp" />
+    <ClCompile Include="src\bTuner.cpp" />
+    <ClCompile Include="src\bTWin.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -28,29 +32,53 @@
     <ResourceCompile Include="src\bTuner.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bLog.h" />
+    <ClInclude Include="src\bLogWin.h" />
+    <ClInclude Include="src\bTuner.h" />
+    <ClInclude Include="src\bTWin.h" />
     <ClInclude Include="src\resource.h" />
-    <ClInclude Include="src\WTL\atlapp.h" />
-    <ClInclude Include="src\WTL\atlcrack.h" />
-    <ClInclude Include="src\WTL\atlctrls.h" />
-    <ClInclude Include="src\WTL\atlctrlw.h" />
-    <ClInclude Include="src\WTL\atlctrlx.h" />
-    <ClInclude Include="src\WTL\atlddx.h" />
-    <ClInclude Include="src\WTL\atldlgs.h" />
-    <ClInclude Include="src\WTL\atldwm.h" />
-    <ClInclude Include="src\WTL\atlfind.h" />
-    <ClInclude Include="src\WTL\atlframe.h" />
-    <ClInclude Include="src\WTL\atlgdi.h" />
-    <ClInclude Include="src\WTL\atlmisc.h" />
-    <ClInclude Include="src\WTL\atlprint.h" />
-    <ClInclude Include="src\WTL\atlres.h" />
-    <ClInclude Include="src\WTL\atlresce.h" />
-    <ClInclude Include="src\WTL\atlribbon.h" />
-    <ClInclude Include="src\WTL\atlscrl.h" />
-    <ClInclude Include="src\WTL\atlsplit.h" />
-    <ClInclude Include="src\WTL\atltheme.h" />
-    <ClInclude Include="src\WTL\atluser.h" />
-    <ClInclude Include="src\WTL\atlwince.h" />
-    <ClInclude Include="src\WTL\atlwinx.h" />
+    <ClInclude Include="src\Win32++\wxx_appcore.h" />
+    <ClInclude Include="src\Win32++\wxx_appcore0.h" />
+    <ClInclude Include="src\Win32++\wxx_archive.h" />
+    <ClInclude Include="src\Win32++\wxx_commondlg.h" />
+    <ClInclude Include="src\Win32++\wxx_controls.h" />
+    <ClInclude Include="src\Win32++\wxx_cstring.h" />
+    <ClInclude Include="src\Win32++\wxx_ddx.h" />
+    <ClInclude Include="src\Win32++\wxx_dialog.h" />
+    <ClInclude Include="src\Win32++\wxx_docking.h" />
+    <ClInclude Include="src\Win32++\wxx_exception.h" />
+    <ClInclude Include="src\Win32++\wxx_file.h" />
+    <ClInclude Include="src\Win32++\wxx_frame.h" />
+    <ClInclude Include="src\Win32++\wxx_gdi.h" />
+    <ClInclude Include="src\Win32++\wxx_imagelist.h" />
+    <ClInclude Include="src\Win32++\wxx_listview.h" />
+    <ClInclude Include="src\Win32++\wxx_mdi.h" />
+    <ClInclude Include="src\Win32++\wxx_menu.h" />
+    <ClInclude Include="src\Win32++\wxx_menubar.h" />
+    <ClInclude Include="src\Win32++\wxx_printdialogs.h" />
+    <ClInclude Include="src\Win32++\wxx_propertysheet.h" />
+    <ClInclude Include="src\Win32++\wxx_rebar.h" />
+    <ClInclude Include="src\Win32++\wxx_rect.h" />
+    <ClInclude Include="src\Win32++\wxx_regkey.h" />
+    <ClInclude Include="src\Win32++\wxx_ribbon.h" />
+    <ClInclude Include="src\Win32++\wxx_richedit.h" />
+    <ClInclude Include="src\Win32++\wxx_shared_ptr.h" />
+    <ClInclude Include="src\Win32++\wxx_socket.h" />
+    <ClInclude Include="src\Win32++\wxx_statusbar.h" />
+    <ClInclude Include="src\Win32++\wxx_stdcontrols.h" />
+    <ClInclude Include="src\Win32++\wxx_tab.h" />
+    <ClInclude Include="src\Win32++\wxx_taskdialog.h" />
+    <ClInclude Include="src\Win32++\wxx_textconv.h" />
+    <ClInclude Include="src\Win32++\wxx_themes.h" />
+    <ClInclude Include="src\Win32++\wxx_time.h" />
+    <ClInclude Include="src\Win32++\wxx_toolbar.h" />
+    <ClInclude Include="src\Win32++\wxx_treeview.h" />
+    <ClInclude Include="src\Win32++\wxx_wceframe.h" />
+    <ClInclude Include="src\Win32++\wxx_wcestddef.h" />
+    <ClInclude Include="src\Win32++\wxx_webbrowser.h" />
+    <ClInclude Include="src\Win32++\wxx_wincore.h" />
+    <ClInclude Include="src\Win32++\wxx_wincore0.h" />
+    <ClInclude Include="src\Win32++\wxx_winutils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{28FB33E1-6091-4D5E-8A6C-F45A52A8EF62}</ProjectGuid>

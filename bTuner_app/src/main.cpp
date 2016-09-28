@@ -1,11 +1,11 @@
-#include <windows.h>
-#include <iostream>
+#include "bTuner.h"
+#include "bLog.h"
 
-
+vector<bLogEntry>* bLog::Log = new vector<bLogEntry>;
 
 int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int iCmdShow)
 {
-	
+	bTuner *_bTuner;
 	HANDLE hMutex;
 	DWORD  dwReturn;
 	BOOL   fGotMutex;
@@ -21,8 +21,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int 
 	{
 		try
 		{
-			
-			return 0;
+			_bTuner=new bTuner;
+			return _bTuner->Run();
 		}
 	
 		catch (std::exception &e)
