@@ -3,14 +3,12 @@
 
 bTWin::bTWin()
 {
-		// Initialize GDI+.
-	GdiplusStartupInput gdiplusStartupInput;
-	GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+	MainMenu=new CMenu(IDR_MENU1);
 };
 
 bTWin::~bTWin()
 {
-	GdiplusShutdown(m_gdiplusToken);
+	
 };
 
 void bTWin::PreRegisterClass(WNDCLASS &wc)
@@ -20,8 +18,9 @@ void bTWin::PreRegisterClass(WNDCLASS &wc)
 	wc.cbClsExtra=0;
     wc.cbWndExtra=0;
 	wc.hIcon=LoadIconA(::GetModuleHandle(NULL),MAKEINTRESOURCEA(IDI_ICON));
-	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(0,0,0));
+	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(30,30,30));
 	wc.lpszClassName=L"bTuner";
+	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
 };
 
 void bTWin::PreCreate(CREATESTRUCT &cs)
@@ -31,13 +30,33 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 	cs.lpszClass=L"bTuner";
 	cs.lpszName=L".:: bTuner ::. V 0.0.1.1";
 	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
-	cs.cx=500;
-	cs.cy=400;
+	cs.cx=700;
+	cs.cy=500;
+};
+int bTWin::OnCreate(CREATESTRUCT& cs)
+{
+	
+	return 0;
 };
 
-void bTWin::OnDraw(CDC* pDC)
+
+void bTWin::OnDraw(CDC& dc)
 {
-	Graphics myGraphics(*pDC);
+	CRect cr = GetClientRect();
+	RECT r;
+	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
+	dc.FillRect(r,(HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+
+	SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom-5);
+	
+	dc.BeginPath();
+	dc.RoundRect(r, 10, 10);
+	dc.EndPath();
+	dc.SelectClipPath(RGN_COPY);
+
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(150, 150, 150)));
+
+
 
 	//TuneIn _tunein;
 	//_tunein.Tune("s53927");
@@ -54,4 +73,55 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return WndProcDefault(uMsg, wParam, lParam);
+};
+
+BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	switch (LOWORD(wParam))
+	{
+
+	case ID_FILE_EXIT:
+		PostQuitMessage(0);
+		break;
+
+	case ID_FILE_OPEN_FILE:
+		break;
+	case ID_FILE_OPEN_URL:
+		break;
+	case ID_HELP_ABOUT:
+		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), this->GetHwnd(), (DLGPROC)&bTWin::AboutDiagproc);
+		break;
+		
+	}
+	return TRUE;
+};
+
+INT_PTR _stdcall bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
+{
+	switch (m) {
+	case WM_INITDIALOG:
+		break;
+	case WM_CLOSE:
+		EndDialog(h, NULL);
+		break;
+	case WM_NOTIFY:
+		switch (((LPNMHDR)l)->code)
+		{
+		  case NM_CLICK:
+			  if (((LPNMHDR)l)->idFrom == IDC_SYSLINK2)
+			  {
+				
+				  PNMLINK pNMLink = (PNMLINK)((LPNMHDR)l);
+				  ShellExecuteW(NULL, L"open", pNMLink->item.szUrl, NULL, NULL, SW_SHOWNORMAL);
+			  }
+		      break;
+
+		}
+		break;
+	case WM_COMMAND:
+		if (LOWORD(w) == IDOK) 
+			EndDialog(h, NULL);
+		break;
+	}
+	return 0;
 }
