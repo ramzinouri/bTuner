@@ -20,7 +20,7 @@ void bTWin::PreRegisterClass(WNDCLASS &wc)
 	wc.cbClsExtra=0;
     wc.cbWndExtra=0;
 	wc.hIcon=LoadIconA(::GetModuleHandle(NULL),MAKEINTRESOURCEA(IDI_ICON));
-	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(0,0,0));
+	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(30,30,30));
 	wc.lpszClassName=L"bTuner";
 };
 
@@ -31,13 +31,25 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 	cs.lpszClass=L"bTuner";
 	cs.lpszName=L".:: bTuner ::. V 0.0.1.1";
 	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
-	cs.cx=500;
-	cs.cy=400;
+	cs.cx=700;
+	cs.cy=500;
 };
 
-void bTWin::OnDraw(CDC* pDC)
+void bTWin::OnDraw(CDC& dc)
 {
-	Graphics myGraphics(*pDC);
+	CRect cr = GetClientRect();
+	RECT r;
+	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
+	dc.FillRect(r,(HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+
+	SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom-5);
+	
+	dc.BeginPath();
+	dc.RoundRect(r, 10, 10);
+	dc.EndPath();
+	dc.SelectClipPath(RGN_COPY);
+
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(150, 150, 150)));
 
 	//TuneIn _tunein;
 	//_tunein.Tune("s53927");

@@ -21,7 +21,7 @@ protected:
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void PreRegisterClass(WNDCLASS &wc);
 	void PreCreate(CREATESTRUCT &cs);
-	void OnDraw(CDC* pDC);
+	void OnDraw(CDC& dc);
 private:
 	ULONG_PTR	m_gdiplusToken;
 };
