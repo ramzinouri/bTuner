@@ -22,8 +22,12 @@ protected:
 	void PreRegisterClass(WNDCLASS &wc);
 	void PreCreate(CREATESTRUCT &cs);
 	void OnDraw(CDC& dc);
+	int  OnCreate(CREATESTRUCT& cs);
+	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+	
 private:
 	ULONG_PTR	m_gdiplusToken;
+	CMenu *MainMenu;
 };
 
 #endif

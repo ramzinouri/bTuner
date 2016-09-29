@@ -3,14 +3,12 @@
 
 bTWin::bTWin()
 {
-		// Initialize GDI+.
-	GdiplusStartupInput gdiplusStartupInput;
-	GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+	MainMenu=new CMenu(IDR_MENU1);
 };
 
 bTWin::~bTWin()
 {
-	GdiplusShutdown(m_gdiplusToken);
+	
 };
 
 void bTWin::PreRegisterClass(WNDCLASS &wc)
@@ -22,6 +20,7 @@ void bTWin::PreRegisterClass(WNDCLASS &wc)
 	wc.hIcon=LoadIconA(::GetModuleHandle(NULL),MAKEINTRESOURCEA(IDI_ICON));
 	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(30,30,30));
 	wc.lpszClassName=L"bTuner";
+	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
 };
 
 void bTWin::PreCreate(CREATESTRUCT &cs)
@@ -34,6 +33,12 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 	cs.cx=700;
 	cs.cy=500;
 };
+int bTWin::OnCreate(CREATESTRUCT& cs)
+{
+	
+	return 0;
+};
+
 
 void bTWin::OnDraw(CDC& dc)
 {
@@ -66,4 +71,25 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return WndProcDefault(uMsg, wParam, lParam);
-}
+};
+
+BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	switch (LOWORD(wParam))
+	{
+
+	case ID_FILE_EXIT:
+		PostQuitMessage(0);
+		break;
+
+	case ID_FILE_OPEN_FILE:
+		break;
+	case ID_FILE_OPEN_URL:
+		break;
+	case ID_HELP_ABOUT:
+		//DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), this->GetHwnd(), (DLGPROC)NULL);
+		break;
+		
+	}
+	return TRUE;
+};

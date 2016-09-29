@@ -80,6 +80,9 @@
     <ClInclude Include="src\Win32++\wxx_wincore0.h" />
     <ClInclude Include="src\Win32++\wxx_winutils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="src\res\bTuner.manifest" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{28FB33E1-6091-4D5E-8A6C-F45A52A8EF62}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
