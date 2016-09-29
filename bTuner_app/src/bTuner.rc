@@ -133,15 +133,18 @@ END
 // Dialog
 //
 
-IDD_DIALOG_ABOUT DIALOGEX 0, 0, 237, 80
-STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
+IDD_DIALOG_ABOUT DIALOGEX 0, 0, 241, 93
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About bTuner"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,166,59,50,14
-    LTEXT           "bTuner v0.0.0.1",IDC_STATIC,17,15,54,9
-    LTEXT           "bl_ackrain@yahoo.com",IDC_STATIC,17,46,75,8
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_CENTERIMAGE,169,9,44,38
+    DEFPUSHBUTTON   "Close",IDOK,166,72,50,14
+    LTEXT           "bTuner v0.0.0.1",IDC_STATIC,16,15,54,9
+    LTEXT           "bl_ackrain@yahoo.com",IDC_STATIC,16,37,75,8
+    ICON            IDI_ICON,IDC_STATIC,181,20,20,20
+    LTEXT           "2016 (C)    bl_ackrain  GPLv3",IDC_STATIC,16,26,93,8
+    CONTROL         "<a href=""http://www.un4seen.com"">Bass Library and plugins</a>",IDC_SYSLINK2,
+                    "SysLink",WS_TABSTOP,16,53,100,14
 END
 
 
@@ -156,9 +159,9 @@ BEGIN
     IDD_DIALOG_ABOUT, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 230
+        RIGHTMARGIN, 234
         TOPMARGIN, 7
-        BOTTOMMARGIN, 73
+        BOTTOMMARGIN, 86
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -171,7 +174,13 @@ END
 
 IDD_DIALOG_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
-    0
+    0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 100,
+    0, 0, 0, 0,
+    0, 0, 0, 0
 END
 
 #endif    // English (United States) resources

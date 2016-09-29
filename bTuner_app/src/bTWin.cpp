@@ -56,6 +56,8 @@ void bTWin::OnDraw(CDC& dc)
 
 	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(150, 150, 150)));
 
+
+
 	//TuneIn _tunein;
 	//_tunein.Tune("s53927");
 
@@ -87,9 +89,39 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 	case ID_FILE_OPEN_URL:
 		break;
 	case ID_HELP_ABOUT:
-		//DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), this->GetHwnd(), (DLGPROC)NULL);
+		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), this->GetHwnd(), (DLGPROC)&bTWin::AboutDiagproc);
 		break;
 		
 	}
 	return TRUE;
 };
+
+INT_PTR _stdcall bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
+{
+	switch (m) {
+	case WM_INITDIALOG:
+		break;
+	case WM_CLOSE:
+		EndDialog(h, NULL);
+		break;
+	case WM_NOTIFY:
+		switch (((LPNMHDR)l)->code)
+		{
+		  case NM_CLICK:
+			  if (((LPNMHDR)l)->idFrom == IDC_SYSLINK2)
+			  {
+				
+				  PNMLINK pNMLink = (PNMLINK)((LPNMHDR)l);
+				  ShellExecuteW(NULL, L"open", pNMLink->item.szUrl, NULL, NULL, SW_SHOWNORMAL);
+			  }
+		      break;
+
+		}
+		break;
+	case WM_COMMAND:
+		if (LOWORD(w) == IDOK) 
+			EndDialog(h, NULL);
+		break;
+	}
+	return 0;
+}
