@@ -1,5 +1,5 @@
 #include "bTWin.h"
-#include "./API/TuneIn.h"
+
 
 bTWin::bTWin()
 {
@@ -35,6 +35,7 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 };
 int bTWin::OnCreate(CREATESTRUCT& cs)
 {
+	Player.OpenURL("http://stream12.iloveradio.de/iloveradio1-aac.mp3");
 	
 	return 0;
 };
@@ -57,9 +58,6 @@ void bTWin::OnDraw(CDC& dc)
 	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(150, 150, 150)));
 
 
-
-	//TuneIn _tunein;
-	//_tunein.Tune("s53927");
 
 };
 

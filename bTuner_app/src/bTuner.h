@@ -2,7 +2,6 @@
 #define BTUNER_H
 
 #include "Win32++\wxx_wincore.h"
-#include "API/TuneIn.h"
 #include "bTWin.h"
 #include "bLogWin.h"
 

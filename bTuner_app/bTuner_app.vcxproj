@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="src\bLog.cpp" />
     <ClCompile Include="src\bLogWin.cpp" />
+    <ClCompile Include="src\bPlayer.cpp" />
+    <ClCompile Include="src\bStation.cpp" />
     <ClCompile Include="src\bTuner.cpp" />
     <ClCompile Include="src\bTWin.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -34,6 +36,8 @@
   <ItemGroup>
     <ClInclude Include="src\bLog.h" />
     <ClInclude Include="src\bLogWin.h" />
+    <ClInclude Include="src\bPlayer.h" />
+    <ClInclude Include="src\bStation.h" />
     <ClInclude Include="src\bTuner.h" />
     <ClInclude Include="src\bTWin.h" />
     <ClInclude Include="src\resource.h" />
@@ -140,6 +144,7 @@
     <TargetName>$(SolutionName)</TargetName>
     <IntDir>$(ProjectDir)build\$(Configuration)\</IntDir>
     <GenerateManifest>false</GenerateManifest>
+    <IncludePath>$(ProjectDir)libs;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -150,6 +155,7 @@
     <TargetName>$(SolutionName)</TargetName>
     <IntDir>$(ProjectDir)build\$(Configuration)\</IntDir>
     <GenerateManifest>false</GenerateManifest>
+    <IncludePath>$(ProjectDir)libs;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -167,6 +173,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -200,6 +207,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

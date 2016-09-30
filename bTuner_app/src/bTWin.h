@@ -6,10 +6,7 @@
 #include "Win32++\wxx_controls.h"
 
 #include "resource.h"
-#include <GdiPlus.h>
-
-using namespace Gdiplus;
-#pragma comment (lib,"Gdiplus.lib")
+#include "bPlayer.h"
 
 
 class bTWin : public CWnd
@@ -26,7 +23,7 @@ protected:
 	void OnDraw(CDC& dc);
 	int  OnCreate(CREATESTRUCT& cs);
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-	
+	bPlayer Player;
 private:
 	ULONG_PTR	m_gdiplusToken;
 	CMenu *MainMenu;
