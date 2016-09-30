@@ -1,2 +1,5 @@
 -Add support for Radio sure station database at http://www.radiosure.com/stations/
 
+-Add Support for Icecast 2.4.1 at http://icecast.org/docs/
+
+-Add support for OGG OPUS Stream Codec

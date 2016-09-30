@@ -4,6 +4,7 @@
 
 #include "Win32++\wxx_wincore.h"
 #include "Win32++\wxx_controls.h"
+#include <stdio.h>
 
 #include "resource.h"
 #include "bPlayer.h"
@@ -24,9 +25,6 @@ protected:
 	int  OnCreate(CREATESTRUCT& cs);
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
-private:
-	ULONG_PTR	m_gdiplusToken;
-	CMenu *MainMenu;
 };
 
 #endif

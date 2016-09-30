@@ -25,6 +25,9 @@ public:
 	char *Notice2;
 	int Public;
 	int PlayedStreamID;
+	char *Playing;
+	char *Artist;
+	char *Track;
 
 	std::vector<bStream> Streams;
 

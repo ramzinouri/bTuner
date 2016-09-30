@@ -14,6 +14,8 @@ enum Status {Playing,Stoped,Connecting,Buffring};
 class bPlayer 
 {
 public:
+	static HWND hwnd;
+	static HSTREAM chan;
 	static Status status;
 	static bStation *PlayingNow;
 	bPlayer();
@@ -25,10 +27,8 @@ public:
 	static void StaticThreadEntry(void* c);
 
 
-private:
-	HSTREAM chan;
-	char * surl;
 	static void CALLBACK DownloadProc(const void *buffer, DWORD length, void *user);
+	static void CALLBACK MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 
 };
 

@@ -8,6 +8,7 @@ bStream::bStream(char *URL)
 }
 bStation::bStation()
 {
+	Playing = "";
 	PlayedStreamID = 0;
 }
 

@@ -3,6 +3,9 @@
 
 Status bPlayer::status = Status::Stoped;
 bStation *bPlayer::PlayingNow = NULL;
+HSTREAM bPlayer::chan = NULL;
+HWND bPlayer::hwnd = NULL;
+
 
 bPlayer::bPlayer()
 {
@@ -14,6 +17,8 @@ bPlayer::bPlayer()
 	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
 	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
 	BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, (void*)NULL);
+
+
 	
 }
 
@@ -53,49 +58,73 @@ void bPlayer::OpenThread()
 	
 	if (!chan)  // failed to open
 		MessageBoxA(NULL, "Can't open stream", "ERROR", MB_OK);
-	Play();
+	else
+		SetTimer(hwnd, 0, 50, 0); // start prebuffer monitoring
+
 }
 
 void CALLBACK bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 {
-	char *stype;
-	char *uuu = (char*)buffer;
-	if (buffer && !length)
-	{
-		for (; *uuu; uuu += strlen(uuu) + 1) {
-			if (!strnicmp(uuu, "icy-name:", 9))
-				PlayingNow->Name = (char*)uuu + 9;
-			if (!strnicmp(uuu, "icy-url:", 8))
-				PlayingNow->Url = (char*)uuu + 8;
-			if (!strnicmp(uuu, "icy-br:", 7))
-				PlayingNow->Streams[PlayingNow->PlayedStreamID].Bitrate = atoi(uuu + 7);
-			if (!strnicmp(uuu, "icy-genre:", 10))
-				PlayingNow->Genre = (char*)uuu + 10;
 
-			if (!strnicmp(uuu, "icy-notice1:", 12))
-				PlayingNow->Notice1 = (char*)uuu + 12;
-			if (!strnicmp(uuu, "icy-notice2:", 12))
-				PlayingNow->Notice2 = (char*)uuu + 12;
-			if (!strnicmp(uuu, "icy-pub:", 8))
-				PlayingNow->Public = atoi(uuu + 8);
-			if (!strnicmp(uuu, "Content-Type:", 13))
-			{
-				stype = (char*)uuu + 14;
-				if (!strnicmp(stype, "audio/mp3", 9))
-					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = Codecs::MP3;
-				if (!strnicmp(stype, "audio/aac", 9))
-					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = Codecs::AAC;
-				if (!strnicmp(stype, "audio/aacp", 10))
-					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = Codecs::AACP;
-				if (!strnicmp(stype, "audio/ogg", 9))
-					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = Codecs::OGG;
-				if (!strnicmp(stype, "audio/mpeg", 10))
-					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = Codecs::MPEG;
+	//if (length)
+	//	status = Status::Buffring;
+}
+
+void CALLBACK bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
+{	
+	char *meta = (char *)BASS_ChannelGetTags(chan, BASS_TAG_META);
+	if (meta) { // got Shoutcast metadata
+		char *p = strstr(meta, "StreamTitle='"); // locate the title
+		if (p) {
+			const char *p2 = strstr(p, "';"); // locate the end of it
+			if (p2) {
+				char *t = strdup(p + 13);
+				t[p2 - (p + 13)] = 0;
+
+				char *pl = new char[strlen(t)+1];
+				memcpy(pl, t, strlen(t) + 1);
+				PlayingNow->Playing = pl;
+				
+				p = strstr(t, "-");
+				if (p) {
+					p[-1] = 0;
+					PlayingNow->Artist = t;
+					PlayingNow->Track = p + 2;
+				}
+
 			}
 		}
 	}
-	if (length)
-		status = Status::Buffring;
+	else {
+		meta = (char *)BASS_ChannelGetTags(chan, BASS_TAG_OGG);
+		if (meta) { // got Icecast/OGG tags
+			char *artist = NULL, *title = NULL, *p = meta;
+			for (; *p; p += strlen(p) + 1) {
+				if (!strnicmp(p, "artist=", 7)) // found the artist
+					artist = p + 7;
+				if (!strnicmp(p, "title=", 6)) // found the title
+					title = p + 6;
+
+			}
+			if (title) {
+				PlayingNow->Track = title;
+				if (artist) {
+					PlayingNow->Artist = artist;
+					char text[100];
+					memset(text, 0, 100);
+					_snprintf(text, sizeof(text), "%s - %s", artist, title);
+					char *pl = new char[strlen(text) + 1];
+					memcpy(pl, text, strlen(text) + 1);
+					PlayingNow->Playing=pl;
+				}
+ 				else
+					PlayingNow->Playing = title;
+			}
+		}
+	}
+	RECT r;
+	GetClientRect(hwnd, &r);
+	InvalidateRect(hwnd,&r, TRUE);
 }
 
 bPlayer::~bPlayer()

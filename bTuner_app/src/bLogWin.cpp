@@ -20,13 +20,13 @@ void bLogWin::PreRegisterClass(WNDCLASS &wc)
     wc.cbWndExtra=0;
 	wc.hIcon=LoadIconA(::GetModuleHandle(NULL),MAKEINTRESOURCEA(IDI_ICON));
 	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(255,255,255));
-	wc.lpszClassName=L"bTuner_log";
+	wc.lpszClassName="bTuner_log";
 };
 
 void bLogWin::PreCreate(CREATESTRUCT &cs)
 {
-	cs.lpszClass=L"bTuner_log";
-	cs.lpszName=L"bTuner Log";
+	cs.lpszClass="bTuner_log";
+	cs.lpszName="bTuner Log";
 	cs.style= WS_TILEDWINDOW |WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 };
 
@@ -39,7 +39,7 @@ int  bLogWin::OnCreate(CREATESTRUCT& cs)
 	_bLogList.SetFont(_font);
 
 	int i = 0;
-	wstringstream msg;
+	stringstream msg;
 	struct tm*  timeinfo;
 	timeinfo = localtime(&bLog::Log->at(i).Time);
 	msg << timeinfo->tm_hour;
