@@ -10,14 +10,16 @@
 #include "bPlayer.h"
 
 
+
 class bTWin : public CWnd
 {
 public:
 	bTWin();
 	virtual ~bTWin();
+	INT_PTR AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l);
 	
 protected:
-	static INT_PTR _stdcall  AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l);
+
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void PreRegisterClass(WNDCLASS &wc);
 	void PreCreate(CREATESTRUCT &cs);
@@ -25,6 +27,7 @@ protected:
 	int  OnCreate(CREATESTRUCT& cs);
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
+	CSlider Volume;
 };
 
 #endif

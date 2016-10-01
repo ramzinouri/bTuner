@@ -25,9 +25,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int 
 			return _bTuner->Run();
 		}
 	
-		catch (std::exception &e)
+		catch (const CException &e)
 		{
-			::MessageBoxA(NULL,e.what(),"Exeption",MB_ICONERROR);
+			MessageBox(NULL, e.GetText(), A2T(e.what()), MB_ICONERROR);
 			return -1;
 		}
 		ReleaseMutex(hMutex);

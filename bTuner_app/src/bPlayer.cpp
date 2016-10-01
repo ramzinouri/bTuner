@@ -9,6 +9,7 @@ HWND bPlayer::hwnd = NULL;
 
 bPlayer::bPlayer()
 {
+
 	status = Status::Stoped;
 	if (!BASS_Init(-1, 44100, 0, NULL, NULL)) {
 		MessageBoxA(NULL,"Can't initialize device","ERROR",MB_OK);
@@ -17,6 +18,8 @@ bPlayer::bPlayer()
 	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
 	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
 	BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, (void*)NULL);
+
+
 
 
 	
@@ -61,6 +64,19 @@ void bPlayer::OpenThread()
 	else
 		SetTimer(hwnd, 0, 50, 0); // start prebuffer monitoring
 
+}
+
+int bPlayer::GetVolume()
+{
+	float vol = 0;
+	BASS_ChannelGetAttribute(chan, BASS_ATTRIB_VOL, &vol);
+	return (vol * 100);
+}
+
+void bPlayer::SetVolume(int Vol)
+{
+	float v = Vol/100.0;
+	BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, v);
 }
 
 void CALLBACK bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)

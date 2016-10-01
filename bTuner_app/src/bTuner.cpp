@@ -41,6 +41,5 @@ BOOL bTuner::InitInstance()
 		return FALSE;
 	}
 
-	_bTWin->CenterWindow();
 	return TRUE;
 };

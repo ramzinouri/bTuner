@@ -18,6 +18,7 @@ public:
 	static HSTREAM chan;
 	static Status status;
 	static bStation *PlayingNow;
+	int BuffProgress;
 	bPlayer();
 	virtual ~bPlayer();
 	int Play();
@@ -25,7 +26,8 @@ public:
 	void OpenURL(char *URL);
 	void OpenThread();
 	static void StaticThreadEntry(void* c);
-
+	int GetVolume();
+	void SetVolume(int Vol);
 
 	static void CALLBACK DownloadProc(const void *buffer, DWORD length, void *user);
 	static void CALLBACK MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
