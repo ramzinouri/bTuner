@@ -121,6 +121,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "E&xit             Alt+F4",    ID_FILE_EXIT
     END
+    POPUP "&Playback"
+    BEGIN
+        MENUITEM "&Resume",                     ID_PLAYBACK_RESUME
+        MENUITEM SEPARATOR
+        MENUITEM "&Stop",                       ID_PLAYBACK_STOP
+    END
     POPUP "&Help"
     BEGIN
         MENUITEM "&About",                      ID_HELP_ABOUT

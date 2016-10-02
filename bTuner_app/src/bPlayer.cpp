@@ -19,10 +19,6 @@ bPlayer::bPlayer()
 	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
 	BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, (void*)NULL);
 
-
-
-
-	
 }
 
 int bPlayer::Play()
@@ -34,6 +30,10 @@ void bPlayer::Stop()
 {
 	if(BASS_ChannelStop(chan))
 		status=Status::Stoped;
+}
+void bPlayer::Resume()
+{
+	_beginthread(&bPlayer::StaticThreadEntry, 0, this);
 }
 
 void bPlayer::OpenURL(char *URL)
@@ -77,6 +77,10 @@ int bPlayer::GetVolume()
 
 void bPlayer::SetVolume(int Vol)
 {
+	if (Vol > 100)
+		Vol = 100;
+	if (Vol < 0)
+		Vol = 0;
 	float v = Vol/100.0;
 	BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, v);
 }

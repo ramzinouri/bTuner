@@ -23,6 +23,7 @@ public:
 	virtual ~bPlayer();
 	int Play();
 	void Stop();
+	void Resume();
 	void OpenURL(char *URL);
 	void OpenThread();
 	static void StaticThreadEntry(void* c);

@@ -50,9 +50,12 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 int bTWin::OnCreate(CREATESTRUCT& cs)
 {
 	Player.hwnd = this->GetHwnd();
+	this->GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	SetRect(&VolumeRect, GetClientRect().right - 120, GetClientRect().bottom - 57, GetClientRect().right - 20, GetClientRect().bottom - 43);
+	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
 
-
-	Player.OpenURL("http://stream01.iloveradio.de/iloveradio1.mp3");
+	Player.OpenURL("http://stream12.iloveradio.de/iloveradio10-aac.mp3");
 	//Player.OpenURL("http://dir.xiph.org/listen/370585/listen.m3u");
 	//Player.OpenURL("http://jil-fm.ice.infomaniak.ch/jilfm.aac");
 	//Player.OpenURL("http://7619.live.streamtheworld.com:80/977_HITS_SC");
@@ -108,20 +111,40 @@ void bTWin::OnDraw(CDC& dc)
 	dc.SelectObject(font);
 	dc.SetTextColor(RGB(0, 0, 0));
 	dc.SetBkMode(TRANSPARENT);
-	dc.TextOut(195, cr.bottom - 65, "Play", 4);
-	
-	brush.CreateSolidBrush(RGB(0, 0, 0));
-	dc.SelectObject(brush);
-	POINT points[3];
-	points[0].x = 172;
-	points[0].y = cr.bottom-58;
-	points[1].x = 185;
-	points[1].y = cr.bottom-50;
-	points[2].x = 172;
-	points[2].y = cr.bottom-42;
+	if (Player.status == Status::Stoped)
+	{
+		dc.TextOut(195, cr.bottom - 65, "Play", 4);
 
-	dc.Polygon(points, 3);
-	
+		brush.CreateSolidBrush(RGB(0, 0, 0));
+		dc.SelectObject(brush);
+		POINT points[3];
+		points[0].x = 172;
+		points[0].y = cr.bottom - 58;
+		points[1].x = 185;
+		points[1].y = cr.bottom - 50;
+		points[2].x = 172;
+		points[2].y = cr.bottom - 42;
+
+		dc.Polygon(points, 3);
+	}
+
+	if (Player.status == Status::Playing)
+	{
+		dc.TextOut(195, cr.bottom - 65, "Stop", 4);
+
+		brush.CreateSolidBrush(RGB(0, 0, 0));
+		dc.SelectObject(brush);
+		POINT points[3];
+		points[0].x = 172;
+		points[0].y = cr.bottom - 58;
+		points[1].x = 185;
+		points[1].y = cr.bottom - 50;
+		points[2].x = 172;
+		points[2].y = cr.bottom - 42;
+
+		SetRect(&r, 172, cr.bottom - 58, 185, cr.bottom - 42);
+		dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+	}
 
 	// Volume 
 	int v = Player.GetVolume();
@@ -213,8 +236,28 @@ void bTWin::OnDraw(CDC& dc)
 
 LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	POINT p;
 	switch (uMsg)
 	{
+	case WM_LBUTTONUP:
+
+		p.x= LOWORD(lParam);
+		p.y= HIWORD(lParam);
+		if (VolumeRect.PtInRect(p))
+			Player.SetVolume(100-VolumeRect.right+p.x);
+		if (PlayRect.PtInRect(p))
+		{
+			if(Player.status==Status::Playing)
+				Player.Stop();
+			else
+			{
+				if (Player.status == Status::Stoped && Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate > 0)
+					Player.Resume();
+			}
+		}
+			
+		InvalidateRect(this->GetClientRect(), TRUE);
+		break;
 	case WM_MOUSEWHEEL:
 
 		if (((short)HIWORD(wParam)) / 120 > 0 )
@@ -299,6 +342,7 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			Player.Play();
 			Player.status = Status::Playing;
+			this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED );
 
 		
 		}
@@ -320,6 +364,20 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch (LOWORD(wParam))
 	{
+	case ID_PLAYBACK_RESUME:
+		Player.Resume();
+		this->GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+		this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED);
+		InvalidateRect(this->GetClientRect(), TRUE);
+		break;
+
+	case ID_PLAYBACK_STOP:
+		Player.Stop();
+		this->GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_ENABLED);
+		this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+		InvalidateRect(this->GetClientRect(), TRUE);
+		break;
+
 
 	case ID_FILE_EXIT:
 		PostQuitMessage(0);
@@ -376,4 +434,15 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 		break;
 	}
 	return 0;
+}
+
+void bTWin::OnMenuUpdate(UINT nID)
+{
+	if (nID == ID_PLAYBACK_RESUME && Player.status==Status::Stoped && Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate !=0)
+		this->GetMenu().EnableMenuItem(nID, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	if (nID == ID_PLAYBACK_STOP && Player.status == Status::Playing )
+		this->GetMenu().EnableMenuItem(nID, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+
+
+	CWnd::OnMenuUpdate(nID);
 }
