@@ -56,9 +56,11 @@ void bPlayer::StaticThreadEntry(void* c)
 void bPlayer::OpenThread()
 {
 	status = Status::Connecting;
+	int v = GetVolume();
 	BASS_StreamFree(chan);
 	chan = BASS_StreamCreateURL((char*)PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, DownloadProc, 0);
-	
+	if(v)
+		SetVolume(v);
 	if (!chan)  // failed to open
 		MessageBoxA(NULL, "Can't open stream", "ERROR", MB_OK);
 	else

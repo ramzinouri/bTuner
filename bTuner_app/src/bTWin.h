@@ -27,7 +27,6 @@ protected:
 	int  OnCreate(CREATESTRUCT& cs);
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
-	CSlider Volume;
 };
 
 #endif

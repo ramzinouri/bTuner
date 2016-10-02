@@ -51,12 +51,8 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 {
 	Player.hwnd = this->GetHwnd();
 
-	Volume.Create(*this);
-	Volume.SetWindowPos(NULL, CRect(3, 3, 100, 30), SWP_SHOWWINDOW);
-	Volume.SetRangeMin(0, TRUE);
-	Volume.SetRangeMax(100, TRUE);
 
-	Player.OpenURL("http://stream01.iloveradio.de/iloveradio5.mp3");
+	Player.OpenURL("http://stream01.iloveradio.de/iloveradio1.mp3");
 	//Player.OpenURL("http://dir.xiph.org/listen/370585/listen.m3u");
 	//Player.OpenURL("http://jil-fm.ice.infomaniak.ch/jilfm.aac");
 	//Player.OpenURL("http://7619.live.streamtheworld.com:80/977_HITS_SC");
@@ -70,23 +66,91 @@ void bTWin::OnDraw(CDC& dc)
 {
 	CRect cr = GetClientRect();
 	RECT r;
+	CFont font;
+	CBrush brush;
+
 	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
 	dc.FillRect(r,(HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
 
 	SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom-5);
-	
-	/*
-	dc.BeginPath();
+
+	brush.CreateHatchBrush(HS_BDIAGONAL,RGB(0,0,0));
+	dc.SelectObject(brush);
 	dc.RoundRect(r, 10, 10);
-	dc.EndPath();
-	dc.SelectClipPath(RGN_COPY);
-	*/
-	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(150, 150, 150)));
+
+
+
+
+
+	SetRect(&r, 150, cr.bottom - 75, cr.right -5, cr.bottom - 25);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(20, 20, 20)));
+
+
+	brush.CreateSolidBrush( RGB(200, 200, 200));
+	dc.SelectObject(brush);
+	SetRect(&r, 160, cr.bottom - 70, 250, cr.bottom - 30);
+	dc.RoundRect(r, 8, 8);
+
+	brush.CreateSolidBrush(RGB(0, 0, 0));
+	dc.SelectObject(brush);
+	SetRect(&r, 163, cr.bottom - 67, 247, cr.bottom - 33);
+	dc.RoundRect(r, 8, 8);
+
+	brush.CreateSolidBrush(RGB(200, 200, 200));
+	dc.SelectObject(brush);
+	SetRect(&r, 165, cr.bottom - 65, 245, cr.bottom - 35);
+	dc.RoundRect(r, 5, 5);
 	
+
+
+	font.CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+	dc.SelectObject(font);
+	dc.SetTextColor(RGB(0, 0, 0));
+	dc.SetBkMode(TRANSPARENT);
+	dc.TextOut(195, cr.bottom - 65, "Play", 4);
+	
+	brush.CreateSolidBrush(RGB(0, 0, 0));
+	dc.SelectObject(brush);
+	POINT points[3];
+	points[0].x = 172;
+	points[0].y = cr.bottom-58;
+	points[1].x = 185;
+	points[1].y = cr.bottom-50;
+	points[2].x = 172;
+	points[2].y = cr.bottom-42;
+
+	dc.Polygon(points, 3);
+	
+
+	// Volume 
+	int v = Player.GetVolume();
+	
+	SetRect(&r, cr.right-120, cr.bottom - 54, cr.right-20, cr.bottom - 46);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(100, 100, 100)));
+
+	SetRect(&r, cr.right-120, cr.bottom - 57, cr.right-20-(100-v), cr.bottom - 43);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(200, 200, 200)));
+
+	dc.SetTextColor(RGB(0, 0, 0));
+	dc.SetBkMode(TRANSPARENT);
+	font.CreateFontA(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
+	dc.SelectObject(font);
+
+	char bf[10];
+	sprintf(bf, "%d", v);
+	CSize sv= dc.GetTextExtentPoint32A(bf, strlen(bf));
+	dc.TextOut(cr.right-70-(sv.cx/2), cr.bottom - 57, bf, strlen(bf));
+
+
+
+	//Playing Now info
+
 	dc.SetTextColor(RGB(245, 245, 245));
 	dc.SetBkColor(RGB(0, 0, 0));
-	dc.SetBkMode(TRANSPARENT);
-	CFont font;
+
+	
 	font.CreateFontA(45, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
 	dc.SelectObject(font);
@@ -151,6 +215,14 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_MOUSEWHEEL:
+
+		if (((short)HIWORD(wParam)) / 120 > 0 )
+			Player.SetVolume(Player.GetVolume() + 5);
+		if (((short)HIWORD(wParam)) / 120 < 0 )
+			Player.SetVolume(Player.GetVolume() - 5);
+		InvalidateRect(this->GetClientRect(), TRUE);
+		break;
 	case WM_TIMER:
 	{ // monitor prebuffering progress
 		DWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER)
@@ -171,13 +243,28 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 							Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate = atoi(icy + 7);
 						if (!strnicmp(icy, "icy-genre:", 10))
 							Player.PlayingNow->Genre = (char*)icy + 10;
-
 						if (!strnicmp(icy, "icy-notice1:", 12))
 							Player.PlayingNow->Notice1 = (char*)icy + 12;
 						if (!strnicmp(icy, "icy-notice2:", 12))
 							Player.PlayingNow->Notice2 = (char*)icy + 12;
 						if (!strnicmp(icy, "icy-pub:", 8))
 							Player.PlayingNow->Public = atoi(icy + 8);
+
+						if (!strnicmp(icy, "icy-name: ", 10))
+							Player.PlayingNow->Name = (char*)icy + 10;
+						if (!strnicmp(icy, "icy-url: ", 9))
+							Player.PlayingNow->Url = (char*)icy + 9;
+						if (!strnicmp(icy, "icy-br: ", 8))
+							Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate = atoi(icy + 8);
+						if (!strnicmp(icy, "icy-genre: ", 11))
+							Player.PlayingNow->Genre = (char*)icy + 11;
+						if (!strnicmp(icy, "icy-notice1: ", 13))
+							Player.PlayingNow->Notice1 = (char*)icy + 13;
+						if (!strnicmp(icy, "icy-notice2 :", 13))
+							Player.PlayingNow->Notice2 = (char*)icy + 13;
+						if (!strnicmp(icy, "icy-pub: ", 9))
+							Player.PlayingNow->Public = atoi(icy + 9);
+
 						if (!strnicmp(icy, "Content-Type:", 13))
 						{
 							char *stype = (char*)icy + 14;
@@ -209,8 +296,7 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 																			  // set sync for end of stream
 			//BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &EndSync, 0);
 			// play it!
-			int v = Player.GetVolume();
-			Player.SetVolume(50);
+
 			Player.Play();
 			Player.status = Status::Playing;
 
