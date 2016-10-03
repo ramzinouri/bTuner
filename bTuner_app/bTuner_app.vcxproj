@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bConfig.cpp" />
     <ClCompile Include="src\bLog.cpp" />
     <ClCompile Include="src\bLogWin.cpp" />
     <ClCompile Include="src\bPlayer.cpp" />
@@ -34,6 +35,7 @@
     <ResourceCompile Include="src\bTuner.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bConfig.h" />
     <ClInclude Include="src\bLog.h" />
     <ClInclude Include="src\bLogWin.h" />
     <ClInclude Include="src\bPlayer.h" />
@@ -167,6 +169,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -195,19 +198,25 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ExceptionHandling>false</ExceptionHandling>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
       <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <FullProgramDatabaseFile>false</FullProgramDatabaseFile>
+      <AssemblyDebug>false</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

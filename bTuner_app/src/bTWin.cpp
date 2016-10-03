@@ -18,6 +18,10 @@ INT_PTR CALLBACK  g_AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 bTWin::bTWin()
 {
 	gp_bTWin = this;
+	Hover = bHover::None;
+	Clicked = FALSE;
+	Mouse.x = 0;
+	Mouse.y = 0;
 };
 
 bTWin::~bTWin()
@@ -42,7 +46,10 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 
 	cs.dwExStyle = WS_EX_ACCEPTFILES;
 	cs.lpszClass="bTuner";
-	cs.lpszName=".:: bTuner ::. V 0.0.1.1";
+	cs.lpszName = ".:: bTuner ::. V 0.0.0.1";
+#ifdef  _DEBUG
+	cs.lpszName = "[Debug] .:: bTuner ::. V 0.0.0.1";
+#endif //  _DEBUG
 	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 	cs.cx=700;
 	cs.cy=500;
@@ -55,7 +62,9 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	SetRect(&VolumeRect, GetClientRect().right - 120, GetClientRect().bottom - 57, GetClientRect().right - 20, GetClientRect().bottom - 43);
 	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
 
-	Player.OpenURL("http://stream12.iloveradio.de/iloveradio10-aac.mp3");
+#ifdef  _DEBUG
+	Player.OpenURL("http://stream12.iloveradio.de/iloveradio5-aac.mp3");
+#endif //  _DEBUG
 	//Player.OpenURL("http://dir.xiph.org/listen/370585/listen.m3u");
 	//Player.OpenURL("http://jil-fm.ice.infomaniak.ch/jilfm.aac");
 	//Player.OpenURL("http://7619.live.streamtheworld.com:80/977_HITS_SC");
@@ -90,6 +99,8 @@ void bTWin::OnDraw(CDC& dc)
 
 
 	brush.CreateSolidBrush( RGB(200, 200, 200));
+	if(Hover==bHover::Play)
+		brush.CreateSolidBrush(RGB(255, 255, 255));
 	dc.SelectObject(brush);
 	SetRect(&r, 160, cr.bottom - 70, 250, cr.bottom - 30);
 	dc.RoundRect(r, 8, 8);
@@ -134,13 +145,6 @@ void bTWin::OnDraw(CDC& dc)
 
 		brush.CreateSolidBrush(RGB(0, 0, 0));
 		dc.SelectObject(brush);
-		POINT points[3];
-		points[0].x = 172;
-		points[0].y = cr.bottom - 58;
-		points[1].x = 185;
-		points[1].y = cr.bottom - 50;
-		points[2].x = 172;
-		points[2].y = cr.bottom - 42;
 
 		SetRect(&r, 172, cr.bottom - 58, 185, cr.bottom - 42);
 		dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
@@ -148,6 +152,8 @@ void bTWin::OnDraw(CDC& dc)
 
 	// Volume 
 	int v = Player.GetVolume();
+	if(Clicked&&VolumeRect.PtInRect(Mouse))
+		v = 100 - VolumeRect.right + Mouse.x;
 	
 	SetRect(&r, cr.right-120, cr.bottom - 54, cr.right-20, cr.bottom - 46);
 	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(100, 100, 100)));
@@ -173,25 +179,32 @@ void bTWin::OnDraw(CDC& dc)
 	dc.SetTextColor(RGB(245, 245, 245));
 	dc.SetBkColor(RGB(0, 0, 0));
 
-	
 	font.CreateFontA(45, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
 	dc.SelectObject(font);
+	if(Player.status != Status::Playing)
+		dc.SetTextColor(RGB(150, 150, 150));
+	if(Player.PlayingNow && Player.PlayingNow->Name)
+		dc.TextOutA(150, cr.bottom - 145, Player.PlayingNow->Name, strlen(Player.PlayingNow->Name));
 
-	if(Player.status==Status::Connecting)
-		dc.TextOutA(150, cr.bottom - 145, "Connecting...", 13);
-
+	font.CreateFontA(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+	dc.SelectObject(font);
+	dc.SetTextColor(RGB(180, 180, 180));
 	if (Player.status == Status::Buffring)
 	{
 		char buf[30];
 		sprintf(buf, "[%d %s] Buffuring",Player.BuffProgress,"%");
-		dc.TextOutA(150, cr.bottom - 145, buf, strlen(buf));
+		dc.TextOutA(150, cr.bottom - 20, buf, strlen(buf));
 	}
+	if (Player.status == Status::Connecting)
+		dc.TextOutA(150, cr.bottom - 20, "Connecting...",13 );
+	if (Player.status == Status::Stoped)
+		dc.TextOutA(150, cr.bottom - 20, "Not Connected", 13);
+
+
 	if (Player.status == Status::Playing)
 	{
-
-		dc.TextOutA(150, cr.bottom-145, Player.PlayingNow->Name, strlen(Player.PlayingNow->Name));
-
 		font.CreateFontA(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		dc.SelectObject(font);
@@ -226,9 +239,6 @@ void bTWin::OnDraw(CDC& dc)
 			sprintf(b, "%d Kbps", Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate);
 			dc.TextOutA(150 + 10 + s.cx + 5 + s2.cx, cr.bottom - 20, b, strlen(b));
 		}
-
-		dc.SetBkColor(RGB(0, 0, 0));
-		dc.SetBkMode(TRANSPARENT);
 	}
 
 
@@ -236,27 +246,65 @@ void bTWin::OnDraw(CDC& dc)
 
 LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	POINT p;
+	int prv;
 	switch (uMsg)
 	{
-	case WM_LBUTTONUP:
-
-		p.x= LOWORD(lParam);
-		p.y= HIWORD(lParam);
-		if (VolumeRect.PtInRect(p))
-			Player.SetVolume(100-VolumeRect.right+p.x);
-		if (PlayRect.PtInRect(p))
+	case WM_LBUTTONDOWN:
+		Clicked = TRUE;
+		ClickP.x = LOWORD(lParam);
+		ClickP.y = HIWORD(lParam);
+		if (VolumeRect.PtInRect(Mouse))
 		{
-			if(Player.status==Status::Playing)
+			Player.SetVolume(100 - VolumeRect.right + Mouse.x);
+			InvalidateRect(VolumeRect, TRUE);
+		}
+		break;
+	case WM_LBUTTONUP:
+		Clicked = FALSE;
+		Mouse.x = LOWORD(lParam);
+		Mouse.y = HIWORD(lParam);
+		if (VolumeRect.PtInRect(Mouse) && VolumeRect.PtInRect(ClickP))
+			Player.SetVolume(100 - VolumeRect.right + Mouse.x);
+		if (PlayRect.PtInRect(Mouse) && !Clicked)
+		{
+			if (Player.status == Status::Playing)
 				Player.Stop();
 			else
 			{
-				if (Player.status == Status::Stoped && Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate > 0)
+				if (Player.status == Status::Stoped&& Player.PlayingNow)
 					Player.Resume();
 			}
+			InvalidateRect(GetClientRect(), TRUE);
 		}
-			
-		InvalidateRect(this->GetClientRect(), TRUE);
+
+		InvalidateRect(VolumeRect, TRUE);
+
+		break;
+	case WM_MOUSEMOVE:
+
+		Mouse.x = LOWORD(lParam);
+		Mouse.y = HIWORD(lParam);
+		prv = Hover;
+		if (VolumeRect.PtInRect(Mouse))
+			Hover = bHover::Volume;
+		else
+			Hover = bHover::None;
+		if (PlayRect.PtInRect(Mouse))
+			Hover = bHover::Play;
+		else
+			Hover = bHover::None;
+		if (Clicked&&VolumeRect.PtInRect(Mouse)&& VolumeRect.PtInRect(ClickP))
+		{
+			InvalidateRect(VolumeRect, TRUE);
+			Player.SetVolume(100 - VolumeRect.right + Mouse.x);
+		}
+
+		if (prv != Hover)
+		{
+			InvalidateRect(VolumeRect, TRUE);
+			InvalidateRect(PlayRect, TRUE);
+		}
+		
 		break;
 	case WM_MOUSEWHEEL:
 
@@ -264,14 +312,14 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			Player.SetVolume(Player.GetVolume() + 5);
 		if (((short)HIWORD(wParam)) / 120 < 0 )
 			Player.SetVolume(Player.GetVolume() - 5);
-		InvalidateRect(this->GetClientRect(), TRUE);
+		InvalidateRect(VolumeRect, TRUE);
 		break;
 	case WM_TIMER:
 	{ // monitor prebuffering progress
 		DWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER)
 			* 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END); // percentage of buffer filled
 		Player.BuffProgress = progress;
-		if (progress>75 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED)) { // over 75% full (or end of download)
+		if (progress>90 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED)) { // over 75% full (or end of download)
 			::KillTimer(this->GetHwnd(), 0); // finished prebuffering, stop monitoring
 			{ // get the broadcast name and URL
 				const char *icy = BASS_ChannelGetTags(Player.chan, BASS_TAG_ICY);
@@ -401,6 +449,19 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 {
 	switch (m) {
 	case WM_INITDIALOG:
+		//::SetFocus(GetDlgItem(IDC_LINK));
+		SendMessage(h, WM_NEXTDLGCTL, (WPARAM)::GetDlgItem(h,IDC_LINK), TRUE);
+		if (OpenClipboard(*this))
+		{
+			HANDLE hData = GetClipboardData(CF_TEXT);
+			char * buffer = (char*)GlobalLock(hData);
+			GlobalUnlock(hData);
+			CloseClipboard();
+			if (!buffer)
+				break;
+			if (!strnicmp(buffer, "http://", 7))
+				::SetDlgItemTextA(h, IDC_LINK, buffer);
+		}
 		break;
 	case WM_CLOSE:
 		EndDialog(h, NULL);
@@ -427,22 +488,14 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 			char *u = new char[256];
 			memset(u, 0, 256);
 			::GetDlgItemText(h, IDC_LINK, u, 256);
-			Player.OpenURL(u);
-			EndDialog(h, NULL);
+			if (!strnicmp(u, "http://", 7))
+			{
+				Player.OpenURL(u);
+				EndDialog(h, NULL);
+			}
 		}
 			
 		break;
 	}
 	return 0;
-}
-
-void bTWin::OnMenuUpdate(UINT nID)
-{
-	if (nID == ID_PLAYBACK_RESUME && Player.status==Status::Stoped && Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate !=0)
-		this->GetMenu().EnableMenuItem(nID, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-	if (nID == ID_PLAYBACK_STOP && Player.status == Status::Playing )
-		this->GetMenu().EnableMenuItem(nID, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-
-
-	CWnd::OnMenuUpdate(nID);
 }

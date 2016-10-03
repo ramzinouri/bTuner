@@ -10,6 +10,7 @@
 #include "bPlayer.h"
 
 
+enum bHover { None, Play, Volume, CoverArt };
 
 class bTWin : public CWnd
 {
@@ -26,11 +27,15 @@ protected:
 	void OnDraw(CDC& dc);
 	int  OnCreate(CREATESTRUCT& cs);
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-	void OnMenuUpdate(UINT nID);
 	bPlayer Player;
+
+private:
 	CRect VolumeRect;
 	CRect PlayRect;
 	int Hover;
+	POINT Mouse,ClickP;
+	BOOL Clicked;
+
 };
 
 #endif

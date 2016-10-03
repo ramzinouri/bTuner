@@ -9,9 +9,9 @@ HWND bPlayer::hwnd = NULL;
 
 bPlayer::bPlayer()
 {
-
+	PlayingNow = NULL;
 	status = Status::Stoped;
-	if (!BASS_Init(-1, 44100, 0, NULL, NULL)) {
+	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, hwnd, NULL)) {
 		MessageBoxA(NULL,"Can't initialize device","ERROR",MB_OK);
 	}
 	BASS_PluginLoad("bass_aac.dll", 0);

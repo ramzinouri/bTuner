@@ -8,7 +8,16 @@ bStream::bStream(char *URL)
 }
 bStation::bStation()
 {
-	Playing = "";
+
+	Name = NULL;
+	Genre = NULL;
+	Url = NULL;
+	Notice1 = NULL;
+	Notice2 = NULL;
+	Public = 0;
+	Playing = NULL;
+	Artist = 0;
+	Track = 0;
 	PlayedStreamID = 0;
 }
 

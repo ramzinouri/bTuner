@@ -18,7 +18,7 @@ bTuner::~bTuner()
 
 BOOL bTuner::InitInstance()
 {
-	bLog::AddLog(bLogEntry("bTuner v0.0.1.1 Started", "bTuner App", LogType::Info));
+	bLog::AddLog(bLogEntry("bTuner v0.0.0.1 Started", "bTuner App", LogType::Info));
 	_bTWin=new bTWin;
 	
 
@@ -32,7 +32,7 @@ BOOL bTuner::InitInstance()
 		_bLogWin->Create();
 		_bLogWin->MoveWindow(_bTWin->GetWindowRect().right,_bTWin->GetWindowRect().top,400,500);
 	}
-
+	_bTWin->SetFocus();
 
 
 	if (!_bTWin->GetHwnd())
