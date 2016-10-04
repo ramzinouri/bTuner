@@ -9,6 +9,7 @@ HWND bPlayer::hwnd = NULL;
 
 bPlayer::bPlayer()
 {
+	Volume = 100;
 	PlayingNow = NULL;
 	status = Status::Stoped;
 	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, hwnd, NULL)) {
@@ -56,11 +57,9 @@ void bPlayer::StaticThreadEntry(void* c)
 void bPlayer::OpenThread()
 {
 	status = Status::Connecting;
-	int v = GetVolume();
 	BASS_StreamFree(chan);
 	chan = BASS_StreamCreateURL((char*)PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, DownloadProc, 0);
-	if(v)
-		SetVolume(v);
+	SetVolume(Volume);
 	if (!chan)  // failed to open
 		MessageBoxA(NULL, "Can't open stream", "ERROR", MB_OK);
 	else
@@ -70,9 +69,7 @@ void bPlayer::OpenThread()
 
 int bPlayer::GetVolume()
 {
-	float vol = 0;
-	BASS_ChannelGetAttribute(chan, BASS_ATTRIB_VOL, &vol);
-	return (vol * 100);
+	return Volume;
 }
 
 void bPlayer::SetVolume(int Vol)
@@ -81,6 +78,7 @@ void bPlayer::SetVolume(int Vol)
 		Vol = 100;
 	if (Vol < 0)
 		Vol = 0;
+	Volume = Vol;
 	float v = Vol/100.0;
 	BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, v);
 }

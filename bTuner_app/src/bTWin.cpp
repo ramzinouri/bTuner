@@ -23,6 +23,17 @@ bTWin::bTWin()
 	Mouse.x = 0;
 	Mouse.y = 0;
 };
+void bTWin::OnDestroy()
+{
+	
+	Config.LastVolume= Player.GetVolume();
+	Config.LastPlayedName = Player.PlayingNow->Name;
+	Config.LastPlayedUrl = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Url;
+	Config.LastWindowPos.x = GetWindowRect().top;
+	Config.LastWindowPos.y = GetWindowRect().left;
+	
+	Config.Save();
+};
 
 bTWin::~bTWin()
 {
@@ -61,6 +72,16 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	SetRect(&VolumeRect, GetClientRect().right - 120, GetClientRect().bottom - 57, GetClientRect().right - 20, GetClientRect().bottom - 43);
 	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
+	Config.Load();
+
+	Player.SetVolume(Config.LastVolume);
+	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
+	if (Player.PlayingNow)
+		delete Player.PlayingNow;
+	Player.PlayingNow = new bStation;
+	Player.PlayingNow->Streams.push_back(bStream((char*)Config.LastPlayedUrl.c_str()));
+
+
 
 #ifdef  _DEBUG
 	Player.OpenURL("http://stream12.iloveradio.de/iloveradio5-aac.mp3");
@@ -449,8 +470,7 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 {
 	switch (m) {
 	case WM_INITDIALOG:
-		//::SetFocus(GetDlgItem(IDC_LINK));
-		SendMessage(h, WM_NEXTDLGCTL, (WPARAM)::GetDlgItem(h,IDC_LINK), TRUE);
+		//SendMessage(h, WM_NEXTDLGCTL, (WPARAM)::GetDlgItem(h,IDC_LINK), TRUE);
 		if (OpenClipboard(*this))
 		{
 			HANDLE hData = GetClipboardData(CF_TEXT);

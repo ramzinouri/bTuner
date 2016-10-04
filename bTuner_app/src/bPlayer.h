@@ -32,7 +32,8 @@ public:
 
 	static void CALLBACK DownloadProc(const void *buffer, DWORD length, void *user);
 	static void CALLBACK MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
-
+private:
+	int Volume;
 };
 
 #endif

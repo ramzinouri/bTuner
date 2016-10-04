@@ -8,6 +8,7 @@
 
 #include "resource.h"
 #include "bPlayer.h"
+#include "bConfig.h"
 
 
 enum bHover { None, Play, Volume, CoverArt };
@@ -26,6 +27,7 @@ protected:
 	void PreCreate(CREATESTRUCT &cs);
 	void OnDraw(CDC& dc);
 	int  OnCreate(CREATESTRUCT& cs);
+	void OnDestroy();
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
 
@@ -35,7 +37,7 @@ private:
 	int Hover;
 	POINT Mouse,ClickP;
 	BOOL Clicked;
-
+	bConfig Config;
 };
 
 #endif
