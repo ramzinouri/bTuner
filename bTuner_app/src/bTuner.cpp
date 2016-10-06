@@ -24,7 +24,6 @@ BOOL bTuner::InitInstance()
 
 
 	_bTWin->Create();
-	_bTWin->CenterWindow();
 
 	if (bDebug)
 	{

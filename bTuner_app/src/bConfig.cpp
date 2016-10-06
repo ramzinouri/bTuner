@@ -16,22 +16,24 @@ bool bConfig::Load()
 	bool Succeeded = false;
 
 		CFile File;
+		Json::Value jRoot;
+		Json::Reader jReader;
 		File.Open("Config.json", CFile::modeNoTruncate|CFile::modeRead);
 		int len = File.GetLength();
 		if (len > 0)
 		{
-			char *buf = new char(len + 1);
+			buf = new char(len + 1);
 			buf[len] = 0;
 			File.Read(buf, len);
 			File.Close();
 			std::string data(buf);
-			j = json::parse(data.c_str());
+			jReader.parse(buf,jRoot);
 
-			LastVolume = j["Session"]["Volume"];
-			LastPlayedName = j["Session"]["Station"]["Name"].get<std::string>().c_str();
-			LastPlayedUrl = j["Session"]["Station"]["Url"].get<std::string>().c_str();
-			LastWindowPos.x = j["Session"]["Window"]["top"];
-			LastWindowPos.y = j["Session"]["Window"]["left"];
+			LastVolume = jRoot["Session"]["Volume"].asInt();
+			LastPlayedName = jRoot["Session"]["Station"]["Name"].asString();
+			LastPlayedUrl = jRoot["Session"]["Station"]["Url"].asString();
+			LastWindowPos.x = jRoot["Session"]["Window"]["top"].asInt();
+			LastWindowPos.y = jRoot["Session"]["Window"]["left"].asInt();
 		}
 		else
 			Default();
@@ -49,17 +51,18 @@ bool bConfig::Save()
 
 
 		CFile File;
+		Json::Value jRoot;
+		Json::FastWriter jWriter;
 		File.Open("Config.json", CFile::modeCreate | CFile::modeWrite);
 
-			json j2;
-			j2["Session"]["Volume"]= LastVolume;
-			j2["Session"]["Station"]["Name"]= LastPlayedName;
-			j2["Session"]["Station"]["Url"]= LastPlayedUrl;
-			j2["Session"]["Window"]["top"]= LastWindowPos.x;
-			j2["Session"]["Window"]["left"]= LastWindowPos.y;
+		jRoot["Session"]["Volume"]= LastVolume;
+		jRoot["Session"]["Station"]["Name"]= LastPlayedName;
+		jRoot["Session"]["Station"]["Url"]= LastPlayedUrl;
+		jRoot["Session"]["Window"]["top"]= LastWindowPos.x;
+		jRoot["Session"]["Window"]["left"]= LastWindowPos.y;
 
-			std::string data = j2.dump();
-			File.Write(data.c_str(), data.length());
+		std::string data = jWriter.write(jRoot);
+		File.Write(data.c_str(), data.length());
 
 		File.Close();
 		Succeeded = true;

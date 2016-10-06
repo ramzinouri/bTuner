@@ -1,10 +1,12 @@
 #ifndef BCONFIG_H
 #define BCONFIG_H
-#include "JSON/json.hpp"
+#define JSON_IS_AMALGAMATION 1
+#include "JSON/json.h" // 0.6 need to upgrade it
+
 #include "win32++/wxx_wincore.h"
 #include "win32++/wxx_file.h"
+#include <fstream>
 
-using json = nlohmann::json;
 
 class bConfig
 {
@@ -18,7 +20,8 @@ public:
 	CPoint LastWindowPos;
 	std::string LastPlayedName;
 	std::string LastPlayedUrl;
-	json j;
+	char *buf;
+	
 };
 
 

@@ -75,16 +75,17 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Config.Load();
 
 	Player.SetVolume(Config.LastVolume);
-	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
+	//MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
 	if (Player.PlayingNow)
 		delete Player.PlayingNow;
 	Player.PlayingNow = new bStation;
 	Player.PlayingNow->Streams.push_back(bStream((char*)Config.LastPlayedUrl.c_str()));
+	Player.PlayingNow->Name = (char*)Config.LastPlayedName.c_str();
 
 
 
 #ifdef  _DEBUG
-	Player.OpenURL("http://stream12.iloveradio.de/iloveradio5-aac.mp3");
+	//Player.OpenURL("http://stream12.iloveradio.de/iloveradio5-aac.mp3");
 #endif //  _DEBUG
 	//Player.OpenURL("http://dir.xiph.org/listen/370585/listen.m3u");
 	//Player.OpenURL("http://jil-fm.ice.infomaniak.ch/jilfm.aac");

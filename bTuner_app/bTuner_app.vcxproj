@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="libs\JSON\jsoncpp.cpp" />
     <ClCompile Include="src\bConfig.cpp" />
     <ClCompile Include="src\bLog.cpp" />
     <ClCompile Include="src\bLogWin.cpp" />
@@ -35,6 +36,8 @@
     <ResourceCompile Include="src\bTuner.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="libs\JSON\json-forwards.h" />
+    <ClInclude Include="libs\JSON\json.h" />
     <ClInclude Include="libs\Win32++\wxx_appcore.h" />
     <ClInclude Include="libs\Win32++\wxx_appcore0.h" />
     <ClInclude Include="libs\Win32++\wxx_archive.h" />
@@ -152,7 +155,7 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)build\bin\$(Configuration)\</OutDir>
     <TargetName>$(SolutionName)</TargetName>
     <IntDir>$(ProjectDir)build\$(Configuration)\</IntDir>
@@ -177,6 +180,7 @@
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
       <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -197,20 +201,23 @@
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MinSpace</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <ExceptionHandling>false</ExceptionHandling>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>
+      </EnableCOMDATFolding>
+      <OptimizeReferences>
+      </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
