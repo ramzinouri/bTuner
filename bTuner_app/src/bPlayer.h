@@ -1,23 +1,40 @@
 #ifndef BPLAYER_H
 #define BPLAYER_H
-
+#include "winsock2.h"
 #include "bass/bass.h"
 #include "bass/bass_aac.h"
 #include <iostream>
 #include <thread>
 #include <process.h>
+#include <cctype>
+#include <iomanip>
+#include <sstream>
+#include <string>
+
+#include "pugixml/pugixml.hpp"
+using namespace pugi;
+
+#include "win32++/wxx_socket.h"
+#include "win32++/wxx_file.h"
+
+using namespace std;
+using namespace Win32xx;
 
 #include "bStation.h"
 
-enum Status {Playing,Stoped,Connecting,Buffring};
+enum eStatus {Playing,Stoped,Connecting,Buffring};
+enum eThread { Openurl,Fetchurl,Downloadcover};
+void CALLBACK  g_MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 
 class bPlayer 
 {
 public:
-	static HWND hwnd;
-	static HSTREAM chan;
-	static Status status;
-	static bStation *PlayingNow;
+	HWND hwnd;
+	HSTREAM chan;
+	eStatus status;
+	bStation *PlayingNow;
+	std::string CoverUrl;
+	bool CoverLoaded;
 	int BuffProgress;
 	bPlayer();
 	virtual ~bPlayer();
@@ -29,11 +46,13 @@ public:
 	static void StaticThreadEntry(void* c);
 	int GetVolume();
 	void SetVolume(int Vol);
-
-	static void CALLBACK DownloadProc(const void *buffer, DWORD length, void *user);
-	static void CALLBACK MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
+	bool FetchCover();
+	bool DownloadCover();
+	//static void CALLBACK DownloadProc(const void *buffer, DWORD length, void *user);
+	void CALLBACK MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 private:
 	int Volume;
+	std::string url_encode(const std::string &value);
 };
 
 #endif

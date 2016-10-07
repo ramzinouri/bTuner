@@ -25,7 +25,7 @@ bTWin::bTWin()
 };
 void bTWin::OnDestroy()
 {
-	
+	GdiplusShutdown(gdiplusToken);
 	Config.LastVolume= Player.GetVolume();
 	Config.LastPlayedName = Player.PlayingNow->Name;
 	Config.LastPlayedUrl = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Url;
@@ -67,6 +67,7 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 };
 int bTWin::OnCreate(CREATESTRUCT& cs)
 {
+	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 	Player.hwnd = this->GetHwnd();
 	this->GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
@@ -98,6 +99,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 
 void bTWin::OnDraw(CDC& dc)
 {
+	Graphics graphics(dc);
 	CRect cr = GetClientRect();
 	RECT r;
 	CFont font;
@@ -111,9 +113,6 @@ void bTWin::OnDraw(CDC& dc)
 	brush.CreateHatchBrush(HS_BDIAGONAL,RGB(0,0,0));
 	dc.SelectObject(brush);
 	dc.RoundRect(r, 10, 10);
-
-
-
 
 
 	SetRect(&r, 150, cr.bottom - 75, cr.right -5, cr.bottom - 25);
@@ -144,7 +143,7 @@ void bTWin::OnDraw(CDC& dc)
 	dc.SelectObject(font);
 	dc.SetTextColor(RGB(0, 0, 0));
 	dc.SetBkMode(TRANSPARENT);
-	if (Player.status == Status::Stoped)
+	if (Player.status == eStatus::Stoped)
 	{
 		dc.TextOut(195, cr.bottom - 65, "Play", 4);
 
@@ -161,7 +160,7 @@ void bTWin::OnDraw(CDC& dc)
 		dc.Polygon(points, 3);
 	}
 
-	if (Player.status == Status::Playing)
+	if (Player.status == eStatus::Playing)
 	{
 		dc.TextOut(195, cr.bottom - 65, "Stop", 4);
 
@@ -204,7 +203,7 @@ void bTWin::OnDraw(CDC& dc)
 	font.CreateFontA(45, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
 	dc.SelectObject(font);
-	if(Player.status != Status::Playing)
+	if(Player.status != eStatus::Playing)
 		dc.SetTextColor(RGB(150, 150, 150));
 	if(Player.PlayingNow && Player.PlayingNow->Name)
 		dc.TextOutA(150, cr.bottom - 145, Player.PlayingNow->Name, strlen(Player.PlayingNow->Name));
@@ -213,20 +212,26 @@ void bTWin::OnDraw(CDC& dc)
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 	dc.SelectObject(font);
 	dc.SetTextColor(RGB(180, 180, 180));
-	if (Player.status == Status::Buffring)
+	if (Player.status == eStatus::Buffring)
 	{
 		char buf[30];
 		sprintf(buf, "[%d %s] Buffuring",Player.BuffProgress,"%");
 		dc.TextOutA(150, cr.bottom - 20, buf, strlen(buf));
 	}
-	if (Player.status == Status::Connecting)
+	if (Player.status == eStatus::Connecting)
 		dc.TextOutA(150, cr.bottom - 20, "Connecting...",13 );
-	if (Player.status == Status::Stoped)
+	if (Player.status == eStatus::Stoped)
 		dc.TextOutA(150, cr.bottom - 20, "Not Connected", 13);
 
 
-	if (Player.status == Status::Playing)
+	if (Player.status == eStatus::Playing)
 	{
+		if (Player.CoverLoaded)
+		{
+			Image image(L"Cover.png");
+			graphics.DrawImage(&image, 5, cr.bottom-145,140,140);
+
+		}
 		font.CreateFontA(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		dc.SelectObject(font);
@@ -289,11 +294,11 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			Player.SetVolume(100 - VolumeRect.right + Mouse.x);
 		if (PlayRect.PtInRect(Mouse) && !Clicked)
 		{
-			if (Player.status == Status::Playing)
+			if (Player.status == eStatus::Playing)
 				Player.Stop();
 			else
 			{
-				if (Player.status == Status::Stoped&& Player.PlayingNow)
+				if (Player.status == eStatus::Stoped&& Player.PlayingNow)
 					Player.Resume();
 			}
 			InvalidateRect(GetClientRect(), TRUE);
@@ -404,21 +409,24 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			// get the stream title and set sync for subsequent titles
 			Player.MetaSync(NULL, NULL, NULL, NULL);
-			BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, &bPlayer::MetaSync, 0); // Shoutcast
-			BASS_ChannelSetSync(Player.chan, BASS_SYNC_OGG_CHANGE, 0, &bPlayer::MetaSync, 0); // Icecast/OGG
+			BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0); // Shoutcast
+			BASS_ChannelSetSync(Player.chan, BASS_SYNC_OGG_CHANGE, 0, &g_MetaSync, 0); // Icecast/OGG
 																			  // set sync for end of stream
 			//BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &EndSync, 0);
 			// play it!
 
 			Player.Play();
-			Player.status = Status::Playing;
+			Player.status = eStatus::Playing;
 			this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED );
 
 		
 		}
 		else
-			Player.status = Status::Buffring;
-		InvalidateRect(this->GetClientRect(), TRUE);
+			Player.status = eStatus::Buffring;
+		RECT cr, r;
+		cr=GetClientRect();
+		SetRect(&r, 150, cr.bottom - 30,cr.right , cr.bottom);
+		InvalidateRect(&r, TRUE);
 		
 	}
 	break;

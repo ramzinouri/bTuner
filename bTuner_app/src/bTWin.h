@@ -5,6 +5,8 @@
 #include "Win32++\wxx_wincore.h"
 #include "Win32++\wxx_controls.h"
 #include <stdio.h>
+#include <gdiplus.h>
+using namespace Gdiplus;
 
 #include "resource.h"
 #include "bPlayer.h"
@@ -38,6 +40,8 @@ private:
 	POINT Mouse,ClickP;
 	BOOL Clicked;
 	bConfig Config;
+	GdiplusStartupInput gdiplusStartupInput;
+	ULONG_PTR           gdiplusToken;
 };
 
 #endif

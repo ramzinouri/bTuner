@@ -184,7 +184,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
-      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;ws2_32.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AssemblyDebug>true</AssemblyDebug>
@@ -233,7 +233,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
-      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;ws2_32.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <FullProgramDatabaseFile>false</FullProgramDatabaseFile>
       <AssemblyDebug>false</AssemblyDebug>
       <LinkTimeCodeGeneration />
