@@ -4,7 +4,7 @@
 bLogEntry::bLogEntry()
 {
 	Type = LogType::Info;
-	localtime(&Time);
+	time(&Time);
 };
 
 bLogEntry::bLogEntry(string _Msg, string _source, LogType _type)

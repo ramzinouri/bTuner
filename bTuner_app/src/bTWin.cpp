@@ -29,8 +29,8 @@ void bTWin::OnDestroy()
 	Config.LastVolume= Player.GetVolume();
 	Config.LastPlayedName = Player.PlayingNow->Name;
 	Config.LastPlayedUrl = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Url;
-	Config.LastWindowPos.x = GetWindowRect().top;
-	Config.LastWindowPos.y = GetWindowRect().left;
+	Config.LastWindowPos.x = GetWindowRect().left;
+	Config.LastWindowPos.y = GetWindowRect().top;
 	
 	Config.Save();
 };
@@ -75,7 +75,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Config.Load();
 
 	Player.SetVolume(Config.LastVolume);
-	//MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
+	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
 	if (Player.PlayingNow)
 		delete Player.PlayingNow;
 	Player.PlayingNow = new bStation;
@@ -338,9 +338,9 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_TIMER:
 	{ // monitor prebuffering progress
-		DWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER)
+		QWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER)
 			* 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END); // percentage of buffer filled
-		Player.BuffProgress = progress;
+		Player.BuffProgress = (int) progress;
 		if (progress>90 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED)) { // over 75% full (or end of download)
 			::KillTimer(this->GetHwnd(), 0); // finished prebuffering, stop monitoring
 			{ // get the broadcast name and URL

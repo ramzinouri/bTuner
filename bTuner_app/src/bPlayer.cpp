@@ -79,7 +79,7 @@ void bPlayer::SetVolume(int Vol)
 	if (Vol < 0)
 		Vol = 0;
 	Volume = Vol;
-	float v = Vol/100.0;
+	float v = Vol/(float )100.0;
 	BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, v);
 }
 
@@ -98,7 +98,7 @@ void CALLBACK bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *u
 		if (p) {
 			const char *p2 = strstr(p, "';"); // locate the end of it
 			if (p2) {
-				char *t = strdup(p + 13);
+				char *t = _strdup(p + 13);
 				t[p2 - (p + 13)] = 0;
 
 				char *pl = new char[strlen(t)+1];
@@ -120,9 +120,9 @@ void CALLBACK bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *u
 		if (meta) { // got Icecast/OGG tags
 			char *artist = NULL, *title = NULL, *p = meta;
 			for (; *p; p += strlen(p) + 1) {
-				if (!strnicmp(p, "artist=", 7)) // found the artist
+				if (!_strnicmp(p, "artist=", 7)) // found the artist
 					artist = p + 7;
-				if (!strnicmp(p, "title=", 6)) // found the title
+				if (!_strnicmp(p, "title=", 6)) // found the title
 					title = p + 6;
 
 			}
@@ -132,7 +132,7 @@ void CALLBACK bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *u
 					PlayingNow->Artist = artist;
 					char text[100];
 					memset(text, 0, 100);
-					_snprintf(text, sizeof(text), "%s - %s", artist, title);
+					_snprintf_s(text, sizeof(text), "%s - %s", artist, title);
 					char *pl = new char[strlen(text) + 1];
 					memcpy(pl, text, strlen(text) + 1);
 					PlayingNow->Playing=pl;

@@ -2612,10 +2612,14 @@ static inline void releaseStringValue(char* value, unsigned length) {
 }
 #else // !JSONCPP_USING_SECURE_MEMORY
 static inline void releasePrefixedStringValue(char* value) {
-  free(value);
+#ifdef NDEBUG
+	free(value);
+#endif
 }
 static inline void releaseStringValue(char* value, unsigned) {
-  //free(value);
+#ifdef NDEBUG
+	free(value);
+#endif
 }
 #endif // JSONCPP_USING_SECURE_MEMORY
 
