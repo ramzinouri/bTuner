@@ -15,6 +15,13 @@ void CALLBACK  g_MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	else
 		return ;
 }
+void CALLBACK  g_DownloadProc(const void *buffer, DWORD length, void *user)
+{
+	if (gp_bPlayer)
+		return gp_bPlayer->DownloadProc(buffer,length, user);
+	else
+		return;
+}
 
 
 bPlayer::bPlayer()
@@ -25,7 +32,8 @@ bPlayer::bPlayer()
 	Volume = 100;
 	PlayingNow = NULL;
 	status = eStatus::Stoped;
-	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, hwnd, NULL)) {
+	CoverLoaded = false;
+	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, 0, NULL)) {
 		MessageBoxA(NULL,"Can't initialize device","ERROR",MB_OK);
 	}
 	BASS_PluginLoad("bass_aac.dll", 0);
@@ -76,11 +84,13 @@ void bPlayer::StaticThreadEntry(void* c)
 void bPlayer::OpenThread()
 {
 	status = eStatus::Connecting;
+	KillTimer(hwnd, 0);
 	BASS_StreamFree(chan);
-	chan = BASS_StreamCreateURL((char*)PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+	std::string u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
+	chan = BASS_StreamCreateURL(u.c_str(), 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);
 	SetVolume(Volume);
 	if (!chan)  // failed to open
-		MessageBoxA(NULL, "Can't open stream", "ERROR", MB_OK);
+		MessageBoxA(hwnd, "Can't open stream", "ERROR", MB_ICONERROR);
 	else
 		SetTimer(hwnd, 0, 50, 0); // start prebuffer monitoring
 
@@ -90,9 +100,11 @@ bool bPlayer::FetchCover()
 	CSocket soc;
 	std::string req;
 	req += "GET /2.0/?method=album.search&album=";
-	string pl = PlayingNow->Artist;
+	string pl = PlayingNow->Artist,tr=PlayingNow->Track;
+	if (tr.find("(")!= std::string::npos)
+		tr.erase(tr.find("("),tr.length());
 	pl += " ";
-	pl+=PlayingNow->Track;
+	pl+=tr;
 	req += url_encode(pl);
 	req+="&api_key=c4eeb5aa39807b0d21d420ab64b42bf6&limit=1&page=1";
 	req += " HTTP/1.1\r\nHost: ws.audioscrobbler.com\r\nConnection: Close\r\n\r\n";
@@ -124,8 +136,16 @@ bool bPlayer::FetchCover()
 	{
 		xml_node album= doc.child("lfm").child("results").child("albummatches").first_child();
 		CoverUrl=album.find_child_by_attribute("size", "large").text().as_string();
-		if(CoverUrl.length()>0)
+		if (CoverUrl.length() > 0)
 			_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Downloadcover);
+		else
+		{
+			CoverLoaded = false;
+			RECT cr, r;
+			GetClientRect(hwnd, &cr);
+			SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
+			InvalidateRect(hwnd, &r, TRUE);
+		}
 	}
 
 	return true;
@@ -134,7 +154,8 @@ bool bPlayer::FetchCover()
 bool bPlayer::DownloadCover()
 {
 	CSocket soc;
-	std::string host=CoverUrl,get;
+	std::string host,get;
+	host = CoverUrl;
 	host.erase(0,CoverUrl.find(":")+3);
 	get = host;
 	host.erase(host.find("/"),host.length());
@@ -162,6 +183,7 @@ bool bPlayer::DownloadCover()
 	int nDataLength, st, trec = 0, datalen = 0;
 	CFile file;
 	file.Open("cover.png", CFile::modeCreate | CFile::modeWrite);
+
 	st = soc.Receive(buffer, 2048, 0);
 	nDataLength = soc.Receive(buffer+st, 2048-st, 0);
 	char *p = strstr(buffer, "\r\n\r\n") + 4;
@@ -184,7 +206,6 @@ bool bPlayer::DownloadCover()
 		memset(buffer, 0, 2048);
 	};
 
-	//ShellExecute(NULL, "open", CoverUrl.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	CoverLoaded = true;
 	RECT cr,r;
 	GetClientRect(hwnd, &cr);
@@ -231,8 +252,11 @@ void bPlayer::SetVolume(int Vol)
 	float v = Vol/(float )100.0;
 	BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, v);
 }
+void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
+{
 
-void CALLBACK bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
+}
+void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {	
 	char *meta = (char *)BASS_ChannelGetTags(chan, BASS_TAG_META);
 	if (meta) { // got Shoutcast metadata
@@ -284,8 +308,9 @@ void CALLBACK bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *u
 			}
 		}
 	}
+	if (!PlayingNow->Artist || !PlayingNow->Track)
+		return;
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
-	CoverLoaded = false;
 	RECT r;
 	GetClientRect(hwnd, &r);
 	InvalidateRect(hwnd,&r, TRUE);

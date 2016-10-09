@@ -82,16 +82,6 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.PlayingNow = new bStation;
 	Player.PlayingNow->Streams.push_back(bStream((char*)Config.LastPlayedUrl.c_str()));
 	Player.PlayingNow->Name = (char*)Config.LastPlayedName.c_str();
-
-
-
-#ifdef  _DEBUG
-	//Player.OpenURL("http://stream12.iloveradio.de/iloveradio5-aac.mp3");
-#endif //  _DEBUG
-	//Player.OpenURL("http://dir.xiph.org/listen/370585/listen.m3u");
-	//Player.OpenURL("http://jil-fm.ice.infomaniak.ch/jilfm.aac");
-	//Player.OpenURL("http://7619.live.streamtheworld.com:80/977_HITS_SC");
-	
 	
 	return 0;
 };
@@ -108,12 +98,18 @@ void bTWin::OnDraw(CDC& dc)
 	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
 	dc.FillRect(r,(HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
 
-	SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom-5);
-
-	brush.CreateHatchBrush(HS_BDIAGONAL,RGB(0,0,0));
-	dc.SelectObject(brush);
-	dc.RoundRect(r, 10, 10);
-
+	if (Player.CoverLoaded&&Player.status==eStatus::Playing)
+	{
+		Image image(L"Cover.png");
+		graphics.DrawImage(&image, 5, cr.bottom - 145, 140, 140);
+	}
+	else
+	{
+		SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
+		brush.CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
+		dc.SelectObject(brush);
+		dc.RoundRect(r, 10, 10);
+	}
 
 	SetRect(&r, 150, cr.bottom - 75, cr.right -5, cr.bottom - 25);
 	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(20, 20, 20)));
@@ -226,12 +222,6 @@ void bTWin::OnDraw(CDC& dc)
 
 	if (Player.status == eStatus::Playing)
 	{
-		if (Player.CoverLoaded)
-		{
-			Image image(L"Cover.png");
-			graphics.DrawImage(&image, 5, cr.bottom-145,140,140);
-
-		}
 		font.CreateFontA(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		dc.SelectObject(font);
@@ -521,6 +511,7 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 			{
 				Player.OpenURL(u);
 				EndDialog(h, NULL);
+				
 			}
 		}
 			

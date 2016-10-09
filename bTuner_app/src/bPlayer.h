@@ -25,6 +25,7 @@ using namespace Win32xx;
 enum eStatus {Playing,Stoped,Connecting,Buffring};
 enum eThread { Openurl,Fetchurl,Downloadcover};
 void CALLBACK  g_MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
+void CALLBACK g_DownloadProc(const void *buffer, DWORD length, void *user);
 
 class bPlayer 
 {
@@ -48,8 +49,8 @@ public:
 	void SetVolume(int Vol);
 	bool FetchCover();
 	bool DownloadCover();
-	//static void CALLBACK DownloadProc(const void *buffer, DWORD length, void *user);
-	void CALLBACK MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
+	void DownloadProc(const void *buffer, DWORD length, void *user);
+	void MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 private:
 	int Volume;
 	std::string url_encode(const std::string &value);
