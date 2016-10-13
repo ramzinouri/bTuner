@@ -62,7 +62,7 @@ LRESULT bLogWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_SIZE:
 		if (::IsWindow(_bLogList) != NULL)
-			_bLogList.MoveWindow(1, 1, this->GetWindowRect().Width() - 17, this->GetWindowRect().Height() - 37, 1);
+			_bLogList.MoveWindow(0, 0, GetClientRect().right, GetClientRect().bottom);
 		
 		break;
 	}

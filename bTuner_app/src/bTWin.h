@@ -4,6 +4,7 @@
 
 #include "Win32++\wxx_wincore.h"
 #include "Win32++\wxx_controls.h"
+#include "win32++\wxx_listview.h"
 #include <stdio.h>
 #include <gdiplus.h>
 using namespace Gdiplus;
@@ -32,6 +33,7 @@ protected:
 	void OnDestroy();
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
+	void DrawPlayer(CDC& dc);
 
 private:
 	CRect VolumeRect;
@@ -42,6 +44,7 @@ private:
 	bConfig Config;
 	GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR           gdiplusToken;
+	CListBox bList;
 };
 
 #endif

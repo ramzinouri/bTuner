@@ -82,182 +82,23 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.PlayingNow = new bStation;
 	Player.PlayingNow->Streams.push_back(bStream((char*)Config.LastPlayedUrl.c_str()));
 	Player.PlayingNow->Name = (char*)Config.LastPlayedName.c_str();
-	
+	/*
+	bList.CreateEx(0, "ListBox","bList", WS_CHILD | WS_VISIBLE  | WS_HSCROLL | WS_VSCROLL | LBS_SORT  | LBS_WANTKEYBOARDINPUT, CRect(10,250,200,450), *this, NULL);;
+	bList.MoveWindow(140,0, GetClientRect().right, GetClientRect().bottom - 155);
+	bList.AddString(Player.PlayingNow->Name);
+	bList.AddString(Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Url);
+	bList.UpdateWindow();
+	*/
+	UpdateWindow();
 	return 0;
 };
 
 
 void bTWin::OnDraw(CDC& dc)
 {
-	Graphics graphics(dc);
-	CRect cr = GetClientRect();
-	RECT r;
-	CFont font;
-	CBrush brush;
+	//Graphics graphics(dc);
 
-	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
-	dc.FillRect(r,(HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
-
-	if (Player.CoverLoaded&&Player.status==eStatus::Playing)
-	{
-		Image image(L"Cover.png");
-		graphics.DrawImage(&image, 5, cr.bottom - 145, 140, 140);
-	}
-	else
-	{
-		SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
-		brush.CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
-		dc.SelectObject(brush);
-		dc.RoundRect(r, 10, 10);
-	}
-
-	SetRect(&r, 150, cr.bottom - 75, cr.right -5, cr.bottom - 25);
-	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(20, 20, 20)));
-
-
-	brush.CreateSolidBrush( RGB(200, 200, 200));
-	if(Hover==bHover::Play)
-		brush.CreateSolidBrush(RGB(255, 255, 255));
-	dc.SelectObject(brush);
-	SetRect(&r, 160, cr.bottom - 70, 250, cr.bottom - 30);
-	dc.RoundRect(r, 8, 8);
-
-	brush.CreateSolidBrush(RGB(0, 0, 0));
-	dc.SelectObject(brush);
-	SetRect(&r, 163, cr.bottom - 67, 247, cr.bottom - 33);
-	dc.RoundRect(r, 8, 8);
-
-	brush.CreateSolidBrush(RGB(200, 200, 200));
-	dc.SelectObject(brush);
-	SetRect(&r, 165, cr.bottom - 65, 245, cr.bottom - 35);
-	dc.RoundRect(r, 5, 5);
-	
-
-
-	font.CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
-	dc.SelectObject(font);
-	dc.SetTextColor(RGB(0, 0, 0));
-	dc.SetBkMode(TRANSPARENT);
-	if (Player.status == eStatus::Stoped)
-	{
-		dc.TextOut(195, cr.bottom - 65, "Play", 4);
-
-		brush.CreateSolidBrush(RGB(0, 0, 0));
-		dc.SelectObject(brush);
-		POINT points[3];
-		points[0].x = 172;
-		points[0].y = cr.bottom - 58;
-		points[1].x = 185;
-		points[1].y = cr.bottom - 50;
-		points[2].x = 172;
-		points[2].y = cr.bottom - 42;
-
-		dc.Polygon(points, 3);
-	}
-
-	if (Player.status == eStatus::Playing)
-	{
-		dc.TextOut(195, cr.bottom - 65, "Stop", 4);
-
-		brush.CreateSolidBrush(RGB(0, 0, 0));
-		dc.SelectObject(brush);
-
-		SetRect(&r, 172, cr.bottom - 58, 185, cr.bottom - 42);
-		dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
-	}
-
-	// Volume 
-	int v = Player.GetVolume();
-	if(Clicked&&VolumeRect.PtInRect(Mouse))
-		v = 100 - VolumeRect.right + Mouse.x;
-	
-	SetRect(&r, cr.right-120, cr.bottom - 54, cr.right-20, cr.bottom - 46);
-	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(100, 100, 100)));
-
-	SetRect(&r, cr.right-120, cr.bottom - 57, cr.right-20-(100-v), cr.bottom - 43);
-	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(200, 200, 200)));
-
-	dc.SetTextColor(RGB(0, 0, 0));
-	dc.SetBkMode(TRANSPARENT);
-	font.CreateFontA(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
-	dc.SelectObject(font);
-
-	char bf[10];
-	sprintf(bf, "%d", v);
-	CSize sv= dc.GetTextExtentPoint32A(bf, strlen(bf));
-	dc.TextOut(cr.right-70-(sv.cx/2), cr.bottom - 57, bf, strlen(bf));
-
-
-
-	//Playing Now info
-
-	dc.SetTextColor(RGB(245, 245, 245));
-	dc.SetBkColor(RGB(0, 0, 0));
-
-	font.CreateFontA(45, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
-		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
-	dc.SelectObject(font);
-	if(Player.status != eStatus::Playing)
-		dc.SetTextColor(RGB(150, 150, 150));
-	if(Player.PlayingNow && Player.PlayingNow->Name)
-		dc.TextOutA(150, cr.bottom - 145, Player.PlayingNow->Name, strlen(Player.PlayingNow->Name));
-
-	font.CreateFontA(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
-	dc.SelectObject(font);
-	dc.SetTextColor(RGB(180, 180, 180));
-	if (Player.status == eStatus::Buffring)
-	{
-		char buf[30];
-		sprintf(buf, "[%d %s] Buffuring",Player.BuffProgress,"%");
-		dc.TextOutA(150, cr.bottom - 20, buf, strlen(buf));
-	}
-	if (Player.status == eStatus::Connecting)
-		dc.TextOutA(150, cr.bottom - 20, "Connecting...",13 );
-	if (Player.status == eStatus::Stoped)
-		dc.TextOutA(150, cr.bottom - 20, "Not Connected", 13);
-
-
-	if (Player.status == eStatus::Playing)
-	{
-		font.CreateFontA(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
-		dc.SelectObject(font);
-		dc.SetTextColor(RGB(200, 200, 200));
-		dc.TextOutA(150, cr.bottom - 110, Player.PlayingNow->Playing, strlen(Player.PlayingNow->Playing));
-
-		font.CreateFontA(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
-		dc.SelectObject(font);
-		dc.SetTextColor(RGB(180, 180, 180));
-		dc.TextOutA(150, cr.bottom - 20, Player.PlayingNow->Url, strlen(Player.PlayingNow->Url));
-
-		CSize s = dc.GetTextExtentPoint32A(Player.PlayingNow->Url, strlen(Player.PlayingNow->Url));
-		font.CreateFontA(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
-		dc.SelectObject(font);
-		dc.SetTextColor(RGB(0, 0, 0));
-		dc.SetBkColor(RGB(245, 245, 245));
-		dc.SetBkMode(OPAQUE);
-
-		char *codecT[] = { "MP3","AAC","OGG","MPEG","AAC+" };
-		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
-		if (c < Codecs::UNDIFINED)
-		{
-			dc.TextOutA(150 + 10 + s.cx, cr.bottom - 20, codecT[c], strlen(codecT[c]));
-		}
-
-		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate)
-		{
-			CSize s2 = dc.GetTextExtentPoint32A(codecT[c], strlen(codecT[c]));
-			char b[10];
-			sprintf(b, "%d Kbps", Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate);
-			dc.TextOutA(150 + 10 + s.cx + 5 + s2.cx, cr.bottom - 20, b, strlen(b));
-		}
-	}
-
+	DrawPlayer(dc);
 
 };
 
@@ -518,4 +359,179 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 		break;
 	}
 	return 0;
+};
+
+void  bTWin::DrawPlayer(CDC& dc)
+{
+
+	Graphics graphics(dc);
+	CRect cr = GetClientRect();
+	RECT r;
+	CFont font;
+	CBrush brush;
+
+	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+
+	if (Player.CoverLoaded&&Player.status == eStatus::Playing)
+	{
+		Image image(L"Cover.png");
+		graphics.DrawImage(&image, 5, cr.bottom - 145, 140, 140);
+	}
+	else
+	{
+		SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
+		brush.CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
+		dc.SelectObject(brush);
+		dc.RoundRect(r, 10, 10);
+	}
+
+	SetRect(&r, 150, cr.bottom - 75, cr.right - 5, cr.bottom - 25);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(20, 20, 20)));
+
+
+	brush.CreateSolidBrush(RGB(200, 200, 200));
+	if (Hover == bHover::Play)
+		brush.CreateSolidBrush(RGB(255, 255, 255));
+	dc.SelectObject(brush);
+	SetRect(&r, 160, cr.bottom - 70, 250, cr.bottom - 30);
+	dc.RoundRect(r, 8, 8);
+
+	brush.CreateSolidBrush(RGB(0, 0, 0));
+	dc.SelectObject(brush);
+	SetRect(&r, 163, cr.bottom - 67, 247, cr.bottom - 33);
+	dc.RoundRect(r, 8, 8);
+
+	brush.CreateSolidBrush(RGB(200, 200, 200));
+	dc.SelectObject(brush);
+	SetRect(&r, 165, cr.bottom - 65, 245, cr.bottom - 35);
+	dc.RoundRect(r, 5, 5);
+
+
+
+	font.CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+	dc.SelectObject(font);
+	dc.SetTextColor(RGB(0, 0, 0));
+	dc.SetBkMode(TRANSPARENT);
+	if (Player.status == eStatus::Stoped)
+	{
+		dc.TextOut(195, cr.bottom - 65, "Play", 4);
+
+		brush.CreateSolidBrush(RGB(0, 0, 0));
+		dc.SelectObject(brush);
+		POINT points[3];
+		points[0].x = 172;
+		points[0].y = cr.bottom - 58;
+		points[1].x = 185;
+		points[1].y = cr.bottom - 50;
+		points[2].x = 172;
+		points[2].y = cr.bottom - 42;
+
+		dc.Polygon(points, 3);
+	}
+
+	if (Player.status == eStatus::Playing)
+	{
+		dc.TextOut(195, cr.bottom - 65, "Stop", 4);
+
+		brush.CreateSolidBrush(RGB(0, 0, 0));
+		dc.SelectObject(brush);
+
+		SetRect(&r, 172, cr.bottom - 58, 185, cr.bottom - 42);
+		dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+	}
+
+	// Volume 
+	int v = Player.GetVolume();
+	if (Clicked&&VolumeRect.PtInRect(Mouse))
+		v = 100 - VolumeRect.right + Mouse.x;
+
+	SetRect(&r, cr.right - 120, cr.bottom - 54, cr.right - 20, cr.bottom - 46);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(100, 100, 100)));
+
+	SetRect(&r, cr.right - 120, cr.bottom - 57, cr.right - 20 - (100 - v), cr.bottom - 43);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(200, 200, 200)));
+
+	dc.SetTextColor(RGB(0, 0, 0));
+	dc.SetBkMode(TRANSPARENT);
+	font.CreateFontA(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
+	dc.SelectObject(font);
+
+	char bf[10];
+	sprintf(bf, "%d", v);
+	CSize sv = dc.GetTextExtentPoint32A(bf, strlen(bf));
+	dc.TextOut(cr.right - 70 - (sv.cx / 2), cr.bottom - 57, bf, strlen(bf));
+
+
+
+	//Playing Now info
+
+	dc.SetTextColor(RGB(245, 245, 245));
+	dc.SetBkColor(RGB(0, 0, 0));
+
+	font.CreateFontA(45, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+	dc.SelectObject(font);
+	if (Player.status != eStatus::Playing)
+		dc.SetTextColor(RGB(150, 150, 150));
+	if (Player.PlayingNow && Player.PlayingNow->Name)
+		dc.TextOutA(150, cr.bottom - 145, Player.PlayingNow->Name, strlen(Player.PlayingNow->Name));
+
+	font.CreateFontA(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+	dc.SelectObject(font);
+	dc.SetTextColor(RGB(180, 180, 180));
+	if (Player.status == eStatus::Buffring)
+	{
+		char buf[30];
+		sprintf(buf, "[%d %s] Buffuring", Player.BuffProgress, "%");
+		dc.TextOutA(150, cr.bottom - 20, buf, strlen(buf));
+	}
+	if (Player.status == eStatus::Connecting)
+		dc.TextOutA(150, cr.bottom - 20, "Connecting...", 13);
+	if (Player.status == eStatus::Stoped)
+		dc.TextOutA(150, cr.bottom - 20, "Not Connected", 13);
+
+
+	if (Player.status == eStatus::Playing)
+	{
+		font.CreateFontA(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+		dc.SelectObject(font);
+		dc.SetTextColor(RGB(200, 200, 200));
+		dc.TextOutA(150, cr.bottom - 110, Player.PlayingNow->Playing, strlen(Player.PlayingNow->Playing));
+
+		font.CreateFontA(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+		dc.SelectObject(font);
+		dc.SetTextColor(RGB(180, 180, 180));
+		dc.TextOutA(150, cr.bottom - 20, Player.PlayingNow->Url, strlen(Player.PlayingNow->Url));
+
+		CSize s = dc.GetTextExtentPoint32A(Player.PlayingNow->Url, strlen(Player.PlayingNow->Url));
+		font.CreateFontA(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
+		dc.SelectObject(font);
+		dc.SetTextColor(RGB(0, 0, 0));
+		dc.SetBkColor(RGB(245, 245, 245));
+		dc.SetBkMode(OPAQUE);
+
+		char *codecT[] = { "MP3","AAC","OGG","MPEG","AAC+" };
+		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
+		if (c < Codecs::UNDIFINED)
+		{
+			dc.TextOutA(150 + 10 + s.cx, cr.bottom - 20, codecT[c], strlen(codecT[c]));
+		}
+
+		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate)
+		{
+			CSize s2 = dc.GetTextExtentPoint32A(codecT[c], strlen(codecT[c]));
+			char b[10];
+			sprintf(b, "%d Kbps", Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate);
+			dc.TextOutA(150 + 10 + s.cx + 5 + s2.cx, cr.bottom - 20, b, strlen(b));
+		}
+	}
+
+
 }

@@ -34,7 +34,7 @@ bPlayer::bPlayer()
 	status = eStatus::Stoped;
 	CoverLoaded = false;
 	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, 0, NULL)) {
-		MessageBoxA(NULL,"Can't initialize device","ERROR",MB_OK);
+		MessageBoxA(hwnd,"Can't initialize device","ERROR",MB_ICONERROR);
 	}
 	BASS_PluginLoad("bass_aac.dll", 0);
 	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
@@ -84,6 +84,7 @@ void bPlayer::StaticThreadEntry(void* c)
 void bPlayer::OpenThread()
 {
 	status = eStatus::Connecting;
+	CoverLoaded = false;
 	KillTimer(hwnd, 0);
 	BASS_StreamFree(chan);
 	std::string u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
@@ -266,11 +267,9 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 			if (p2) {
 				char *t = _strdup(p + 13);
 				t[p2 - (p + 13)] = 0;
-
 				char *pl = new char[strlen(t)+1];
 				memcpy(pl, t, strlen(t) + 1);
 				PlayingNow->Playing = pl;
-				
 				p = strstr(t, "-");
 				if (p) {
 					p[-1] = 0;
@@ -290,7 +289,6 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 					artist = p + 7;
 				if (!_strnicmp(p, "title=", 6)) // found the title
 					title = p + 6;
-
 			}
 			if (title) {
 				PlayingNow->Track = title;
