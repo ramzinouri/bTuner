@@ -22,6 +22,7 @@ class bLogWin : public CWnd
 public:
 	bLogWin();
 	virtual ~bLogWin();
+	void UpdateLog();
 protected:
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void PreRegisterClass(WNDCLASS &wc);

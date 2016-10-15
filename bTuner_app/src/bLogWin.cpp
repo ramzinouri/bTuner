@@ -4,13 +4,28 @@
 
 bLogWin::bLogWin()
 {
-
+	bLog::_bLogWin = this;
 };
 
 bLogWin::~bLogWin()
 {
-	
+	bLog::_bLogWin = NULL;
 };
+
+void bLogWin::UpdateLog()
+{
+	_bLogList.ResetContent();
+	for (int i = 0; i <(int)bLog::Log->size(); i++)
+	{
+		struct tm*  timeinfo;
+		timeinfo = localtime(&bLog::Log->at(i).Time);
+		CString ms;
+		ms.Format("%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+		ms  += bLog::Log->at(i).Msg.c_str();
+		_bLogList.InsertString(i,ms.c_str());
+	}
+	_bLogList.RedrawWindow();
+}
 
 void bLogWin::PreRegisterClass(WNDCLASS &wc)
 {
@@ -34,22 +49,11 @@ int  bLogWin::OnCreate(CREATESTRUCT& cs)
 {
 	_bLogList.Create(this->GetHwnd());
 	HFONT _font;
-	_font= CreateFont(13, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Lucida Console"));
+	_font= CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
 	_bLogList.SetFont(_font);
 
-	int i = 0;
-	stringstream msg;
-	struct tm*  timeinfo;
-	timeinfo = localtime(&bLog::Log->at(i).Time);
-	msg << timeinfo->tm_hour;
-	msg << ":";
-	msg << timeinfo->tm_min;
-	msg << ":";
-	msg << timeinfo->tm_sec;
-	msg << " ::  ";
-	msg << bLog::Log->at(i).Msg.c_str();
-	_bLogList.AddString(msg.str().c_str());
+	UpdateLog();
 	return 0;
 };
 
@@ -57,7 +61,9 @@ LRESULT bLogWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_CLOSE:
 	case WM_DESTROY:
+		bLog::_bLogWin = NULL;
 		this->CloseWindow();
 		break;
 	case WM_SIZE:

@@ -22,10 +22,11 @@ using namespace Win32xx;
 
 #include "bStation.h"
 
-enum eStatus {Playing,Stoped,Connecting,Buffring};
+enum eStatus { Playing,Stopped,Connecting,Buffring};
 enum eThread { Openurl,Fetchurl,Downloadcover};
 void CALLBACK  g_MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 void CALLBACK g_DownloadProc(const void *buffer, DWORD length, void *user);
+void CALLBACK g_EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 
 class bPlayer 
 {
@@ -51,6 +52,7 @@ public:
 	bool DownloadCover();
 	void DownloadProc(const void *buffer, DWORD length, void *user);
 	void MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
+	void EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 private:
 	int Volume;
 	std::string url_encode(const std::string &value);

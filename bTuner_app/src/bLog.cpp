@@ -1,6 +1,8 @@
 #include "bLog.h"
 #include <Windows.h>
 
+bLogWin* bLog::_bLogWin=NULL;
+
 bLogEntry::bLogEntry()
 {
 	Type = LogType::Info;
@@ -19,12 +21,12 @@ bLogEntry::bLogEntry(string _Msg, string _source, LogType _type)
 
 bLog::bLog()
 {
-	
 	MessageBoxA(NULL,"blog","blog created",MB_OK);
 };
 
 void bLog::AddLog(bLogEntry _Entry)
 {
 	bLog::Log->emplace_back(_Entry);
-
+	if(_bLogWin)
+		_bLogWin->UpdateLog();
 };

@@ -5,8 +5,6 @@
 using namespace pugi;
 
 #include "win32++/wxx_wincore.h"
-#include "win32++/wxx_file.h"
-
 
 
 class bConfig

@@ -52,8 +52,8 @@ bool bConfig::Save()
 	nSession.child("Window").child("left").text()=LastWindowPos.x;
 	nSession.child("Window").child("top").text() = LastWindowPos.y;
 
-	doc.save_file("Config.xml");
-	Succeeded = true;
+	
+	Succeeded = doc.save_file("Config.xml");
 
 	return Succeeded;
 

@@ -1,5 +1,5 @@
 #include "bTWin.h"
-
+#include "bLog.h"
 
 namespace
 {
@@ -32,7 +32,8 @@ void bTWin::OnDestroy()
 	Config.LastWindowPos.x = GetWindowRect().left;
 	Config.LastWindowPos.y = GetWindowRect().top;
 	
-	Config.Save();
+	if (!Config.Save())
+		bLog::AddLog(bLogEntry("Failed to Save Config File", "bTuner Win", LogType::Error));
 };
 
 bTWin::~bTWin()
@@ -73,7 +74,10 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	SetRect(&VolumeRect, GetClientRect().right - 120, GetClientRect().bottom - 57, GetClientRect().right - 20, GetClientRect().bottom - 43);
 	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
-	Config.Load();
+	
+	if(!Config.Load())
+		bLog::AddLog(bLogEntry("Failed to Load Config File", "bTuner Win", LogType::Error));
+
 
 	Player.SetVolume(Config.LastVolume);
 	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
@@ -82,13 +86,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.PlayingNow = new bStation;
 	Player.PlayingNow->Streams.push_back(bStream((char*)Config.LastPlayedUrl.c_str()));
 	Player.PlayingNow->Name = (char*)Config.LastPlayedName.c_str();
-	/*
-	bList.CreateEx(0, "ListBox","bList", WS_CHILD | WS_VISIBLE  | WS_HSCROLL | WS_VSCROLL | LBS_SORT  | LBS_WANTKEYBOARDINPUT, CRect(10,250,200,450), *this, NULL);;
-	bList.MoveWindow(140,0, GetClientRect().right, GetClientRect().bottom - 155);
-	bList.AddString(Player.PlayingNow->Name);
-	bList.AddString(Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Url);
-	bList.UpdateWindow();
-	*/
+
 	UpdateWindow();
 	return 0;
 };
@@ -122,20 +120,23 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Mouse.x = LOWORD(lParam);
 		Mouse.y = HIWORD(lParam);
 		if (VolumeRect.PtInRect(Mouse) && VolumeRect.PtInRect(ClickP))
+		{
 			Player.SetVolume(100 - VolumeRect.right + Mouse.x);
+			InvalidateRect(VolumeRect, TRUE);
+			break;
+		}
+			
 		if (PlayRect.PtInRect(Mouse) && !Clicked)
 		{
 			if (Player.status == eStatus::Playing)
 				Player.Stop();
 			else
 			{
-				if (Player.status == eStatus::Stoped&& Player.PlayingNow)
+				if (Player.status == eStatus::Stopped&& Player.PlayingNow)
 					Player.Resume();
 			}
 			InvalidateRect(GetClientRect(), TRUE);
 		}
-
-		InvalidateRect(VolumeRect, TRUE);
 
 		break;
 	case WM_MOUSEMOVE:
@@ -153,14 +154,14 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			Hover = bHover::None;
 		if (Clicked&&VolumeRect.PtInRect(Mouse)&& VolumeRect.PtInRect(ClickP))
 		{
-			InvalidateRect(VolumeRect, TRUE);
 			Player.SetVolume(100 - VolumeRect.right + Mouse.x);
+			InvalidateRect(VolumeRect, TRUE);
 		}
 
 		if (prv != Hover)
 		{
-			InvalidateRect(VolumeRect, TRUE);
-			InvalidateRect(PlayRect, TRUE);
+			if (Hover == bHover::Play|| prv == bHover::Play)
+				InvalidateRect(PlayRect, TRUE);
 		}
 		
 		break;
@@ -239,26 +240,30 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			// get the stream title and set sync for subsequent titles
-			Player.MetaSync(NULL, NULL, NULL, NULL);
 			BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0); // Shoutcast
 			BASS_ChannelSetSync(Player.chan, BASS_SYNC_OGG_CHANGE, 0, &g_MetaSync, 0); // Icecast/OGG
-																			  // set sync for end of stream
-			//BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &EndSync, 0);
+			BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &g_EndSync, 0);// set sync for end of stream
 			// play it!
 
 			Player.Play();
 			Player.status = eStatus::Playing;
+			Player.MetaSync(NULL, NULL, NULL, NULL);
 			this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED );
 
+			RECT cr, r;
+			cr = GetClientRect();
+			SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
+			InvalidateRect(&r, TRUE);
 		
 		}
 		else
+		{
 			Player.status = eStatus::Buffring;
-		RECT cr, r;
-		cr=GetClientRect();
-		SetRect(&r, 150, cr.bottom - 30,cr.right , cr.bottom);
-		InvalidateRect(&r, TRUE);
-		
+			RECT cr, r;
+			cr = GetClientRect();
+			SetRect(&r, 150, cr.bottom - 30, cr.right, cr.bottom);
+			InvalidateRect(&r, TRUE);
+		}
 	}
 	break;
 	case WM_DESTROY:
@@ -321,7 +326,8 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 				break;
 			if (!strnicmp(buffer, "http://", 7))
 				::SetDlgItemTextA(h, IDC_LINK, buffer);
-		}
+		}else
+				bLog::AddLog(bLogEntry("Failed to Open Clipboard", "bTuner Win", LogType::Error));
 		break;
 	case WM_CLOSE:
 		EndDialog(h, NULL);
@@ -410,11 +416,11 @@ void  bTWin::DrawPlayer(CDC& dc)
 
 
 	font.CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
 	dc.SelectObject(font);
 	dc.SetTextColor(RGB(0, 0, 0));
 	dc.SetBkMode(TRANSPARENT);
-	if (Player.status == eStatus::Stoped)
+	if (Player.status == eStatus::Stopped)
 	{
 		dc.TextOut(195, cr.bottom - 65, "Play", 4);
 
@@ -456,7 +462,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 	dc.SetTextColor(RGB(0, 0, 0));
 	dc.SetBkMode(TRANSPARENT);
 	font.CreateFontA(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
 	dc.SelectObject(font);
 
 	char bf[10];
@@ -480,7 +486,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 		dc.TextOutA(150, cr.bottom - 145, Player.PlayingNow->Name, strlen(Player.PlayingNow->Name));
 
 	font.CreateFontA(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 	dc.SelectObject(font);
 	dc.SetTextColor(RGB(180, 180, 180));
 	if (Player.status == eStatus::Buffring)
@@ -491,33 +497,33 @@ void  bTWin::DrawPlayer(CDC& dc)
 	}
 	if (Player.status == eStatus::Connecting)
 		dc.TextOutA(150, cr.bottom - 20, "Connecting...", 13);
-	if (Player.status == eStatus::Stoped)
+	if (Player.status == eStatus::Stopped)
 		dc.TextOutA(150, cr.bottom - 20, "Not Connected", 13);
 
 
 	if (Player.status == eStatus::Playing)
 	{
 		font.CreateFontA(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		dc.SelectObject(font);
 		dc.SetTextColor(RGB(200, 200, 200));
 		dc.TextOutA(150, cr.bottom - 110, Player.PlayingNow->Playing, strlen(Player.PlayingNow->Playing));
 
-		font.CreateFontA(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		font.CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		dc.SelectObject(font);
 		dc.SetTextColor(RGB(180, 180, 180));
 		dc.TextOutA(150, cr.bottom - 20, Player.PlayingNow->Url, strlen(Player.PlayingNow->Url));
 
 		CSize s = dc.GetTextExtentPoint32A(Player.PlayingNow->Url, strlen(Player.PlayingNow->Url));
-		font.CreateFontA(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
+		font.CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
 		dc.SelectObject(font);
 		dc.SetTextColor(RGB(0, 0, 0));
 		dc.SetBkColor(RGB(245, 245, 245));
 		dc.SetBkMode(OPAQUE);
 
-		char *codecT[] = { "MP3","AAC","OGG","MPEG","AAC+" };
+		char *codecT[] = { " MP3 "," AAC "," OGG "," MPEG "," AAC+ " };
 		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
 		if (c < Codecs::UNDIFINED)
 		{
@@ -527,8 +533,8 @@ void  bTWin::DrawPlayer(CDC& dc)
 		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate)
 		{
 			CSize s2 = dc.GetTextExtentPoint32A(codecT[c], strlen(codecT[c]));
-			char b[10];
-			sprintf(b, "%d Kbps", Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate);
+			char b[15];
+			sprintf(b, " %d Kbps ", Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate);
 			dc.TextOutA(150 + 10 + s.cx + 5 + s2.cx, cr.bottom - 20, b, strlen(b));
 		}
 	}

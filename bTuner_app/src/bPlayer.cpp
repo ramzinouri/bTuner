@@ -1,5 +1,5 @@
 #include "bPlayer.h"
-
+#include "bLog.h"
 
 
 
@@ -23,6 +23,15 @@ void CALLBACK  g_DownloadProc(const void *buffer, DWORD length, void *user)
 		return;
 }
 
+void CALLBACK  g_EndSync(HSYNC handle, DWORD channel, DWORD data, void *user)
+{
+	if (gp_bPlayer)
+		return gp_bPlayer->EndSync(handle, channel, data,user);
+	else
+		return;
+}
+
+
 
 bPlayer::bPlayer()
 {
@@ -31,10 +40,10 @@ bPlayer::bPlayer()
 	hwnd = NULL;
 	Volume = 100;
 	PlayingNow = NULL;
-	status = eStatus::Stoped;
+	status = eStatus::Stopped;
 	CoverLoaded = false;
 	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, 0, NULL)) {
-		MessageBoxA(hwnd,"Can't initialize device","ERROR",MB_ICONERROR);
+			bLog::AddLog(bLogEntry("Cant Initialize Bass Device", "bPlayer", LogType::Error));
 	}
 	BASS_PluginLoad("bass_aac.dll", 0);
 	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
@@ -45,13 +54,23 @@ bPlayer::bPlayer()
 
 int bPlayer::Play()
 {
+	string msg2 = "Playing : ";
+	msg2 += PlayingNow->Name;
+	char *codecT[] = { "MP3","AAC","OGG","MPEG","AAC+" };
+	int en = PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding;
+
+	CString msg;
+	msg.Format("Playing : %s  [%s,%d Kbps]",PlayingNow->Name,codecT[en], PlayingNow->Streams[PlayingNow->PlayedStreamID].Bitrate);
+	bLog::AddLog(bLogEntry(msg.c_str(), "bPlayer", LogType::Info));
 	return BASS_ChannelPlay(chan, FALSE);
 }
 
 void bPlayer::Stop()
 {
-	if(BASS_ChannelStop(chan))
-		status=eStatus::Stoped;
+	BASS_ChannelStop(chan);
+	BASS_StreamFree(chan);
+	status=eStatus::Stopped;
+	bLog::AddLog(bLogEntry("Stopped", "bPlayer", LogType::Info));
 }
 void bPlayer::Resume()
 {
@@ -83,15 +102,27 @@ void bPlayer::StaticThreadEntry(void* c)
 
 void bPlayer::OpenThread()
 {
+	std::string u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
+	string msg = "Connecting To: ";
+	msg += u;
+	bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Info));
 	status = eStatus::Connecting;
 	CoverLoaded = false;
 	KillTimer(hwnd, 0);
 	BASS_StreamFree(chan);
-	std::string u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
 	chan = BASS_StreamCreateURL(u.c_str(), 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);
 	SetVolume(Volume);
 	if (!chan)  // failed to open
-		MessageBoxA(hwnd, "Can't open stream", "ERROR", MB_ICONERROR);
+	{
+		string msg = "Can't Open Stream : ";
+		msg += u;
+		bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Error));
+		status = eStatus::Stopped;
+		RECT cr;
+		GetClientRect(hwnd, &cr);
+		InvalidateRect(hwnd, &cr, TRUE);
+	
+	}
 	else
 		SetTimer(hwnd, 0, 50, 0); // start prebuffer monitoring
 
@@ -257,6 +288,17 @@ void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 {
 
 }
+
+void bPlayer::EndSync(HSYNC handle, DWORD channel, DWORD data, void *user)
+{
+	string msg = "EndSync : ";
+	msg += PlayingNow->Name;
+	bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Info));
+	status = eStatus::Stopped;
+	RECT r;
+	GetClientRect(hwnd, &r);
+	InvalidateRect(hwnd, &r, TRUE);
+}
 void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {	
 	char *meta = (char *)BASS_ChannelGetTags(chan, BASS_TAG_META);
@@ -309,6 +351,9 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	if (!PlayingNow->Artist || !PlayingNow->Track)
 		return;
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
+	string msg = "Track : ";
+	msg += PlayingNow->Playing;
+	bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Info));
 	RECT r;
 	GetClientRect(hwnd, &r);
 	InvalidateRect(hwnd,&r, TRUE);
