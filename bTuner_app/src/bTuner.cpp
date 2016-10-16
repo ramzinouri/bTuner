@@ -18,7 +18,7 @@ bTuner::~bTuner()
 
 BOOL bTuner::InitInstance()
 {
-	bLog::AddLog(bLogEntry("bTuner v0.0.0.1 Started", "bTuner App", LogType::Info));
+	bLog::AddLog(bLogEntry(L"bTuner v0.0.0.1 Started", L"bTuner App", LogType::Info));
 	_bTWin=new bTWin;
 	
 
@@ -33,7 +33,7 @@ BOOL bTuner::InitInstance()
 		if (!_bLogWin->GetHwnd())
 		{
 			//::MessageBox(NULL, _T("Failed to create Frame window"), _T("ERROR"), MB_ICONERROR);
-			bLog::AddLog(bLogEntry("Failed to create Log window", "bTuner App", LogType::Error));
+			bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", LogType::Error));
 			return FALSE;
 		}
 	}
@@ -43,7 +43,7 @@ BOOL bTuner::InitInstance()
 	if (!_bTWin->GetHwnd())
 	{
 		//::MessageBox(NULL, _T("Failed to create Frame window"), _T("ERROR"), MB_ICONERROR);
-		bLog::AddLog(bLogEntry("Failed to create Main window", "bTuner App", LogType::Error));
+		bLog::AddLog(bLogEntry(L"Failed to create Main window", L"bTuner App", LogType::Error));
 		return FALSE;
 	}
 

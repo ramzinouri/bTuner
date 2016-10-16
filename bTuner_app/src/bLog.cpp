@@ -9,7 +9,7 @@ bLogEntry::bLogEntry()
 	time(&Time);
 };
 
-bLogEntry::bLogEntry(string _Msg, string _source, LogType _type)
+bLogEntry::bLogEntry(wstring _Msg, wstring _source, LogType _type)
 {
 	Msg = _Msg;
 	Source = _source;

@@ -20,7 +20,7 @@ void bLogWin::UpdateLog()
 		struct tm*  timeinfo;
 		timeinfo = localtime(&bLog::Log->at(i).Time);
 		CString ms;
-		ms.Format("%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+		ms.Format(L"%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 		ms  += bLog::Log->at(i).Msg.c_str();
 		_bLogList.InsertString(i,ms.c_str());
 	}
@@ -35,13 +35,13 @@ void bLogWin::PreRegisterClass(WNDCLASS &wc)
     wc.cbWndExtra=0;
 	wc.hIcon=LoadIconA(::GetModuleHandle(NULL),MAKEINTRESOURCEA(IDI_ICON));
 	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(255,255,255));
-	wc.lpszClassName="bTuner_log";
+	wc.lpszClassName=L"bTuner_log";
 };
 
 void bLogWin::PreCreate(CREATESTRUCT &cs)
 {
-	cs.lpszClass="bTuner_log";
-	cs.lpszName="bTuner Log";
+	cs.lpszClass=L"bTuner_log";
+	cs.lpszName=L"bTuner Log";
 	cs.style= WS_TILEDWINDOW |WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 };
 

@@ -17,8 +17,8 @@ public:
 	void Default();
 	int LastVolume;
 	CPoint LastWindowPos;
-	std::string LastPlayedName;
-	std::string LastPlayedUrl;
+	std::wstring LastPlayedName;
+	std::wstring LastPlayedUrl;
 	char *buf;
 	
 };

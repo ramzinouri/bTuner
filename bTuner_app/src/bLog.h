@@ -18,11 +18,11 @@ class bLogEntry
 {
 public:
 	bLogEntry();
-	bLogEntry(string _Msg, string _source, LogType _type);
+	bLogEntry(wstring _Msg, wstring _source, LogType _type);
 
 
-	string Msg;
-	string Source;
+	wstring Msg;
+	wstring Source;
 	LogType Type;
 	time_t Time;
 };

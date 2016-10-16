@@ -8,8 +8,9 @@
 #include <process.h>
 #include <cctype>
 #include <iomanip>
-#include <sstream>
 #include <string>
+#include <locale>
+#include <codecvt>
 
 #include "pugixml/pugixml.hpp"
 using namespace pugi;
@@ -35,7 +36,7 @@ public:
 	HSTREAM chan;
 	eStatus status;
 	bStation *PlayingNow;
-	std::string CoverUrl;
+	std::wstring CoverUrl;
 	bool CoverLoaded;
 	int BuffProgress;
 	bPlayer();
@@ -43,7 +44,7 @@ public:
 	int Play();
 	void Stop();
 	void Resume();
-	void OpenURL(char *URL);
+	void OpenURL(std::wstring URL);
 	void OpenThread();
 	static void StaticThreadEntry(void* c);
 	int GetVolume();
@@ -55,7 +56,7 @@ public:
 	void EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 private:
 	int Volume;
-	std::string url_encode(const std::string &value);
+	std::string url_encode(const std::wstring &input);
 };
 
 #endif

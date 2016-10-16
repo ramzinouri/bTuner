@@ -7,8 +7,8 @@ enum Codecs{MP3,AAC,OGG,MPEG,AACP,UNDIFINED};
 class bStream
 {
 public:
-	bStream(char *URL);
-	char * Url;
+	bStream(std::wstring URL);
+	std::wstring  Url;
 	int Bitrate;
 	Codecs Encoding;
 };
@@ -18,16 +18,16 @@ class bStation
 public:
 	bStation();
 	virtual ~bStation();
-	char *Name;
-	char *Genre;
-	char *Url;
-	char *Notice1;
-	char *Notice2;
+	std::wstring Name;
+	std::wstring Genre;
+	std::wstring Url;
+	std::wstring Notice1;
+	std::wstring Notice2;
 	int Public;
 	int PlayedStreamID;
-	char *Playing;
-	char *Artist;
-	char *Track;
+	std::wstring Playing;
+	std::wstring Artist;
+	std::wstring Track;
 
 	std::vector<bStream> Streams;
 

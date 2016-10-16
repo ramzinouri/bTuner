@@ -20,12 +20,12 @@ bool bConfig::Load()
 	
 		if (result)
 		{
-			xml_node nSession = doc.child("bTuner").child("Session");
-			LastVolume = nSession.child("Volume").text().as_int();
-			LastPlayedName = nSession.child("Station").child("Name").text().as_string();
-			LastPlayedUrl = nSession.child("Station").child("Url").text().as_string();
-			LastWindowPos.x = nSession.child("Window").child("left").text().as_int();
-			LastWindowPos.y = nSession.child("Window").child("top").text().as_int();
+			xml_node nSession = doc.child(L"bTuner").child(L"Session");
+			LastVolume = nSession.child(L"Volume").text().as_int();
+			LastPlayedName = nSession.child(L"Station").child(L"Name").text().as_string();
+			LastPlayedUrl = nSession.child(L"Station").child(L"Url").text().as_string();
+			LastWindowPos.x = nSession.child(L"Window").child(L"left").text().as_int();
+			LastWindowPos.y = nSession.child(L"Window").child(L"top").text().as_int();
 		}
 		else
 			Default();
@@ -44,13 +44,13 @@ bool bConfig::Save()
 
 	xml_document doc;
 	xml_parse_result result = doc.load_file("Config.xml");
-	xml_node nSession = doc.child("bTuner").child("Session");
+	xml_node nSession = doc.child(L"bTuner").child(L"Session");
 
-	nSession.child("Volume").text() = LastVolume;
-	nSession.child("Station").child("Name").text()=LastPlayedName.c_str();
-	nSession.child("Station").child("Url").text()=LastPlayedUrl.c_str();
-	nSession.child("Window").child("left").text()=LastWindowPos.x;
-	nSession.child("Window").child("top").text() = LastWindowPos.y;
+	nSession.child(L"Volume").text() = LastVolume;
+	nSession.child(L"Station").child(L"Name").text()=LastPlayedName.c_str();
+	nSession.child(L"Station").child(L"Url").text()=LastPlayedUrl.c_str();
+	nSession.child(L"Window").child(L"left").text()=LastWindowPos.x;
+	nSession.child(L"Window").child(L"top").text() = LastWindowPos.y;
 
 	
 	Succeeded = doc.save_file("Config.xml");
@@ -63,30 +63,30 @@ bool bConfig::Save()
 void bConfig::Default()
 {
 	LastVolume = 100;
-	LastPlayedName ="";
-	LastPlayedUrl = "";
+	LastPlayedName =L"";
+	LastPlayedUrl = L"";
 	LastWindowPos.x = 0;
 	LastWindowPos.y = 0;
 	xml_document doc;
-	doc.append_child("bTuner");
-	xml_node nSession = doc.child("bTuner").append_child("Session");
-	nSession.append_child("Station");
-	nSession.child("Station").append_child("Name");
-	nSession.child("Station").child("Name").append_child(pugi::node_pcdata);
-	nSession.child("Station").append_child("Url");
-	nSession.child("Station").child("Url").append_child(pugi::node_pcdata);
-	nSession.append_child("Window");
-	nSession.child("Window").append_child("top");
-	nSession.child("Window").child("top").append_child(pugi::node_pcdata);
-	nSession.child("Window").append_child("left");
-	nSession.child("Window").child("left").append_child(pugi::node_pcdata);
-	nSession.append_child("Volume");
-	nSession.child("Volume").append_child(pugi::node_pcdata);
-	nSession.child("Volume").text() = LastVolume;
-	nSession.child("Station").child("Name").text() = LastPlayedName.c_str();
-	nSession.child("Station").child("Url").text() = LastPlayedUrl.c_str();
-	nSession.child("Window").child("left").text() = LastWindowPos.x;
-	nSession.child("Window").child("top").text() = LastWindowPos.y;
+	doc.append_child(L"bTuner");
+	xml_node nSession = doc.child(L"bTuner").append_child(L"Session");
+	nSession.append_child(L"Station");
+	nSession.child(L"Station").append_child(L"Name");
+	nSession.child(L"Station").child(L"Name").append_child(pugi::node_pcdata);
+	nSession.child(L"Station").append_child(L"Url");
+	nSession.child(L"Station").child(L"Url").append_child(pugi::node_pcdata);
+	nSession.append_child(L"Window");
+	nSession.child(L"Window").append_child(L"top");
+	nSession.child(L"Window").child(L"top").append_child(pugi::node_pcdata);
+	nSession.child(L"Window").append_child(L"left");
+	nSession.child(L"Window").child(L"left").append_child(pugi::node_pcdata);
+	nSession.append_child(L"Volume");
+	nSession.child(L"Volume").append_child(pugi::node_pcdata);
+	nSession.child(L"Volume").text() = LastVolume;
+	nSession.child(L"Station").child(L"Name").text() = LastPlayedName.c_str();
+	nSession.child(L"Station").child(L"Url").text() = LastPlayedUrl.c_str();
+	nSession.child(L"Window").child(L"left").text() = LastWindowPos.x;
+	nSession.child(L"Window").child(L"top").text() = LastWindowPos.y;
 
 	doc.save_file("Config.xml");
 }

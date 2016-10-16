@@ -19,12 +19,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int 
 	HANDLE hMutex;
 	DWORD  dwReturn;
 	BOOL   fGotMutex;
-	char   szAppname[_MAX_PATH];
-	char   szFname[_MAX_FNAME];
-	GetModuleFileNameA(GetModuleHandle(NULL), szAppname,sizeof(szAppname));
-	_splitpath(szAppname, NULL, NULL, szFname, NULL);
-	strupr(szFname);
-	hMutex = CreateMutexA(NULL,FALSE,szFname);
+	wchar_t   szAppname[_MAX_PATH];
+	wchar_t   szFname[_MAX_FNAME];
+	GetModuleFileName(GetModuleHandle(NULL), szAppname,sizeof(szAppname));
+	_wsplitpath(szAppname, NULL, NULL, szFname, NULL);
+	wcsupr(szFname);
+	hMutex = CreateMutex(NULL,FALSE,szFname);
 	dwReturn = WaitForSingleObject(hMutex,500);
 	fGotMutex = (dwReturn == WAIT_OBJECT_0) || (dwReturn == WAIT_ABANDONED);
 	if (fGotMutex)
@@ -44,7 +44,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int 
 	}
 	else
 	{
-		::MessageBoxA(NULL,"bTuner already running","Error",MB_ICONERROR);
+		::MessageBox(NULL,L"bTuner already running",L"Error",MB_ICONERROR);
 		return -1;
 	};
 	return 0;

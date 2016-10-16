@@ -43,7 +43,7 @@ bPlayer::bPlayer()
 	status = eStatus::Stopped;
 	CoverLoaded = false;
 	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, 0, NULL)) {
-			bLog::AddLog(bLogEntry("Cant Initialize Bass Device", "bPlayer", LogType::Error));
+			bLog::AddLog(bLogEntry(L"Cant Initialize Bass Device", L"bPlayer", LogType::Error));
 	}
 	BASS_PluginLoad("bass_aac.dll", 0);
 	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
@@ -54,14 +54,9 @@ bPlayer::bPlayer()
 
 int bPlayer::Play()
 {
-	string msg2 = "Playing : ";
-	msg2 += PlayingNow->Name;
-	char *codecT[] = { "MP3","AAC","OGG","MPEG","AAC+" };
-	int en = PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding;
-
-	CString msg;
-	msg.Format("Playing : %s  [%s,%d Kbps]",PlayingNow->Name,codecT[en], PlayingNow->Streams[PlayingNow->PlayedStreamID].Bitrate);
-	bLog::AddLog(bLogEntry(msg.c_str(), "bPlayer", LogType::Info));
+	wstring msg = L"Playing : ";
+	msg += PlayingNow->Name;
+	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
 	return BASS_ChannelPlay(chan, FALSE);
 }
 
@@ -70,14 +65,14 @@ void bPlayer::Stop()
 	BASS_ChannelStop(chan);
 	BASS_StreamFree(chan);
 	status=eStatus::Stopped;
-	bLog::AddLog(bLogEntry("Stopped", "bPlayer", LogType::Info));
+	bLog::AddLog(bLogEntry(L"Stopped", L"bPlayer", LogType::Info));
 }
 void bPlayer::Resume()
 {
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Openurl);
 }
 
-void bPlayer::OpenURL(char *URL)
+void bPlayer::OpenURL(wstring URL)
 {
 	if (PlayingNow)
 		delete PlayingNow;
@@ -102,11 +97,14 @@ void bPlayer::StaticThreadEntry(void* c)
 
 void bPlayer::OpenThread()
 {
-	std::string u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
-	string msg = "Connecting To: ";
+	std::wstring u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
+	wstring msg = L"Connecting To: ";
 	msg += u;
-	bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Info));
+	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
 	status = eStatus::Connecting;
+	RECT cr;
+	GetClientRect(hwnd, &cr);
+	InvalidateRect(hwnd, &cr, TRUE);
 	CoverLoaded = false;
 	KillTimer(hwnd, 0);
 	BASS_StreamFree(chan);
@@ -114,9 +112,9 @@ void bPlayer::OpenThread()
 	SetVolume(Volume);
 	if (!chan)  // failed to open
 	{
-		string msg = "Can't Open Stream : ";
+		wstring msg = L"Can't Open Stream : ";
 		msg += u;
-		bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Error));
+		bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Error));
 		status = eStatus::Stopped;
 		RECT cr;
 		GetClientRect(hwnd, &cr);
@@ -132,25 +130,18 @@ bool bPlayer::FetchCover()
 	CSocket soc;
 	std::string req;
 	req += "GET /2.0/?method=album.search&album=";
-	string pl = PlayingNow->Artist,tr=PlayingNow->Track;
-	if (tr.find("(")!= std::string::npos)
-		tr.erase(tr.find("("),tr.length());
-	pl += " ";
-	pl+=tr;
-	req += url_encode(pl);
-	req+="&api_key=c4eeb5aa39807b0d21d420ab64b42bf6&limit=1&page=1";
+	req += url_encode(PlayingNow->Playing);
+	req += "&api_key=c4eeb5aa39807b0d21d420ab64b42bf6&limit=1&page=1";
 	req += " HTTP/1.1\r\nHost: ws.audioscrobbler.com\r\nConnection: Close\r\n\r\n";
 	soc.Create(AF_INET,SOCK_STREAM, IPPROTO_TCP);
-	ADDRINFO Hints;
+	ADDRINFOW Hints;
 	ZeroMemory(&Hints, sizeof(ADDRINFO));
 	Hints.ai_family = AF_UNSPEC;
 	Hints.ai_socktype = SOCK_STREAM;
 	Hints.ai_protocol = IPPROTO_TCP;
-	ADDRINFO *AddrInfo;
+	ADDRINFOW *AddrInfo;
 
-	CString csPort;
-	csPort.Format(_T("%u"), 80);
-	int RetVal = GetAddrInfo("ws.audioscrobbler.com", csPort, &Hints, &AddrInfo);
+	int RetVal = GetAddrInfo(L"ws.audioscrobbler.com", L"80", &Hints, &AddrInfo);
 
 
 	RetVal = soc.Connect(AddrInfo->ai_addr, (int)AddrInfo->ai_addrlen);
@@ -166,8 +157,10 @@ bool bPlayer::FetchCover()
 	xml_parse_result result = doc.load_buffer(p+4,strlen(p+4));
 	if (result)
 	{
-		xml_node album= doc.child("lfm").child("results").child("albummatches").first_child();
-		CoverUrl=album.find_child_by_attribute("size", "large").text().as_string();
+		xml_node album= doc.child(L"lfm").child(L"results").child(L"albummatches").first_child();
+
+		CoverUrl=album.find_child_by_attribute(L"size", L"large").text().as_string();
+
 		if (CoverUrl.length() > 0)
 			_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Downloadcover);
 		else
@@ -187,8 +180,10 @@ bool bPlayer::DownloadCover()
 {
 	CSocket soc;
 	std::string host,get;
-	host = CoverUrl;
-	host.erase(0,CoverUrl.find(":")+3);
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv1;
+	std::string u8str = conv1.to_bytes(CoverUrl);
+	host = u8str;
+	host.erase(0, u8str.find(":")+3);
 	get = host;
 	host.erase(host.find("/"),host.length());
 	get.erase(0,get.find("/") );
@@ -196,17 +191,17 @@ bool bPlayer::DownloadCover()
 	std::string req;
 	req += "GET "+get;
 	req += " HTTP/1.1\r\nHost: "+host+"\r\nConnection: keep-alive\r\n\r\n";
+
 	soc.Create(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	ADDRINFO Hints;
+	ADDRINFOA Hints;
 	ZeroMemory(&Hints, sizeof(ADDRINFO));
 	Hints.ai_family = AF_UNSPEC;
 	Hints.ai_socktype = SOCK_STREAM;
 	Hints.ai_protocol = IPPROTO_TCP;
-	ADDRINFO *AddrInfo;
+	ADDRINFOA *AddrInfo;
 
-	CString csPort;
-	csPort.Format(_T("%u"), 80);
-	int RetVal = GetAddrInfo(host.c_str(), csPort, &Hints, &AddrInfo);
+
+	int RetVal = GetAddrInfoA(host.c_str(), "80", &Hints, &AddrInfo);
 
 	RetVal = soc.Connect(AddrInfo->ai_addr, (int)AddrInfo->ai_addrlen);
 	soc.Send(req.c_str(), req.length(), NULL);
@@ -214,7 +209,7 @@ bool bPlayer::DownloadCover()
 	memset(buffer, 0, 2048);
 	int nDataLength, st, trec = 0, datalen = 0;
 	CFile file;
-	file.Open("cover.png", CFile::modeCreate | CFile::modeWrite);
+	file.Open(L"cover.png", CFile::modeCreate | CFile::modeWrite);
 
 	st = soc.Receive(buffer, 2048, 0);
 	nDataLength = soc.Receive(buffer+st, 2048-st, 0);
@@ -246,27 +241,21 @@ bool bPlayer::DownloadCover()
 	return true;
 }
 
-std::string bPlayer::url_encode(const std::string &value) {
-	std::ostringstream escaped;
-	escaped.fill('0');
-	escaped << hex;
-
-	for (std::string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
-		std::string::value_type c = (*i);
-
-		// Keep alphanumeric and other accepted characters intact
-		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-			escaped << c;
-			continue;
+std::string bPlayer::url_encode(const std::wstring &input) {
+	std::string output;
+	int cbNeeded = WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, NULL);
+	if (cbNeeded > 0) {
+		char *utf8 = new char[cbNeeded];
+		if (WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, utf8, cbNeeded, NULL, NULL) != 0) {
+			for (char *p = utf8; *p; *p++) {
+				char onehex[5];
+				_snprintf(onehex, sizeof(onehex), "%%%02.2X", (unsigned char)*p);
+				output.append(onehex);
+			}
 		}
-
-		// Any other characters are percent-encoded
-		escaped << uppercase;
-		escaped << '%' << setw(2) << int((unsigned char)c);
-		escaped << nouppercase;
+		delete[] utf8;
 	}
-
-	return escaped.str();
+	return output;
 }
 
 int bPlayer::GetVolume()
@@ -291,9 +280,9 @@ void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 
 void bPlayer::EndSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {
-	string msg = "EndSync : ";
+	wstring msg = L"EndSync : ";
 	msg += PlayingNow->Name;
-	bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Info));
+	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
 	status = eStatus::Stopped;
 	RECT r;
 	GetClientRect(hwnd, &r);
@@ -311,12 +300,12 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 				t[p2 - (p + 13)] = 0;
 				char *pl = new char[strlen(t)+1];
 				memcpy(pl, t, strlen(t) + 1);
-				PlayingNow->Playing = pl;
+				PlayingNow->Playing = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(pl);
 				p = strstr(t, "-");
 				if (p) {
 					p[-1] = 0;
-					PlayingNow->Artist = t;
-					PlayingNow->Track = p + 2;
+					PlayingNow->Artist = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(t);
+					PlayingNow->Track = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(p+2);
 				}
 
 			}
@@ -333,27 +322,23 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 					title = p + 6;
 			}
 			if (title) {
-				PlayingNow->Track = title;
+				
+				PlayingNow->Track = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(title);
 				if (artist) {
-					PlayingNow->Artist = artist;
-					char text[100];
-					memset(text, 0, 100);
-					_snprintf_s(text, sizeof(text), "%s - %s", artist, title);
-					char *pl = new char[strlen(text) + 1];
-					memcpy(pl, text, strlen(text) + 1);
-					PlayingNow->Playing=pl;
+					PlayingNow->Artist = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(artist);
+					PlayingNow->Playing= PlayingNow->Artist+L" - "+ PlayingNow->Track;
 				}
  				else
-					PlayingNow->Playing = title;
+					PlayingNow->Playing = PlayingNow->Track;
 			}
 		}
 	}
-	if (!PlayingNow->Artist || !PlayingNow->Track)
+	if (!PlayingNow->Artist.size() || !PlayingNow->Track.size())
 		return;
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
-	string msg = "Track : ";
+	wstring msg = L"Track : ";
 	msg += PlayingNow->Playing;
-	bLog::AddLog(bLogEntry(msg, "bPlayer", LogType::Info));
+	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
 	RECT r;
 	GetClientRect(hwnd, &r);
 	InvalidateRect(hwnd,&r, TRUE);
