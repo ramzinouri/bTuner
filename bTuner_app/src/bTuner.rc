@@ -118,13 +118,14 @@ CAPTION "About bTuner"
 FONT 10, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Close",IDCANCEL,179,64,50,14
-    LTEXT           "bTuner",IDC_STATIC,42,11,24,9
-    LTEXT           "bl_ackrain@yahoo.com",IDC_STATIC,16,37,75,8
+    LTEXT           "bTuner",IDC_APP_NAME,41,8,90,19
     ICON            IDI_ICON,IDC_STATIC,15,10,20,20
-    LTEXT           "2016 (C)    bl_ackrain  GPLv3",IDC_STATIC,16,67,93,8,WS_DISABLED
+    LTEXT           "Copyright (C) 2016 bl_ackrain",IDC_STATIC,16,58,120,8
     CONTROL         "<a href=""http://www.un4seen.com"">Bass Library and plugins</a>",IDC_SYSLINK2,
-                    "SysLink",WS_TABSTOP,16,55,100,9
-    LTEXT           "Version: 0.0.0.1",IDC_STATIC,42,22,53,8
+                    "SysLink",WS_TABSTOP,16,40,100,9
+    LTEXT           "Version: 0.0.0.1",IDC_STATIC,42,25,53,8
+    CONTROL         "Distributed under <a href=""http://www.gnu.org/licenses/gpl-3.0.html"">GNU GPLv3</a>",IDC_SYSLINK3,
+                    "SysLink",WS_TABSTOP,16,67,100,9
 END
 
 IDD_DIALOG_OPENURL DIALOGEX 0, 0, 245, 55
@@ -176,8 +177,8 @@ BEGIN
     0,
     0, 0, 0, 0,
     0, 0, 0, 0,
-    0, 0, 0, 0,
     0, 0, 100, 100,
+    0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0

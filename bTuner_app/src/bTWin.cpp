@@ -87,6 +87,18 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.PlayingNow->Streams.push_back(bStream(Config.LastPlayedUrl));
 	Player.PlayingNow->Name = Config.LastPlayedName;
 
+	
+	bList.Create(*this);
+	bList.SetWindowLong(GCL_HBRBACKGROUND, (LONG)CreateSolidBrush(RGB(0, 0, 0)));
+	bList.MoveWindow(150,0,GetClientRect().Width()-150,GetClientRect().Height()-150);
+#ifdef _DEBUG
+	bList.AddString(L"http://7619.live.streamtheworld.com:80/977_HITS_SC");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio1.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio2.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio2.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio4.mp3");
+#endif
+
 	UpdateWindow();
 	return 0;
 };
@@ -103,8 +115,23 @@ void bTWin::OnDraw(CDC& dc)
 LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	int prv;
+	PDRAWITEMSTRUCT pdis;
+	PMEASUREITEMSTRUCT pmis;
 	switch (uMsg)
 	{
+	case WM_MEASUREITEM:
+
+		pmis = (PMEASUREITEMSTRUCT)lParam;
+
+		// Set the height of the list box items. 
+		pmis->itemHeight = 30;
+		return TRUE;
+	case WM_DRAWITEM:
+
+		pdis = (PDRAWITEMSTRUCT)lParam;
+		if (pdis->hwndItem == bList)
+			bList.DrawItem(wParam, lParam);
+		break;
 	case WM_LBUTTONDOWN:
 		Clicked = TRUE;
 		ClickP.x = LOWORD(lParam);
@@ -265,8 +292,14 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return WndProcDefault(uMsg, wParam, lParam);
 };
 
+LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
+{
+	return NULL;
+}
+
 BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 {
+	TCHAR Buffer[MAX_PATH];
 	switch (LOWORD(wParam))
 	{
 	case ID_PLAYBACK_RESUME:
@@ -299,12 +332,20 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		break;
 		
 	}
+	switch (HIWORD(wParam))
+	{
+	case LBN_DBLCLK:
+		bList.GetText(bList.GetCurSel(),Buffer);
+		Player.OpenURL(Buffer);
+		break;
+	}
 	return TRUE;
 };
 
 INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 {
 	RECT rcOwner, rcDlg,rc;
+	HFONT font;
 	switch (m) {
 	case WM_INITDIALOG:
 
@@ -329,6 +370,11 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 				::SetDlgItemTextA(h, IDC_LINK, buffer);
 		}else
 				bLog::AddLog(bLogEntry(L"Failed to Open Clipboard", L"bTuner Win", LogType::Error));
+
+		font=::CreateFont(40, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+		//::GetDlgItem(h,IDC_STATIC);
+		::SendDlgItemMessageW(h, IDC_APP_NAME, WM_SETFONT, WPARAM(font), TRUE);
+
 		break;
 	case WM_CLOSE:
 		EndDialog(h, NULL);
@@ -337,7 +383,7 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 		switch (((LPNMHDR)l)->code)
 		{
 		  case NM_CLICK:
-			  if (((LPNMHDR)l)->idFrom == IDC_SYSLINK2)
+			  if (((LPNMHDR)l)->idFrom == IDC_SYSLINK2|| ((LPNMHDR)l)->idFrom == IDC_SYSLINK3)
 			  {
 				
 				  PNMLINK pNMLink = (PNMLINK)((LPNMHDR)l);

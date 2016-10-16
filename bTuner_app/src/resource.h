@@ -9,6 +9,8 @@
 #define IDC_SYSLINK2                    1001
 #define IDC_EDIT1                       1002
 #define IDC_LINK                        1002
+#define IDC_SYSLINK3                    1002
+#define IDC_APP_NAME                    1003
 #define ID_FILE_OPEN_URL                32773
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
@@ -23,7 +25,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40003
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1004
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

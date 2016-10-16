@@ -12,6 +12,7 @@ using namespace Gdiplus;
 #include "resource.h"
 #include "bPlayer.h"
 #include "bConfig.h"
+#include "bRadioList.h"
 
 
 enum bHover { None, Play, Volume, CoverArt };
@@ -32,6 +33,7 @@ protected:
 	int  OnCreate(CREATESTRUCT& cs);
 	void OnDestroy();
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+	LRESULT OnNotify(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
 	void DrawPlayer(CDC& dc);
 
@@ -44,7 +46,7 @@ private:
 	bConfig Config;
 	GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR           gdiplusToken;
-	CListBox bList;
+	bRadioList bList;
 };
 
 #endif
