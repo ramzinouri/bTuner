@@ -64,6 +64,7 @@ void bPlayer::Stop()
 	BASS_StreamFree(chan);
 	status=eStatus::Stopped;
 	bLog::AddLog(bLogEntry(L"Stopped", L"bPlayer", LogType::Info));
+	::SetWindowText(hwnd, L".:: bTuner ::.");
 }
 void bPlayer::Resume()
 {
@@ -97,6 +98,7 @@ void bPlayer::OpenThread()
 {
 	std::wstring u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
 	bLog::AddLog(bLogEntry(L"Connecting To: " + u, L"bPlayer", LogType::Info));
+	::SetWindowText(hwnd, L".:: bTuner ::.");
 	status = eStatus::Connecting;
 	RECT cr;
 	GetClientRect(hwnd, &cr);
@@ -295,6 +297,7 @@ void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 void bPlayer::EndSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {
 	bLog::AddLog(bLogEntry(L"EndSync : " + PlayingNow->Name, L"bPlayer", LogType::Info));
+	::SetWindowText(hwnd, L".:: bTuner ::.");
 	status = eStatus::Stopped;
 	RECT r;
 	GetClientRect(hwnd, &r);
@@ -350,6 +353,8 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
 
 	bLog::AddLog(bLogEntry(L"Track : " + PlayingNow->Playing, L"bPlayer", LogType::Info));
+	std::wstring tit= PlayingNow->Playing + L" -- .:: bTuner ::.";
+	::SetWindowText(hwnd, tit.c_str());
 	RECT r;
 	GetClientRect(hwnd, &r);
 	InvalidateRect(hwnd,&r, TRUE);

@@ -22,6 +22,7 @@ bTWin::bTWin()
 	Clicked = FALSE;
 	Mouse.x = 0;
 	Mouse.y = 0;
+	Playlist = NULL;
 };
 void bTWin::OnDestroy()
 {
@@ -59,9 +60,9 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 	cs.dwExStyle = WS_EX_ACCEPTFILES;
 	cs.lpszClass=L"bTuner";
 #ifdef  _DEBUG
-	cs.lpszName = L"[Debug] .:: bTuner ::. V 0.0.0.1";
+	cs.lpszName = L"[Debug] .:: bTuner ::.";
 #else
-	cs.lpszName = L".:: bTuner ::. V 0.0.0.1";
+	cs.lpszName = L".:: bTuner ::.";
 #endif
 	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 	cs.cx=700;
@@ -93,6 +94,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	bList.SetWindowLong(GCL_HBRBACKGROUND, (LONG)CreateSolidBrush(RGB(0, 0, 0)));
 	bList.MoveWindow(150,0,GetClientRect().Width()-150,GetClientRect().Height()-150);
 #ifdef _DEBUG
+	/*
 	bList.AddString(L"http://7619.live.streamtheworld.com:80/977_HITS_SC");
 	bList.AddString(L"http://dir.xiph.org/listen/1313/listen.m3u");
 	bList.AddString(L"http://stream01.iloveradio.de/iloveradio1.mp3");
@@ -105,8 +107,15 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	bList.AddString(L"http://stream01.iloveradio.de/iloveradio8.mp3");
 	bList.AddString(L"http://stream01.iloveradio.de/iloveradio9.mp3");
 	bList.AddString(L"http://stream01.iloveradio.de/iloveradio10.mp3");
-
+	*/
+	
 #endif
+	Playlist = new bPlaylist;
+	Playlist->LoadFile(L"Fav.pls");
+	for (int i = 0; i < Playlist->Stations.size(); i++)
+	{
+		bList.AddString(Playlist->Stations[i].Name.c_str());
+}
 
 	UpdateWindow();
 	return 0;
@@ -355,8 +364,8 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 	switch (HIWORD(wParam))
 	{
 	case LBN_DBLCLK:
-		bList.GetText(bList.GetCurSel(),Buffer);
-		Player.OpenURL(Buffer);
+		
+		Player.OpenURL(Playlist->Stations[bList.GetCurSel()].Streams[0].Url);
 		break;
 	}
 	return TRUE;
@@ -569,7 +578,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		dc.SelectObject(font);
 		dc.SetTextColor(RGB(200, 200, 200));
-		dc.TextOut(150, cr.bottom - 110, Player.PlayingNow->Playing.c_str(), Player.PlayingNow->Playing.size());
+		dc.TextOut(150, cr.bottom - 105, Player.PlayingNow->Playing.c_str(), Player.PlayingNow->Playing.size());
 
 		font.CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));

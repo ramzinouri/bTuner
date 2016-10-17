@@ -13,6 +13,7 @@ using namespace Gdiplus;
 #include "bPlayer.h"
 #include "bConfig.h"
 #include "bRadioList.h"
+#include "bPlaylist.h"
 
 
 enum bHover { None, Play, Volume, CoverArt };
@@ -47,6 +48,7 @@ private:
 	GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR           gdiplusToken;
 	bRadioList bList;
+	bPlaylist* Playlist;
 };
 
 #endif

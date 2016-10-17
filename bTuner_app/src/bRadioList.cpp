@@ -12,7 +12,7 @@ bRadioList::~bRadioList()
 
 void bRadioList::PreCreate(CREATESTRUCT &cs)
 {
-	cs.style = WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOTIFY | LBS_SORT;
+	cs.style = WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOTIFY ;
 };
 
 void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
