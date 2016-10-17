@@ -57,6 +57,7 @@ public:
 private:
 	int Volume;
 	std::string url_encode(const std::wstring &input);
+	std::wostringstream playlistbuffer;
 };
 
 #endif

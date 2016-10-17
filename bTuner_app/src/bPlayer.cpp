@@ -54,9 +54,7 @@ bPlayer::bPlayer()
 
 int bPlayer::Play()
 {
-	wstring msg = L"Playing : ";
-	msg += PlayingNow->Name;
-	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
+	bLog::AddLog(bLogEntry(L"Playing : " + PlayingNow->Name, L"bPlayer", LogType::Info));
 	return BASS_ChannelPlay(chan, FALSE);
 }
 
@@ -98,9 +96,7 @@ void bPlayer::StaticThreadEntry(void* c)
 void bPlayer::OpenThread()
 {
 	std::wstring u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
-	wstring msg = L"Connecting To: ";
-	msg += u;
-	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
+	bLog::AddLog(bLogEntry(L"Connecting To: " + u, L"bPlayer", LogType::Info));
 	status = eStatus::Connecting;
 	RECT cr;
 	GetClientRect(hwnd, &cr);
@@ -112,9 +108,8 @@ void bPlayer::OpenThread()
 	SetVolume(Volume);
 	if (!chan)  // failed to open
 	{
-		wstring msg = L"Can't Open Stream : ";
-		msg += u;
-		bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Error));
+
+		bLog::AddLog(bLogEntry(L"Can't Open Stream : " + u, L"bPlayer", LogType::Error));
 		status = eStatus::Stopped;
 		RECT cr;
 		GetClientRect(hwnd, &cr);
@@ -130,7 +125,12 @@ bool bPlayer::FetchCover()
 	CSocket soc;
 	std::string req;
 	req += "GET /2.0/?method=album.search&album=";
-	req += url_encode(PlayingNow->Playing);
+	std::wstring ser = PlayingNow->Artist + L" ";
+	std::wstring tr = PlayingNow->Track;
+	if (tr.find(L"(") != std::wstring::npos)
+		tr.erase(tr.find(L"("), tr.length());
+	ser += tr;
+	req += url_encode(ser);
 	req += "&api_key=c4eeb5aa39807b0d21d420ab64b42bf6&limit=1&page=1";
 	req += " HTTP/1.1\r\nHost: ws.audioscrobbler.com\r\nConnection: Close\r\n\r\n";
 	soc.Create(AF_INET,SOCK_STREAM, IPPROTO_TCP);
@@ -275,14 +275,26 @@ void bPlayer::SetVolume(int Vol)
 }
 void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 {
+	char *uuu = (char*)buffer,*t;
+	if (buffer && !length)
+	{
+		for (; *uuu; uuu += strlen(uuu) + 1) {
+			if (!strnicmp(uuu, "icy-name:", 9))
+				t = (char*)uuu + 9;
+			if (!strnicmp(uuu, "icy-url:", 8))
+				t = (char*)uuu + 8;
+			if (!strnicmp(uuu, "icy-br:", 7))
+				t = uuu + 7;
+			if (!strnicmp(uuu, "icy-genre:", 10))
+				t = (char*)uuu + 10;
+		}
+	}
 
 }
 
 void bPlayer::EndSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {
-	wstring msg = L"EndSync : ";
-	msg += PlayingNow->Name;
-	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
+	bLog::AddLog(bLogEntry(L"EndSync : " + PlayingNow->Name, L"bPlayer", LogType::Info));
 	status = eStatus::Stopped;
 	RECT r;
 	GetClientRect(hwnd, &r);
@@ -336,9 +348,8 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	if (!PlayingNow->Artist.size() || !PlayingNow->Track.size())
 		return;
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
-	wstring msg = L"Track : ";
-	msg += PlayingNow->Playing;
-	bLog::AddLog(bLogEntry(msg, L"bPlayer", LogType::Info));
+
+	bLog::AddLog(bLogEntry(L"Track : " + PlayingNow->Playing, L"bPlayer", LogType::Info));
 	RECT r;
 	GetClientRect(hwnd, &r);
 	InvalidateRect(hwnd,&r, TRUE);

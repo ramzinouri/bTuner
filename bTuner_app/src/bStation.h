@@ -21,16 +21,12 @@ public:
 	std::wstring Name;
 	std::wstring Genre;
 	std::wstring Url;
-	std::wstring Notice1;
-	std::wstring Notice2;
-	int Public;
 	int PlayedStreamID;
 	std::wstring Playing;
 	std::wstring Artist;
 	std::wstring Track;
-
+	int ID;
 	std::vector<bStream> Streams;
-
 };
 
 #endif

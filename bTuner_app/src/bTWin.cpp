@@ -58,10 +58,11 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 
 	cs.dwExStyle = WS_EX_ACCEPTFILES;
 	cs.lpszClass=L"bTuner";
-	cs.lpszName = L".:: bTuner ::. V 0.0.0.1";
 #ifdef  _DEBUG
 	cs.lpszName = L"[Debug] .:: bTuner ::. V 0.0.0.1";
-#endif //  _DEBUG
+#else
+	cs.lpszName = L".:: bTuner ::. V 0.0.0.1";
+#endif
 	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 	cs.cx=700;
 	cs.cy=500;
@@ -93,10 +94,18 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	bList.MoveWindow(150,0,GetClientRect().Width()-150,GetClientRect().Height()-150);
 #ifdef _DEBUG
 	bList.AddString(L"http://7619.live.streamtheworld.com:80/977_HITS_SC");
+	bList.AddString(L"http://dir.xiph.org/listen/1313/listen.m3u");
 	bList.AddString(L"http://stream01.iloveradio.de/iloveradio1.mp3");
 	bList.AddString(L"http://stream01.iloveradio.de/iloveradio2.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio2.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio3.mp3");
 	bList.AddString(L"http://stream01.iloveradio.de/iloveradio4.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio5.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio6.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio7.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio8.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio9.mp3");
+	bList.AddString(L"http://stream01.iloveradio.de/iloveradio10.mp3");
+
 #endif
 
 	UpdateWindow();
@@ -256,6 +265,17 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						}
 					}
 				}
+			}
+			if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == Codecs::UNDIFINED)
+			{
+				BASS_CHANNELINFO  info2;
+				BASS_ChannelGetInfo(Player.chan, &info2); // get info
+				if (info2.ctype == BASS_CTYPE_STREAM_MP3)
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::MP3;
+				if (info2.ctype == BASS_CTYPE_STREAM_OGG)
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::OGG;
+				if (info2.ctype == BASS_CTYPE_STREAM_AAC)
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::AAC;
 			}
 			// get the stream title and set sync for subsequent titles
 			BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0); // Shoutcast
@@ -565,7 +585,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 		dc.SetBkColor(RGB(245, 245, 245));
 		dc.SetBkMode(OPAQUE);
 
-		wchar_t *codecT[] = { L" MP3 ",L" AAC ",L" OGG ",L" MPEG ",L" AAC+ " };
+		wchar_t *codecT[] = { L" MP3 ",L" AAC ",L" OGG ",L" MPEG ",L" AAC+ ",L"" };
 		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
 		if (c < Codecs::UNDIFINED)
 		{
