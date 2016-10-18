@@ -24,8 +24,18 @@ void bLogWin::UpdateLog()
 		ms  += bLog::Log->at(i).Msg.c_str();
 		_bLogList.InsertString(i,ms.c_str());
 	}
-	_bLogList.RedrawWindow();
 }
+void bLogWin::AddLog()
+{
+		struct tm*  timeinfo;
+		timeinfo = localtime(&bLog::Log->at(bLog::Log->size()-1).Time);
+		CString ms;
+		ms.Format(L"%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+		ms += bLog::Log->at(bLog::Log->size()-1).Msg.c_str();
+		_bLogList.AddString(ms.c_str());
+
+}
+
 
 void bLogWin::PreRegisterClass(WNDCLASS &wc)
 {

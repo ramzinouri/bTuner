@@ -3,20 +3,18 @@
 
 #include "Win32++\wxx_wincore.h"
 #include "Win32++\wxx_controls.h"
+#include "Win32++\wxx_listview.h"
 
 
-class bRadioList : public CListBox
+class bRadioList : public CListView
 {
 public:
 	bRadioList();
 	virtual ~bRadioList();
 	void DrawItem(WPARAM wParam, LPARAM lParam);
+	void OnCreate();
 protected:
 	void PreCreate(CREATESTRUCT &cs);
-	void OnDraw(CDC& dc);
-	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-public:
-	bool firstdraw;
 
 };
 

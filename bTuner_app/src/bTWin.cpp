@@ -26,6 +26,8 @@ bTWin::bTWin()
 };
 void bTWin::OnDestroy()
 {
+	if (Playlist)
+		delete Playlist;
 	GdiplusShutdown(gdiplusToken);
 	Config.LastVolume= Player.GetVolume();
 	Config.LastPlayedName = Player.PlayingNow->Name;
@@ -89,33 +91,53 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.PlayingNow->Streams.push_back(bStream(Config.LastPlayedUrl));
 	Player.PlayingNow->Name = Config.LastPlayedName;
 
+
 	
 	bList.Create(*this);
-	bList.SetWindowLong(GCL_HBRBACKGROUND, (LONG)CreateSolidBrush(RGB(0, 0, 0)));
-	bList.MoveWindow(150,0,GetClientRect().Width()-150,GetClientRect().Height()-150);
+	bList.OnCreate();
+
 #ifdef _DEBUG
 	/*
-	bList.AddString(L"http://7619.live.streamtheworld.com:80/977_HITS_SC");
-	bList.AddString(L"http://dir.xiph.org/listen/1313/listen.m3u");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio1.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio2.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio3.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio4.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio5.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio6.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio7.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio8.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio9.mp3");
-	bList.AddString(L"http://stream01.iloveradio.de/iloveradio10.mp3");
-	*/
-	
-#endif
 	Playlist = new bPlaylist;
-	Playlist->LoadFile(L"Fav.pls");
-	for (int i = 0; i < Playlist->Stations.size(); i++)
+	Playlist->LoadFile(L"../../../test/Fav.pls");
+	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
+		bList.InsertItem(0, Playlist->Stations[i].Name.c_str());
+	*/
+#endif
+	
+	xml_document doc;
+	bLog::AddLog(bLogEntry(L"Loading .... yp.xml", L"bTuner Win", LogType::Info));
+	xml_parse_result result = doc.load_file("../../../test/yp.xml");
+
+	if (result)
 	{
-		bList.AddString(Playlist->Stations[i].Name.c_str());
-}
+		xml_node nDir = doc.child(L"directory");
+		Playlist = new bPlaylist;
+		int i = 0;
+		for (xml_node nEntry = nDir.first_child(); nEntry; nEntry = nEntry.next_sibling())
+		{
+			bStation st;
+			st.Name = nEntry.child(L"server_name").text().as_string();
+			bStream s(nEntry.child(L"listen_url").text().as_string());
+			st.Streams.push_back(s);
+			Playlist->Stations.push_back(st);
+			LV_ITEM *it = new LV_ITEM;
+			it->mask = LVIF_TEXT;
+			it->iSubItem = 0;
+			it->pszText = (LPWSTR)nEntry.child(L"server_name").text().as_string();
+			it->iItem = i;
+			bList.InsertItem(*it);
+			i++;
+		}
+
+
+
+		CString msg;
+		msg.Format(L"[ %u ] Station Loaded From yp.xml", Playlist->Stations.size());
+		bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", LogType::Info));
+
+	}
+	
 
 	UpdateWindow();
 	return 0;
@@ -147,7 +169,7 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DRAWITEM:
 
 		pdis = (PDRAWITEMSTRUCT)lParam;
-		if (pdis->hwndItem == bList)
+		if (pdis->CtlType == ODT_LISTVIEW)
 			bList.DrawItem(wParam, lParam);
 		break;
 	case WM_LBUTTONDOWN:
@@ -323,12 +345,25 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 {
+	NMHDR *hdr;
+	switch (((LPNMHDR)lParam)->code)
+	{
+	case LVN_ITEMACTIVATE:
+		hdr = (NMHDR FAR*)lParam;
+		if (hdr->hwndFrom == bList)
+		{
+			int index = bList.GetNextItem(-1, LVNI_SELECTED);
+			if (index != -1)
+				Player.OpenURL(Playlist->Stations[index].Streams[0].Url);
+
+		}
+		break;
+	}
 	return NULL;
 }
 
 BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	TCHAR Buffer[MAX_PATH];
 	switch (LOWORD(wParam))
 	{
 	case ID_PLAYBACK_RESUME:
@@ -361,13 +396,7 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		break;
 		
 	}
-	switch (HIWORD(wParam))
-	{
-	case LBN_DBLCLK:
-		
-		Player.OpenURL(Playlist->Stations[bList.GetCurSel()].Streams[0].Url);
-		break;
-	}
+
 	return TRUE;
 };
 

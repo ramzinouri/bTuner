@@ -28,5 +28,5 @@ void bLog::AddLog(bLogEntry _Entry)
 {
 	bLog::Log->emplace_back(_Entry);
 	if(_bLogWin)
-		_bLogWin->UpdateLog();
+		_bLogWin->AddLog();
 };
