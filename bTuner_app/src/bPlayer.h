@@ -36,7 +36,7 @@ public:
 	HSTREAM chan;
 	eStatus status;
 	bStation *PlayingNow;
-	std::wstring CoverUrl;
+
 	bool CoverLoaded;
 	int BuffProgress;
 	bPlayer();
@@ -45,19 +45,19 @@ public:
 	void Stop();
 	void Resume();
 	void OpenURL(std::wstring URL);
-	void OpenThread();
-	static void StaticThreadEntry(void* c);
 	int GetVolume();
 	void SetVolume(int Vol);
-	bool FetchCover();
-	bool DownloadCover();
 	void DownloadProc(const void *buffer, DWORD length, void *user);
 	void MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 	void EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 private:
+	void OpenThread();
+	bool FetchCover();
+	bool DownloadCover();
+	static void StaticThreadEntry(void* c);
 	int Volume;
 	std::string url_encode(const std::wstring &input);
-	std::wostringstream playlistbuffer;
+	std::wstring CoverUrl;
 };
 
 #endif

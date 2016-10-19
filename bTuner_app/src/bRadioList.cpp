@@ -1,5 +1,19 @@
 #include"bRadioList.h"
 
+int CALLBACK bRadioList::MyCompareProc(LPARAM lParam1, LPARAM lParam2,LPARAM lParamSort)
+{
+	UNREFERENCED_PARAMETER(lParamSort);
+	if (lParam1||lParam2)
+	{
+		std::wstring sta[] = { (WCHAR*)lParam1,(WCHAR*)lParam2 };
+		std::sort(sta, sta + 1);
+		if (sta[0] == (WCHAR*)lParam1)
+			return -1;
+		else
+			return 1;
+	}
+	return 0;
+}
 bRadioList::bRadioList()
 {
 	
@@ -12,7 +26,7 @@ bRadioList::~bRadioList()
 
 void bRadioList::PreCreate(CREATESTRUCT &cs)
 {
-	cs.style = WS_BORDER | WS_VISIBLE | WS_TABSTOP | WS_CHILD | LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SINGLESEL | LVS_OWNERDRAWFIXED;
+	cs.style = WS_BORDER | WS_VISIBLE | WS_TABSTOP | WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_OWNERDRAWFIXED;
 };
 
 void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
@@ -46,10 +60,14 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 void bRadioList::OnCreate()
 {
 	MoveWindow(150, 0, GetParent().GetClientRect().Width() - 150, GetParent().GetClientRect().Height() - 150);
-	InsertColumn(0, L"Stations", LVCFMT_LEFT, GetParent().GetClientRect().Width() - 150 - GetSystemMetrics(SM_CXVSCROLL));
+	InsertColumn(0, L"Stations", LVCFMT_LEFT, GetParent().GetClientRect().Width() - 150 - GetSystemMetrics(SM_CXVSCROLL),0);
+	InsertColumn(1, L"ID", LVCFMT_LEFT | LVCFMT_FIXED_WIDTH,0,1);
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_TWOCLICKACTIVATE);
 	SetBkColor(RGB(0, 0, 0));
 	SetTextColor(RGB(255, 255, 255));
 	SetTextBkColor(RGB(0, 0, 0));
-
+}
+void bRadioList::Sort()
+{
+	SortItems(&bRadioList::MyCompareProc, 0);
 }

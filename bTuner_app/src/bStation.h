@@ -1,32 +1,33 @@
 #ifndef BSTATION_H
 #define BSTATION_H
 #include <vector>
+#include <algorithm>
 
-enum Codecs{MP3,AAC,OGG,MPEG,AACP,UNDIFINED};
+enum eCodecs{MP3,AAC,OGG,MPEG,AACP,UNDIFINED};
 
 class bStream
 {
 public:
 	bStream(std::wstring URL);
 	std::wstring  Url;
-	int Bitrate;
-	Codecs Encoding;
+	unsigned int Bitrate;
+	eCodecs Encoding;
 };
 
 class bStation
 {
 public:
 	bStation();
-	virtual ~bStation();
 	std::wstring Name;
 	std::wstring Genre;
 	std::wstring Url;
-	int PlayedStreamID;
+	unsigned int PlayedStreamID;
 	std::wstring Playing;
 	std::wstring Artist;
 	std::wstring Track;
-	int ID;
+	unsigned int ID;
 	std::vector<bStream> Streams;
+	friend bool operator < (const bStation& l, const bStation& r);
 };
 
 #endif

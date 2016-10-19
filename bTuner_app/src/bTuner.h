@@ -15,7 +15,7 @@ public:
 	bool bDebug;
 private:
 	bTWin *_bTWin;
-	bLogWin *_bLogWin;
+
 
 };
 

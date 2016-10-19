@@ -26,6 +26,7 @@ bool bConfig::Load()
 			LastPlayedUrl = nSession.child(L"Station").child(L"Url").text().as_string();
 			LastWindowPos.x = nSession.child(L"Window").child(L"left").text().as_int();
 			LastWindowPos.y = nSession.child(L"Window").child(L"top").text().as_int();
+			LogWindow = nSession.child(L"LogWindow").text().as_bool();
 		}
 		else
 			Default();
@@ -62,6 +63,13 @@ bool bConfig::Save()
 
 void bConfig::Default()
 {
+	LogWindow = false;
+#ifdef _DEBUG
+	LogWindow = true;
+#else
+	LogWindow = false;
+#endif
+
 	LastVolume = 100;
 	LastPlayedName =L"";
 	LastPlayedUrl = L"";
@@ -87,6 +95,9 @@ void bConfig::Default()
 	nSession.child(L"Station").child(L"Url").text() = LastPlayedUrl.c_str();
 	nSession.child(L"Window").child(L"left").text() = LastWindowPos.x;
 	nSession.child(L"Window").child(L"top").text() = LastWindowPos.y;
+	nSession.append_child(L"LogWindow");
+	nSession.child(L"LogWindow").append_child(pugi::node_pcdata);
+	nSession.child(L"LogWindow").text() = LogWindow;
 
 	doc.save_file("Config.xml");
 }

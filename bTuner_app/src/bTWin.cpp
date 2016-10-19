@@ -24,8 +24,15 @@ bTWin::bTWin()
 	Mouse.y = 0;
 	Playlist = NULL;
 };
+void  bTWin::OnClose()
+{
+	if (bLog::_bLogWin)
+		bLog::_bLogWin->CloseWindow();
+	CWnd::OnClose();
+}
 void bTWin::OnDestroy()
 {
+	
 	if (Playlist)
 		delete Playlist;
 	GdiplusShutdown(gdiplusToken);
@@ -91,10 +98,11 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.PlayingNow->Streams.push_back(bStream(Config.LastPlayedUrl));
 	Player.PlayingNow->Name = Config.LastPlayedName;
 
-
-	
 	bList.Create(*this);
 	bList.OnCreate();
+
+
+
 
 #ifdef _DEBUG
 	/*
@@ -125,12 +133,24 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 			it->mask = LVIF_TEXT;
 			it->iSubItem = 0;
 			it->pszText = (LPWSTR)nEntry.child(L"server_name").text().as_string();
+			it->lParam = (LPARAM)i;
 			it->iItem = i;
 			bList.InsertItem(*it);
+
+
+			LV_ITEM *id = new LV_ITEM;
+			id->mask = LVIF_TEXT;
+			id->iSubItem = 1;
+			CString sID;
+			sID.Format(L"%u", i);
+			id->pszText = (LPWSTR)sID.c_str();
+			id->lParam = (LPARAM)sID.c_str();
+			id->iItem = i;
+			bList.SetItem(*id);
 			i++;
 		}
 
-
+		//Playlist->Sort();
 
 		CString msg;
 		msg.Format(L"[ %u ] Station Loaded From yp.xml", Playlist->Stations.size());
@@ -140,6 +160,16 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	
 
 	UpdateWindow();
+
+	if (Config.LogWindow)
+	{
+		bLog::_bLogWin = new bLogWin;
+		bLog::_bLogWin->Create();
+		bLog::_bLogWin->MoveWindow(GetWindowRect().right, GetWindowRect().top, 500, 500);
+		if (!bLog::_bLogWin->GetHwnd())
+			bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", LogType::Error));
+	}
+	SetFocus();
 	return 0;
 };
 
@@ -277,36 +307,36 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						{
 							char *stype = (char*)icy + 14;
 							if (!strnicmp(stype, "audio/mp3", 9))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::MP3;
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
 							if (!strnicmp(stype, "audio/aac", 9))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::AAC;
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
 							if (!strnicmp(stype, "audio/aacp", 10))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::AACP;
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AACP;
 							if (!strnicmp(stype, "audio/ogg", 9))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::OGG;
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
 							if (!strnicmp(stype, "audio/mpeg", 10))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::MPEG;
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MPEG;
 
 							BASS_CHANNELINFO  info;
 							BASS_ChannelGetInfo(Player.chan, &info); // get info
 							if (info.ctype == BASS_CTYPE_STREAM_MP3)
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::MP3;
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
 							if (info.ctype == BASS_CTYPE_STREAM_OGG)
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::OGG;
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
 						}
 					}
 				}
 			}
-			if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == Codecs::UNDIFINED)
+			if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == eCodecs::UNDIFINED)
 			{
 				BASS_CHANNELINFO  info2;
 				BASS_ChannelGetInfo(Player.chan, &info2); // get info
 				if (info2.ctype == BASS_CTYPE_STREAM_MP3)
-					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::MP3;
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
 				if (info2.ctype == BASS_CTYPE_STREAM_OGG)
-					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::OGG;
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
 				if (info2.ctype == BASS_CTYPE_STREAM_AAC)
-					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = Codecs::AAC;
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
 			}
 			// get the stream title and set sync for subsequent titles
 			BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0); // Shoutcast
@@ -346,14 +376,16 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 {
 	NMHDR *hdr;
+	LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
 	switch (((LPNMHDR)lParam)->code)
 	{
 	case LVN_ITEMACTIVATE:
 		hdr = (NMHDR FAR*)lParam;
 		if (hdr->hwndFrom == bList)
 		{
-			int index = bList.GetNextItem(-1, LVNI_SELECTED);
-			if (index != -1)
+			CString sID=bList.GetItemText(lpnmia->iItem, 1);
+			int index = std::stoi(sID.c_str());
+			if (index >= 0 && index <(int)Playlist->Stations.size())
 				Player.OpenURL(Playlist->Stations[index].Streams[0].Url);
 
 		}
@@ -625,7 +657,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 
 		wchar_t *codecT[] = { L" MP3 ",L" AAC ",L" OGG ",L" MPEG ",L" AAC+ ",L"" };
 		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
-		if (c < Codecs::UNDIFINED)
+		if (c < eCodecs::UNDIFINED)
 		{
 			dc.TextOut(150 + 10 + s.cx, cr.bottom - 20, codecT[c], wcslen(codecT[c]));
 		}

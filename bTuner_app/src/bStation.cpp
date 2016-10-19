@@ -4,7 +4,7 @@ bStream::bStream(std::wstring URL)
 {
 	Url = URL;
 	Bitrate = 0;
-	Encoding = Codecs::UNDIFINED;
+	Encoding = eCodecs::UNDIFINED;
 }
 bStation::bStation()
 {
@@ -18,7 +18,15 @@ bStation::bStation()
 	PlayedStreamID = 0;
 }
 
-bStation::~bStation()
+bool operator< (const bStation& l, const bStation& r)
 {
+	std::vector<std::wstring> data;
+	data.push_back(l.Name);
+	data.push_back(r.Name);
+	std::sort(data.begin(), data.end());
 
+	if (data[0] != l.Name)
+		return false;
+	else
+		return true;
 }

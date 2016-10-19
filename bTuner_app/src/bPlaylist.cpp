@@ -10,6 +10,21 @@ bPlaylist::~bPlaylist()
 
 }
 
+int bPlaylist::Locate(std::wstring name)
+{
+	for (int i=0 ;i< Stations.size();i++)
+	{
+		if (Stations.at(i).Name == name)
+			return i;
+	}
+	return -1;
+}
+
+void bPlaylist::Sort()
+{
+	std::sort(Stations.begin(), Stations.end());
+}
+
 
 bool bPlaylist::ParsePLS(std::wstringstream* data)
 {
@@ -46,7 +61,7 @@ bool bPlaylist::ParsePLS(std::wstringstream* data)
 		if (p1.find(L"Title")!= std::wstring::npos ||p1.find(L"title")!= std::wstring::npos)
 		{
 			p1.replace(0, 5, L"");
-			int num = std::stoi(p1);
+			unsigned int num = std::stoi(p1);
 			if (num > Stations.size())
 			{
 				bStation s;
@@ -59,7 +74,7 @@ bool bPlaylist::ParsePLS(std::wstringstream* data)
 		if (p1.find(L"File")!= std::wstring::npos || p1.find(L"file")!= std::wstring::npos)
 		{
 			p1.replace(0, 4, L"");
-			int num = std::stoi(p1);
+			unsigned int num = std::stoi(p1);
 			if (num > Stations.size())
 			{
 				bStation s;
@@ -95,7 +110,7 @@ bool bPlaylist::LoadFile(std::wstring path)
 	if (!file.is_open())
 		return false;
 	file.seekg(0, file.end);
-	int length = file.tellg();
+	unsigned int length =(unsigned int) file.tellg();
 	file.seekg(0, file.beg);
 	wchar_t * buffer = new wchar_t[length+1];
 	buffer[length] = 0;
@@ -108,7 +123,34 @@ bool bPlaylist::LoadFile(std::wstring path)
 	if (line.find(L"[playlist]") != std::wstring::npos)
 		return ParsePLS(new std::wstringstream(buffer));
 
-	
+	return result;
+}
+
+bool bPlaylist::ParsePLS(std::wstringstream* data)
+{
+	bool result = false;
+	std::wstring line;
+	std::getline(*data, line);
+
+	xml_document doc;
+	xml_parse_result result = doc.load_string(data->str().c_str());
+
+	if (!result)
+		return false;
+
+	xml_node nTrackList = doc.child(L"playlist").child(L"trackList");
+
+	int i = 0;
+	for (xml_node nTrack = nTrackList.first_child(); nTrack; nTrack = nTrack.next_sibling())
+	{
+		bStation st;
+		st.Name = doc.child(L"playlist").child(L"title").text().as_string();
+		st.Url = doc.child(L"playlist").child(L"info").text().as_string();
+		bStream s(nTrack.child(L"location").text().as_string());
+		st.Streams.push_back(s);
+		Stations.push_back(st);
+		i++;
+	}
 
 	return result;
 }

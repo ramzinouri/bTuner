@@ -14,12 +14,14 @@ public:
 	virtual ~bConfig();
 	bool Load();
 	bool Save();
-	void Default();
 	int LastVolume;
 	CPoint LastWindowPos;
 	std::wstring LastPlayedName;
 	std::wstring LastPlayedUrl;
-	char *buf;
+	bool LogWindow;
+private:
+	void Default();
+	//char *buf;
 	
 };
 
