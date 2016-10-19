@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm>
 
-enum eCodecs{MP3,AAC,OGG,MPEG,AACP,UNDIFINED};
+enum eCodecs{MP3,AAC,OGG,MPEG,AACP,OPUS,NSV,UNDIFINED};
 
 class bStream
 {

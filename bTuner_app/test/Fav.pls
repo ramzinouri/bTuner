@@ -18,17 +18,23 @@ Title5=977 Hits
 File6=http://live.hunter.fm:80/mobile
 Title6=HUNTER.FM -=[: The Hitz Channel :]=-
 
-File7=http://stream.phate.io/phatecc.mp3
-Title7=Phate Radio
+File7=http://streaming211.radionomy.com:80/ClubHits
+Title7=ClubHits
 
-File8=http://jil-fm.ice.infomaniak.ch/jilfm.aac
-Title8=Jil FM
+File8=http://streaming208.radionomy.com:80/-Pophits
+Title8=#Pophits
 
-File9=http://emaru.animenfo.com:443/
-Title9=AnimeNfo Radio
+File9=http://stream.phate.io/phatecc.mp3
+Title9=Phate Radio
 
-File10=http://stream.phate.io/phatecc.mp3
-Title10=Phate Radio
+File10=http://jil-fm.ice.infomaniak.ch/jilfm.aac
+Title10=Jil FM
 
-NumberOfEntries=10
+File11=http://emaru.animenfo.com:443/
+Title11=AnimeNfo Radio
+
+File12=http://www.nexusnet.com.mx:8000/animenexus-relay
+Title12=[AnimeNexus]
+
+NumberOfEntries=12
 Version=2

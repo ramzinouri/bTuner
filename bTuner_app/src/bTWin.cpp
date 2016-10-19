@@ -81,14 +81,20 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 {
 	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 	Player.hwnd = this->GetHwnd();
-	this->GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-	this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	if (!Config.Load())
+		bLog::AddLog(bLogEntry(L"Failed to Load Config File", L"bTuner Win", LogType::Error));
+
+	GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	if (Config.LogWindow)
+		GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW, MF_CHECKED );
+	else
+		GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW, MF_UNCHECKED);
+
 	SetRect(&VolumeRect, GetClientRect().right - 120, GetClientRect().bottom - 57, GetClientRect().right - 20, GetClientRect().bottom - 43);
 	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
 	
-	if(!Config.Load())
-		bLog::AddLog(bLogEntry(L"Failed to Load Config File", L"bTuner Win", LogType::Error));
-
+	
 
 	Player.SetVolume(Config.LastVolume);
 	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
@@ -104,15 +110,16 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 
 
 
-#ifdef _DEBUG
-	/*
+
+	
 	Playlist = new bPlaylist;
 	Playlist->LoadFile(L"../../../test/Fav.pls");
 	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
-		bList.InsertItem(0, Playlist->Stations[i].Name.c_str());
-	*/
-#endif
+		bList.AddStation(Playlist->Stations.at(i));
 	
+
+	
+	/*
 	xml_document doc;
 	bLog::AddLog(bLogEntry(L"Loading .... yp.xml", L"bTuner Win", LogType::Info));
 	xml_parse_result result = doc.load_file("../../../test/yp.xml");
@@ -158,7 +165,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 
 	}
 	
-
+	*/
 	UpdateWindow();
 
 	if (Config.LogWindow)
@@ -316,6 +323,8 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
 							if (!strnicmp(stype, "audio/mpeg", 10))
 								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MPEG;
+							if (!strnicmp(stype, "video/nsv", 9))
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::NSV;
 
 							BASS_CHANNELINFO  info;
 							BASS_ChannelGetInfo(Player.chan, &info); // get info
@@ -323,6 +332,8 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
 							if (info.ctype == BASS_CTYPE_STREAM_OGG)
 								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
+							if (info.ctype == BASS_CTYPE_STREAM_OPUS)
+								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OPUS;
 						}
 					}
 				}
@@ -357,7 +368,7 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		else
 		{
-			Player.status = eStatus::Buffring;
+			Player.status = eStatus::Buffering;
 			RECT cr, r;
 			cr = GetClientRect();
 			SetRect(&r, 150, cr.bottom - 30, cr.right, cr.bottom);
@@ -411,7 +422,35 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 		InvalidateRect(this->GetClientRect(), TRUE);
 		break;
-
+	case ID_HELP_LOGWINDOW:
+		if (!Config.LogWindow)
+		{
+			GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW,MF_CHECKED);
+			Config.LogWindow = true;
+			Config.Save();
+			if (!bLog::_bLogWin)
+			{
+				bLog::_bLogWin = new bLogWin;
+				bLog::_bLogWin->Create();
+				bLog::_bLogWin->MoveWindow(GetWindowRect().right, GetWindowRect().top, 500, 500);
+				if (!bLog::_bLogWin->GetHwnd())
+					bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", LogType::Error));
+			}
+			SetFocus();
+		}
+		else
+		{
+			GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW, MF_UNCHECKED);
+			Config.LogWindow = false;
+			Config.Save();
+			if (bLog::_bLogWin)
+			{
+				bLog::_bLogWin->Destroy();
+				delete bLog::_bLogWin;
+				bLog::_bLogWin = NULL;
+			}
+		}
+		break;
 
 	case ID_FILE_EXIT:
 		PostQuitMessage(0);
@@ -621,10 +660,10 @@ void  bTWin::DrawPlayer(CDC& dc)
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 	dc.SelectObject(font);
 	dc.SetTextColor(RGB(180, 180, 180));
-	if (Player.status == eStatus::Buffring)
+	if (Player.status == eStatus::Buffering)
 	{
 		CString buf;
-		buf.Format(L"[%u %s] Buffuring", v,L"%");
+		buf.Format(L"[%u %s] Buffering", v,L"%");
 		dc.TextOut(150, cr.bottom - 20, buf.c_str(),buf.GetLength());
 	}
 	if (Player.status == eStatus::Connecting)
@@ -655,7 +694,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 		dc.SetBkColor(RGB(245, 245, 245));
 		dc.SetBkMode(OPAQUE);
 
-		wchar_t *codecT[] = { L" MP3 ",L" AAC ",L" OGG ",L" MPEG ",L" AAC+ ",L"" };
+		wchar_t *codecT[] = { L" MP3 ",L" AAC ",L" OGG ",L" MPEG ",L" AAC+ ",L" Opus ",L" NSV ",L"" };
 		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
 		if (c < eCodecs::UNDIFINED)
 		{

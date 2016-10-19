@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+    <title>top100station - Germanys No.1 Web Hit Station</title>
+    <info>www.top100station.de</info>
+    <trackList>
+        <track><location>http://87.230.103.60:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.25:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.50:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.49:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.24:80/top100station.mp3</location></track>
+        <track><location>http://87.230.103.58:80/top100station.mp3</location></track>
+        <track><location>http://80.237.152.83:80/top100station.mp3</location></track>
+        <track><location>http://87.230.103.107:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.30:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.12:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.11:80/top100station.mp3</location></track>
+        <track><location>http://87.230.101.16:80/top100station.mp3</location></track>
+    </trackList>
+</playlist>

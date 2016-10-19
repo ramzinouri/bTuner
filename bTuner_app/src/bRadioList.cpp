@@ -1,19 +1,5 @@
 #include"bRadioList.h"
 
-int CALLBACK bRadioList::MyCompareProc(LPARAM lParam1, LPARAM lParam2,LPARAM lParamSort)
-{
-	UNREFERENCED_PARAMETER(lParamSort);
-	if (lParam1||lParam2)
-	{
-		std::wstring sta[] = { (WCHAR*)lParam1,(WCHAR*)lParam2 };
-		std::sort(sta, sta + 1);
-		if (sta[0] == (WCHAR*)lParam1)
-			return -1;
-		else
-			return 1;
-	}
-	return 0;
-}
 bRadioList::bRadioList()
 {
 	
@@ -28,6 +14,26 @@ void bRadioList::PreCreate(CREATESTRUCT &cs)
 {
 	cs.style = WS_BORDER | WS_VISIBLE | WS_TABSTOP | WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_OWNERDRAWFIXED;
 };
+void bRadioList::AddStation(const bStation& station)
+{
+	int i = GetItemCount();
+	LV_ITEM *it = new LV_ITEM;
+	it->mask = LVIF_TEXT;
+	it->iSubItem = 0;
+	it->pszText = (LPWSTR)station.Name.c_str();
+	it->iItem = i;
+	InsertItem(*it);
+
+	LV_ITEM *id = new LV_ITEM;
+	id->mask = LVIF_TEXT;
+	id->iSubItem = 1;
+	CString sID;
+	sID.Format(L"%u", i);
+	id->pszText = (LPWSTR)sID.c_str();
+	id->lParam = (LPARAM)sID.c_str();
+	id->iItem = i;
+	SetItem(*id);
+}
 
 void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 {
@@ -37,22 +43,25 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 	if (pdis->itemID == -1)
 		return;
 
-		font=CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+		font=CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
 			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
 		SelectObject(pdis->hDC, font);
 		
 
-		CString text=this->GetItemText(pdis->itemID, 0);
+		CString text=GetItemText(pdis->itemID, 0);
 
+		if(pdis->itemID%2)
+			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+		else
+			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(15, 15, 15)));
 
 		if (pdis->itemState & ODS_SELECTED)
-			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(100, 100, 100)));
-		else if (pdis->itemState & ODS_DEFAULT)
-			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(40, 185, 220)));
 
 		::SetTextColor(pdis->hDC, RGB(255, 255, 255));
+
 		SetBkMode(pdis->hDC, TRANSPARENT);
-		TextOut(pdis->hDC, 5, pdis->rcItem.top + 5, text.c_str(), text.GetLength());
+		TextOut(pdis->hDC, 20, pdis->rcItem.top + 7, text.c_str(), text.GetLength());
 
 
 }
@@ -66,8 +75,4 @@ void bRadioList::OnCreate()
 	SetBkColor(RGB(0, 0, 0));
 	SetTextColor(RGB(255, 255, 255));
 	SetTextBkColor(RGB(0, 0, 0));
-}
-void bRadioList::Sort()
-{
-	SortItems(&bRadioList::MyCompareProc, 0);
 }

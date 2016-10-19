@@ -12,7 +12,7 @@ bPlaylist::~bPlaylist()
 
 int bPlaylist::Locate(std::wstring name)
 {
-	for (int i=0 ;i< Stations.size();i++)
+	for (int i=0 ;i < (int)Stations.size(); i++ )
 	{
 		if (Stations.at(i).Name == name)
 			return i;
@@ -122,13 +122,20 @@ bool bPlaylist::LoadFile(std::wstring path)
 	std::getline(data, line);
 	if (line.find(L"[playlist]") != std::wstring::npos)
 		return ParsePLS(new std::wstringstream(buffer));
+	if (line.find(L"<?xml") != std::wstring::npos)
+	{
+		std::getline(data, line);
+		if (line.find(L"<playlist") != std::wstring::npos)
+			return ParseXSPF(new std::wstringstream(buffer));
+	}
+
+		
 
 	return result;
 }
 
-bool bPlaylist::ParsePLS(std::wstringstream* data)
+bool bPlaylist::ParseXSPF(std::wstringstream* data)
 {
-	bool result = false;
 	std::wstring line;
 	std::getline(*data, line);
 
@@ -139,18 +146,15 @@ bool bPlaylist::ParsePLS(std::wstringstream* data)
 		return false;
 
 	xml_node nTrackList = doc.child(L"playlist").child(L"trackList");
+	bStation st;
+	st.Name = doc.child(L"playlist").child(L"title").text().as_string();
+	st.Url = doc.child(L"playlist").child(L"info").text().as_string();
 
-	int i = 0;
 	for (xml_node nTrack = nTrackList.first_child(); nTrack; nTrack = nTrack.next_sibling())
 	{
-		bStation st;
-		st.Name = doc.child(L"playlist").child(L"title").text().as_string();
-		st.Url = doc.child(L"playlist").child(L"info").text().as_string();
 		bStream s(nTrack.child(L"location").text().as_string());
 		st.Streams.push_back(s);
-		Stations.push_back(st);
-		i++;
 	}
-
-	return result;
+	Stations.push_back(st);
+	return true;
 }

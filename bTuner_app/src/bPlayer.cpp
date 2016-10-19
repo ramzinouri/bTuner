@@ -46,6 +46,7 @@ bPlayer::bPlayer()
 			bLog::AddLog(bLogEntry(L"Cant Initialize Bass Device", L"bPlayer", LogType::Error));
 	}
 	BASS_PluginLoad("bass_aac.dll", 0);
+	BASS_PluginLoad("bassopus.dll", 0);
 	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
 	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
 	BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, (void*)NULL);
@@ -277,18 +278,14 @@ void bPlayer::SetVolume(int Vol)
 }
 void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 {
-	char *uuu = (char*)buffer,*t;
+	char *uuu = (char*)buffer;
 	if (buffer && !length)
 	{
 		for (; *uuu; uuu += strlen(uuu) + 1) {
-			if (!strnicmp(uuu, "icy-name:", 9))
-				t = (char*)uuu + 9;
-			if (!strnicmp(uuu, "icy-url:", 8))
-				t = (char*)uuu + 8;
-			if (!strnicmp(uuu, "icy-br:", 7))
-				t = uuu + 7;
-			if (!strnicmp(uuu, "icy-genre:", 10))
-				t = (char*)uuu + 10;
+#ifdef _DEBUG
+			std::wstring msg = L"HTTP :: " + std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(uuu);
+			bLog::AddLog(bLogEntry(msg, L"debug", LogType::Info));
+#endif
 		}
 	}
 
@@ -331,24 +328,41 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 		if (meta) { // got Icecast/OGG tags
 			char *artist = NULL, *title = NULL, *p = meta;
 			for (; *p; p += strlen(p) + 1) {
-				if (!_strnicmp(p, "artist=", 7)) // found the artist
+				if (!_strnicmp(p, "artist=", 7))
 					artist = p + 7;
-				if (!_strnicmp(p, "title=", 6)) // found the title
+				if (!_strnicmp(p, "title=", 6))
 					title = p + 6;
+				if (!_strnicmp(p, "artist= ", 8)) 
+					artist = p + 8;
+				if (!_strnicmp(p, "title= ", 7)) 
+					title = p + 7;
+#ifdef _DEBUG
+				std::wstring msg = L"OGG META:: "+std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(p);
+				bLog::AddLog(bLogEntry(msg, L"debug", LogType::Info));
+#endif
 			}
 			if (title) {
 				
 				PlayingNow->Track = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(title);
 				if (artist) {
 					PlayingNow->Artist = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(artist);
-					PlayingNow->Playing= PlayingNow->Artist+L" - "+ PlayingNow->Track;
+					if (PlayingNow->Artist.size())
+					{
+						PlayingNow->Playing = PlayingNow->Artist + L" - ";
+						if (PlayingNow->Track.size())
+							PlayingNow->Playing += PlayingNow->Track;
+					}
+					else
+						PlayingNow->Playing = PlayingNow->Track;
+
+					if (!PlayingNow->Name.size())
+						PlayingNow->Name = PlayingNow->Artist;
 				}
- 				else
-					PlayingNow->Playing = PlayingNow->Track;
+ 				
 			}
 		}
 	}
-	if (!PlayingNow->Artist.size() || !PlayingNow->Track.size())
+	if (!PlayingNow->Playing.size() )
 		return;
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
 

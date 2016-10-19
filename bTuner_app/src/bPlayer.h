@@ -3,6 +3,7 @@
 #include "winsock2.h"
 #include "bass/bass.h"
 #include "bass/bass_aac.h"
+#include "bass/bassopus.h"
 #include <iostream>
 #include <thread>
 #include <process.h>
@@ -23,7 +24,7 @@ using namespace Win32xx;
 
 #include "bStation.h"
 
-enum eStatus { Playing,Stopped,Connecting,Buffring};
+enum eStatus { Playing,Stopped,Connecting,Buffering};
 enum eThread { Openurl,Fetchurl,Downloadcover};
 void CALLBACK  g_MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 void CALLBACK g_DownloadProc(const void *buffer, DWORD length, void *user);

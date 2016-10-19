@@ -16,7 +16,7 @@ bool bConfig::Load()
 	bool Succeeded = false;
 
 	xml_document doc;
-	xml_parse_result result = doc.load_file("Config.xml");
+	xml_parse_result result = doc.load_file("bTuner.xml");
 	
 		if (result)
 		{
@@ -44,38 +44,6 @@ bool bConfig::Save()
 
 
 	xml_document doc;
-	xml_parse_result result = doc.load_file("Config.xml");
-	xml_node nSession = doc.child(L"bTuner").child(L"Session");
-
-	nSession.child(L"Volume").text() = LastVolume;
-	nSession.child(L"Station").child(L"Name").text()=LastPlayedName.c_str();
-	nSession.child(L"Station").child(L"Url").text()=LastPlayedUrl.c_str();
-	nSession.child(L"Window").child(L"left").text()=LastWindowPos.x;
-	nSession.child(L"Window").child(L"top").text() = LastWindowPos.y;
-
-	
-	Succeeded = doc.save_file("Config.xml");
-
-	return Succeeded;
-
-}
-
-
-void bConfig::Default()
-{
-	LogWindow = false;
-#ifdef _DEBUG
-	LogWindow = true;
-#else
-	LogWindow = false;
-#endif
-
-	LastVolume = 100;
-	LastPlayedName =L"";
-	LastPlayedUrl = L"";
-	LastWindowPos.x = 0;
-	LastWindowPos.y = 0;
-	xml_document doc;
 	doc.append_child(L"bTuner");
 	xml_node nSession = doc.child(L"bTuner").append_child(L"Session");
 	nSession.append_child(L"Station");
@@ -99,5 +67,27 @@ void bConfig::Default()
 	nSession.child(L"LogWindow").append_child(pugi::node_pcdata);
 	nSession.child(L"LogWindow").text() = LogWindow;
 
-	doc.save_file("Config.xml");
+	Succeeded = doc.save_file("bTuner.xml");
+
+	return Succeeded;
+
+}
+
+
+void bConfig::Default()
+{
+	LogWindow = false;
+#ifdef _DEBUG
+	LogWindow = true;
+#else
+	LogWindow = false;
+#endif
+
+	LastVolume = 100;
+	LastPlayedName =L"";
+	LastPlayedUrl = L"";
+	LastWindowPos.x = 0;
+	LastWindowPos.y = 0;
+
+	Save();
 }

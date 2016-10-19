@@ -101,6 +101,8 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
+        MENUITEM "&Log Window",                 ID_HELP_LOGWINDOW
+        MENUITEM SEPARATOR
         MENUITEM "&About bTuner",               ID_HELP_ABOUT
     END
 END
