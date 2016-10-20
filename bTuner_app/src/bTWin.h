@@ -23,7 +23,7 @@ class bTWin : public CWnd
 public:
 	bTWin();
 	virtual ~bTWin();
-	INT_PTR AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l);
+	INT_PTR Diagproc(HWND h, UINT m, WPARAM w, LPARAM l);
 
 protected:
 
@@ -38,6 +38,7 @@ protected:
 	bPlayer Player;
 	void DrawPlayer(CDC& dc);
 	void  OnClose();
+	void OnTimer(int TimerID);
 
 private:
 	CRect VolumeRect;

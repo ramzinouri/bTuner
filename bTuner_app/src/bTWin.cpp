@@ -1,15 +1,16 @@
 #include "bTWin.h"
 #include "bLog.h"
+#include "bString.h"
 
 namespace
 {
 	bTWin *gp_bTWin = NULL;
 }
 
-INT_PTR CALLBACK  g_AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
+INT_PTR CALLBACK  g_Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 {
 	if (gp_bTWin)
-		return gp_bTWin->AboutDiagproc(h, m, w, l);
+		return gp_bTWin->Diagproc(h, m, w, l);
 	else
 		return 0;
 }
@@ -30,6 +31,41 @@ void  bTWin::OnClose()
 		bLog::_bLogWin->CloseWindow();
 	CWnd::OnClose();
 }
+
+void  bTWin::OnTimer(int TimerID)
+{
+	QWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER)* 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END); 
+	Player.BuffProgress = (int)progress;
+	if (progress>90 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED))
+	{
+		::KillTimer(GetHwnd(), 0);
+		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == eCodecs::UNDIFINED)
+		{
+			BASS_CHANNELINFO  info2;
+			BASS_ChannelGetInfo(Player.chan, &info2);
+			if (info2.ctype == BASS_CTYPE_STREAM_MP3)
+				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
+			if (info2.ctype == BASS_CTYPE_STREAM_OGG)
+				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
+			if (info2.ctype == BASS_CTYPE_STREAM_AAC)
+				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
+			if (info2.ctype == BASS_CTYPE_STREAM_OPUS)
+				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OPUS;
+		}
+		BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0); 
+		BASS_ChannelSetSync(Player.chan, BASS_SYNC_OGG_CHANGE, 0, &g_MetaSync, 0); 
+		BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &g_EndSync, 0);
+	
+		Player.Play();
+	}
+	else
+	{
+		Player.status = eStatus::Buffering;
+		Player.UpdateWnd();
+	}
+
+}
+
 void bTWin::OnDestroy()
 {
 	
@@ -43,7 +79,7 @@ void bTWin::OnDestroy()
 	Config.LastWindowPos.y = GetWindowRect().top;
 	
 	if (!Config.Save())
-		bLog::AddLog(bLogEntry(L"Failed to Save Config File", L"bTuner Win", LogType::Error));
+		bLog::AddLog(bLogEntry(L"Failed to Save Config File", L"bTuner Win", eLogType::Error));
 };
 
 bTWin::~bTWin()
@@ -82,9 +118,9 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 	Player.hwnd = this->GetHwnd();
 	if (!Config.Load())
-		bLog::AddLog(bLogEntry(L"Failed to Load Config File", L"bTuner Win", LogType::Error));
-
-	GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+		bLog::AddLog(bLogEntry(L"Failed to Load Config File", L"bTuner Win", eLogType::Error));
+	if(!Config.LastPlayedUrl.size())
+		GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	if (Config.LogWindow)
 		GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW, MF_CHECKED );
@@ -93,8 +129,6 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 
 	SetRect(&VolumeRect, GetClientRect().right - 120, GetClientRect().bottom - 57, GetClientRect().right - 20, GetClientRect().bottom - 43);
 	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
-	
-	
 
 	Player.SetVolume(Config.LastVolume);
 	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
@@ -108,12 +142,9 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	bList.OnCreate();
 
 
-
-
-
 	
 	Playlist = new bPlaylist;
-	Playlist->LoadFile(L"../../../test/Fav.pls");
+	Playlist->LoadFile(L"../../../test/bFavorites.xspf");
 	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
 		bList.AddStation(Playlist->Stations.at(i));
 	
@@ -174,7 +205,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 		bLog::_bLogWin->Create();
 		bLog::_bLogWin->MoveWindow(GetWindowRect().right, GetWindowRect().top, 500, 500);
 		if (!bLog::_bLogWin->GetHwnd())
-			bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", LogType::Error));
+			bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", eLogType::Error));
 	}
 	SetFocus();
 	return 0;
@@ -199,8 +230,6 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_MEASUREITEM:
 
 		pmis = (PMEASUREITEMSTRUCT)lParam;
-
-		// Set the height of the list box items. 
 		pmis->itemHeight = 30;
 		return TRUE;
 	case WM_DRAWITEM:
@@ -239,7 +268,6 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (Player.status == eStatus::Stopped&& Player.PlayingNow)
 					Player.Resume();
 			}
-			InvalidateRect(GetClientRect(), TRUE);
 		}
 
 		break;
@@ -277,104 +305,9 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			Player.SetVolume(Player.GetVolume() - 5);
 		InvalidateRect(VolumeRect, TRUE);
 		break;
+
 	case WM_TIMER:
-	{ // monitor prebuffering progress
-		QWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER)
-			* 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END); // percentage of buffer filled
-		Player.BuffProgress = (int) progress;
-		if (progress>90 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED)) { // over 75% full (or end of download)
-			::KillTimer(this->GetHwnd(), 0); // finished prebuffering, stop monitoring
-			{ // get the broadcast name and URL
-				const char *icy = BASS_ChannelGetTags(Player.chan, BASS_TAG_ICY);
-				if (!icy) icy = BASS_ChannelGetTags(Player.chan, BASS_TAG_HTTP); // no ICY tags, try HTTP
-				if (icy) {
-					for (; *icy; icy += strlen(icy) + 1) {
-						if (!strnicmp(icy, "icy-name:", 9))
-							Player.PlayingNow->Name = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(icy + 9);
-						if (!strnicmp(icy, "icy-url:", 8))
-							Player.PlayingNow->Url = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(icy + 8);
-						if (!strnicmp(icy, "icy-br:", 7))
-							Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate = atoi(icy + 7);
-						if (!strnicmp(icy, "icy-genre:", 10))
-							Player.PlayingNow->Genre = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(icy + 10);
-
-
-						if (!strnicmp(icy, "icy-name: ", 10))
-							Player.PlayingNow->Name = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(icy + 10);
-						if (!strnicmp(icy, "icy-url: ", 9))
-							Player.PlayingNow->Url = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(icy + 9);
-						if (!strnicmp(icy, "icy-br:" , 8))
-							Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate = atoi(icy + 8);
-						if (!strnicmp(icy, "icy-genre: ", 11))
-							Player.PlayingNow->Genre = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(icy + 11);
-
-
-
-						if (!strnicmp(icy, "Content-Type:", 13))
-						{
-							char *stype = (char*)icy + 14;
-							if (!strnicmp(stype, "audio/mp3", 9))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
-							if (!strnicmp(stype, "audio/aac", 9))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
-							if (!strnicmp(stype, "audio/aacp", 10))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AACP;
-							if (!strnicmp(stype, "audio/ogg", 9))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
-							if (!strnicmp(stype, "audio/mpeg", 10))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MPEG;
-							if (!strnicmp(stype, "video/nsv", 9))
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::NSV;
-
-							BASS_CHANNELINFO  info;
-							BASS_ChannelGetInfo(Player.chan, &info); // get info
-							if (info.ctype == BASS_CTYPE_STREAM_MP3)
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
-							if (info.ctype == BASS_CTYPE_STREAM_OGG)
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
-							if (info.ctype == BASS_CTYPE_STREAM_OPUS)
-								Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OPUS;
-						}
-					}
-				}
-			}
-			if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == eCodecs::UNDIFINED)
-			{
-				BASS_CHANNELINFO  info2;
-				BASS_ChannelGetInfo(Player.chan, &info2); // get info
-				if (info2.ctype == BASS_CTYPE_STREAM_MP3)
-					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
-				if (info2.ctype == BASS_CTYPE_STREAM_OGG)
-					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
-				if (info2.ctype == BASS_CTYPE_STREAM_AAC)
-					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
-			}
-			// get the stream title and set sync for subsequent titles
-			BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0); // Shoutcast
-			BASS_ChannelSetSync(Player.chan, BASS_SYNC_OGG_CHANGE, 0, &g_MetaSync, 0); // Icecast/OGG
-			BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &g_EndSync, 0);// set sync for end of stream
-			// play it!
-
-			Player.Play();
-			Player.status = eStatus::Playing;
-			Player.MetaSync(NULL, NULL, NULL, NULL);
-			this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED );
-
-			RECT cr, r;
-			cr = GetClientRect();
-			SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
-			InvalidateRect(&r, TRUE);
-		
-		}
-		else
-		{
-			Player.status = eStatus::Buffering;
-			RECT cr, r;
-			cr = GetClientRect();
-			SetRect(&r, 150, cr.bottom - 30, cr.right, cr.bottom);
-			InvalidateRect(&r, TRUE);
-		}
-	}
+		OnTimer((int)wParam);
 	break;
 	case WM_DESTROY:
 		::PostQuitMessage(0);
@@ -411,18 +344,15 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 	case ID_PLAYBACK_RESUME:
 		Player.Resume();
-		this->GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-		this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED);
-		InvalidateRect(this->GetClientRect(), TRUE);
+
 		break;
 
 	case ID_PLAYBACK_STOP:
 		Player.Stop();
-		this->GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_ENABLED);
-		this->GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-		InvalidateRect(this->GetClientRect(), TRUE);
 		break;
+
 	case ID_HELP_LOGWINDOW:
+
 		if (!Config.LogWindow)
 		{
 			GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW,MF_CHECKED);
@@ -434,7 +364,7 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 				bLog::_bLogWin->Create();
 				bLog::_bLogWin->MoveWindow(GetWindowRect().right, GetWindowRect().top, 500, 500);
 				if (!bLog::_bLogWin->GetHwnd())
-					bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", LogType::Error));
+					bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", eLogType::Error));
 			}
 			SetFocus();
 		}
@@ -459,11 +389,11 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 	case ID_FILE_OPEN_FILE:
 		break;
 	case ID_FILE_OPEN_URL:
-		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_OPENURL), this->GetHwnd(), (DLGPROC)&g_AboutDiagproc);
+		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_OPENURL), this->GetHwnd(), (DLGPROC)&g_Diagproc);
 		
 		break;
 	case ID_HELP_ABOUT:
-		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), this->GetHwnd(), (DLGPROC)&g_AboutDiagproc);
+		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), this->GetHwnd(), (DLGPROC)&g_Diagproc);
 		break;
 		
 	}
@@ -471,14 +401,14 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 	return TRUE;
 };
 
-INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
+INT_PTR bTWin::Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 {
 	RECT rcOwner, rcDlg,rc;
 	HFONT font;
 	switch (m) {
 	case WM_INITDIALOG:
 
-		:: GetWindowRect(*this,&rcOwner);
+		::GetWindowRect(*this,&rcOwner);
 		::GetWindowRect(h, &rcDlg);
 		CopyRect(&rc, &rcOwner);
 		OffsetRect(&rcDlg, -rcDlg.left, -rcDlg.top);
@@ -498,10 +428,9 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 			if (!strnicmp(buffer, "http://", 7))
 				::SetDlgItemTextA(h, IDC_LINK, buffer);
 		}else
-				bLog::AddLog(bLogEntry(L"Failed to Open Clipboard", L"bTuner Win", LogType::Error));
+				bLog::AddLog(bLogEntry(L"Failed to Open Clipboard", L"bTuner Win", eLogType::Error));
 
 		font=::CreateFont(40, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
-		//::GetDlgItem(h,IDC_STATIC);
 		::SendDlgItemMessageW(h, IDC_APP_NAME, WM_SETFONT, WPARAM(font), TRUE);
 
 		break;
@@ -522,6 +451,7 @@ INT_PTR bTWin::AboutDiagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 
 		}
 		break;
+
 	case WM_COMMAND:
 		if (LOWORD(w) == IDCANCEL)
 			EndDialog(h, NULL);
@@ -558,7 +488,12 @@ void  bTWin::DrawPlayer(CDC& dc)
 	else
 	{
 		SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
-		brush.CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
+		//brush.CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
+		HBRUSH hBrush = ::CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
+		if (hBrush != 0)
+			brush.Attach(hBrush);
+
+		
 		dc.SelectObject(brush);
 		dc.RoundRect(r, 10, 10);
 	}

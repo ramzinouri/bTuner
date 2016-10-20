@@ -28,6 +28,7 @@
     <ClCompile Include="src\bPlaylist.cpp" />
     <ClCompile Include="src\bRadioList.cpp" />
     <ClCompile Include="src\bStation.cpp" />
+    <ClCompile Include="src\bString.cpp" />
     <ClCompile Include="src\bTuner.cpp" />
     <ClCompile Include="src\bTWin.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -92,6 +93,7 @@
     <ClInclude Include="src\bPlaylist.h" />
     <ClInclude Include="src\bRadioList.h" />
     <ClInclude Include="src\bStation.h" />
+    <ClInclude Include="src\bString.h" />
     <ClInclude Include="src\bTuner.h" />
     <ClInclude Include="src\bTWin.h" />
     <ClInclude Include="src\resource.h" />

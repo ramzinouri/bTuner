@@ -9,21 +9,21 @@
 
 using namespace std;
 
-enum  LogType
+enum  eLogType
 {
-	Error,Info
+	Error,Info,Track,Player,Debug
 };
 
 class bLogEntry
 {
 public:
 	bLogEntry();
-	bLogEntry(wstring _Msg, wstring _source, LogType _type);
+	bLogEntry(wstring _Msg, wstring _source, eLogType _type);
 
 
 	wstring Msg;
 	wstring Source;
-	LogType Type;
+	eLogType Type;
 	time_t Time;
 };
 

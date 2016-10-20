@@ -11,6 +11,7 @@ class bLogList : public CListBox
 public:
 	bLogList();
 	virtual ~bLogList();
+	void DrawItem(WPARAM wParam, LPARAM lParam);
 protected:
 	void PreCreate(CREATESTRUCT &cs);
 

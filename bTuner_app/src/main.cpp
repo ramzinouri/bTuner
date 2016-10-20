@@ -32,7 +32,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int 
 		try
 		{
 			_bTuner=new bTuner;
-			return _bTuner->Run();
+			int r=_bTuner->Run();
+			return r;
 		}
 	
 		catch (const CException &e)

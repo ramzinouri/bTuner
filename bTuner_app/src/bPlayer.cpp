@@ -43,7 +43,7 @@ bPlayer::bPlayer()
 	status = eStatus::Stopped;
 	CoverLoaded = false;
 	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, 0, NULL)) {
-			bLog::AddLog(bLogEntry(L"Cant Initialize Bass Device", L"bPlayer", LogType::Error));
+			bLog::AddLog(bLogEntry(L"Cant Initialize Bass Device", L"bPlayer", eLogType::Error));
 	}
 	BASS_PluginLoad("bass_aac.dll", 0);
 	BASS_PluginLoad("bassopus.dll", 0);
@@ -55,8 +55,15 @@ bPlayer::bPlayer()
 
 int bPlayer::Play()
 {
-	bLog::AddLog(bLogEntry(L"Playing : " + PlayingNow->Name, L"bPlayer", LogType::Info));
-	return BASS_ChannelPlay(chan, FALSE);
+	bLog::AddLog(bLogEntry(L"Playing : " + PlayingNow->Name, L"bPlayer", eLogType::Player));
+	if (BASS_ChannelPlay(chan, FALSE))
+	{
+		status = eStatus::Playing;
+		MetaSync(NULL, NULL, NULL, NULL);
+		UpdateWnd();
+		return true;
+	}
+	return false;
 }
 
 void bPlayer::Stop()
@@ -64,8 +71,9 @@ void bPlayer::Stop()
 	BASS_ChannelStop(chan);
 	BASS_StreamFree(chan);
 	status=eStatus::Stopped;
-	bLog::AddLog(bLogEntry(L"Stopped", L"bPlayer", LogType::Info));
-	::SetWindowText(hwnd, L".:: bTuner ::.");
+	UpdateWnd();
+	bLog::AddLog(bLogEntry(L"Stopped", L"bPlayer", eLogType::Error));
+	
 }
 void bPlayer::Resume()
 {
@@ -74,11 +82,14 @@ void bPlayer::Resume()
 
 void bPlayer::OpenURL(wstring URL)
 {
-	if (PlayingNow)
-		delete PlayingNow;
-	PlayingNow = new bStation;
-	PlayingNow->Streams.push_back(bStream(URL));
-	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Openurl);
+	if (PlayingNow->Streams[PlayingNow->PlayedStreamID].Url!=URL || status==eStatus::Stopped)
+	{
+		if (PlayingNow)
+			delete PlayingNow;
+		PlayingNow = new bStation;
+		PlayingNow->Streams.push_back(bStream(URL));
+		_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Openurl);
+	}
 	
 }
 
@@ -97,30 +108,23 @@ void bPlayer::StaticThreadEntry(void* c)
 
 void bPlayer::OpenThread()
 {
-	std::wstring u = PlayingNow->Streams[PlayingNow->PlayedStreamID].Url;
-	bLog::AddLog(bLogEntry(L"Connecting To: " + u, L"bPlayer", LogType::Info));
-	::SetWindowText(hwnd, L".:: bTuner ::.");
+	bLog::AddLog(bLogEntry(L"Connecting To: " + PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, L"bPlayer", eLogType::Info));
 	status = eStatus::Connecting;
-	RECT cr;
-	GetClientRect(hwnd, &cr);
-	InvalidateRect(hwnd, &cr, TRUE);
+	UpdateWnd();
 	CoverLoaded = false;
 	KillTimer(hwnd, 0);
+	BASS_ChannelStop(chan);
 	BASS_StreamFree(chan);
-	chan = BASS_StreamCreateURL(u.c_str(), 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);
+	chan = BASS_StreamCreateURL(PlayingNow->Streams[PlayingNow->PlayedStreamID].Url.c_str(), 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);
 	SetVolume(Volume);
 	if (!chan)  // failed to open
 	{
-
-		bLog::AddLog(bLogEntry(L"Can't Open Stream : " + u, L"bPlayer", LogType::Error));
+		bLog::AddLog(bLogEntry(L"Can't Open Stream : " + PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, L"bPlayer", eLogType::Error));
 		status = eStatus::Stopped;
-		RECT cr;
-		GetClientRect(hwnd, &cr);
-		InvalidateRect(hwnd, &cr, TRUE);
-	
+		UpdateWnd();
 	}
 	else
-		SetTimer(hwnd, 0, 50, 0); // start prebuffer monitoring
+		SetTimer(hwnd, 0, 500, 0); // start prebuffer monitoring
 
 }
 bool bPlayer::FetchCover()
@@ -169,10 +173,7 @@ bool bPlayer::FetchCover()
 		else
 		{
 			CoverLoaded = false;
-			RECT cr, r;
-			GetClientRect(hwnd, &cr);
-			SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
-			InvalidateRect(hwnd, &r, TRUE);
+			UpdateWnd();
 		}
 	}
 
@@ -212,7 +213,18 @@ bool bPlayer::DownloadCover()
 	memset(buffer, 0, 2048);
 	int nDataLength, st, trec = 0, datalen = 0;
 	CFile file;
-	file.Open(L"cover.png", CFile::modeCreate | CFile::modeWrite);
+	try
+	{
+		file.Open(L"cover.png", CFile::modeCreate | CFile::modeWrite);
+	}
+
+	catch (const CFileException& e)
+	{
+		std::wstring msg = L"Can't Open Cover File : ";
+		msg += e.GetFilePath();
+		bLog::AddLog(bLogEntry(msg, L"bPlayer", eLogType::Error));
+		return FALSE;
+	}
 
 	st = soc.Receive(buffer, 2048, 0);
 	nDataLength = soc.Receive(buffer+st, 2048-st, 0);
@@ -235,12 +247,8 @@ bool bPlayer::DownloadCover()
 		file.Write(buffer, nDataLength);
 		memset(buffer, 0, 2048);
 	};
-
 	CoverLoaded = true;
-	RECT cr,r;
-	GetClientRect(hwnd, &cr);
-	SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
-	InvalidateRect(hwnd, &r, TRUE);
+	UpdateWnd();
 	return true;
 }
 
@@ -276,16 +284,92 @@ void bPlayer::SetVolume(int Vol)
 	float v = Vol/(float )100.0;
 	BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, v);
 }
+void bPlayer::UpdateWnd()
+{
+	HMENU hmenu = GetMenu(hwnd);
+	CMenu menu(hmenu);
+	if (status != eStatus::Playing)
+		::SetWindowText(hwnd, L".:: bTuner ::.");
+
+	if (status == eStatus::Playing)
+	{
+		menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED);
+		menu.EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	}
+	if (status == eStatus::Stopped)
+	{
+		menu.EnableMenuItem(ID_PLAYBACK_RESUME, MF_ENABLED);
+		menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	}
+	if (status == eStatus::Playing&&PlayingNow->Playing.size())
+	{
+		std::wstring title = PlayingNow->Playing + L" -- .:: bTuner ::.";
+		::SetWindowText(hwnd, title.c_str());
+	}
+	RECT cr, r;
+	GetClientRect(hwnd,&cr);
+	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
+	InvalidateRect(hwnd,&r,FALSE);
+}
+void bPlayer::ProcessTags(const char * buffer)
+{
+	if (buffer) {
+		for (; *buffer; buffer += strlen(buffer) + 1) {
+			if (!strnicmp(buffer, "icy-name:", 9))
+				PlayingNow->Name = bString::TrimLeft(bString::PointerToString(buffer + 9));
+			if (!strnicmp(buffer, "icy-url:", 8))
+				PlayingNow->Url = bString::TrimLeft(bString::PointerToString(buffer + 8));
+			if (!strnicmp(buffer, "icy-br:", 7))
+				PlayingNow->Streams[PlayingNow->PlayedStreamID].Bitrate = atoi(buffer + 7);
+			if (!strnicmp(buffer, "icy-genre:", 10))
+				PlayingNow->Genre = bString::TrimLeft(bString::PointerToString(buffer + 10));
+
+			if (!strnicmp(buffer, "Content-Type:", 13))
+			{
+				char *stype = (char*)buffer + 14;
+				if (!strnicmp(stype, "audio/mp3", 9))
+					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
+				if (!strnicmp(stype, "audio/aac", 9))
+					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
+				if (!strnicmp(stype, "audio/aacp", 10))
+					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::AACP;
+				if (!strnicmp(stype, "audio/mpeg", 10))
+					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
+				if (!strnicmp(stype, "video/nsv", 9))
+					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::NSV;
+
+			}
+#ifdef _DEBUG
+			bLog::AddLog(bLogEntry(L"TAGS :: " + bString::PointerToString(buffer), L"debug", eLogType::Debug));
+#endif	
+		}
+	}
+	UpdateWnd();
+}
 void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 {
-	char *uuu = (char*)buffer;
+	char *http = (char*)buffer;
 	if (buffer && !length)
 	{
-		for (; *uuu; uuu += strlen(uuu) + 1) {
-#ifdef _DEBUG
-			std::wstring msg = L"HTTP :: " + std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(uuu);
-			bLog::AddLog(bLogEntry(msg, L"debug", LogType::Info));
-#endif
+		std::string h(http);
+		if (h.find("200")==std::string::npos)
+		{
+			//bLog::AddLog(bLogEntry(L"Stream Url Error", L"bPlayer", eLogType::Error));
+			for (; *http; http += strlen(http) + 1) {
+				bLog::AddLog(bLogEntry(L"HTTP :: " + bString::PointerToString(http), L"debug", eLogType::Debug));
+			}
+			return;
+		}
+		for (; *http; http += strlen(http) + 1) {
+			if (!strnicmp(http, "icy", 3))
+			{
+				ProcessTags((const char *)buffer);
+				return;
+			}
+		}
+		http = (char*)buffer;
+		for (; *http; http += strlen(http) + 1) {
+			bLog::AddLog(bLogEntry(L"HTTP :: " + bString::PointerToString(http), L"debug", eLogType::Debug));
 		}
 	}
 
@@ -293,12 +377,9 @@ void bPlayer::DownloadProc(const void *buffer, DWORD length, void *user)
 
 void bPlayer::EndSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {
-	bLog::AddLog(bLogEntry(L"EndSync : " + PlayingNow->Name, L"bPlayer", LogType::Info));
-	::SetWindowText(hwnd, L".:: bTuner ::.");
+	bLog::AddLog(bLogEntry(L"EndSync : " + PlayingNow->Name, L"bPlayer", eLogType::Error));
 	status = eStatus::Stopped;
-	RECT r;
-	GetClientRect(hwnd, &r);
-	InvalidateRect(hwnd, &r, TRUE);
+	UpdateWnd();
 }
 void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {	
@@ -312,12 +393,12 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 				t[p2 - (p + 13)] = 0;
 				char *pl = new char[strlen(t)+1];
 				memcpy(pl, t, strlen(t) + 1);
-				PlayingNow->Playing = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(pl);
+				PlayingNow->Playing = bString::Trim(bString::PointerToString(pl));
 				p = strstr(t, "-");
 				if (p) {
 					p[-1] = 0;
-					PlayingNow->Artist = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(t);
-					PlayingNow->Track = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(p+2);
+					PlayingNow->Artist = bString::Trim(bString::PointerToString(t));
+					PlayingNow->Track = bString::Trim(bString::PointerToString(p+2));
 				}
 
 			}
@@ -325,27 +406,23 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	}
 	else {
 		meta = (char *)BASS_ChannelGetTags(chan, BASS_TAG_OGG);
-		if (meta) { // got Icecast/OGG tags
+		if (meta) {
 			char *artist = NULL, *title = NULL, *p = meta;
 			for (; *p; p += strlen(p) + 1) {
 				if (!_strnicmp(p, "artist=", 7))
 					artist = p + 7;
 				if (!_strnicmp(p, "title=", 6))
 					title = p + 6;
-				if (!_strnicmp(p, "artist= ", 8)) 
-					artist = p + 8;
-				if (!_strnicmp(p, "title= ", 7)) 
-					title = p + 7;
 #ifdef _DEBUG
 				std::wstring msg = L"OGG META:: "+std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(p);
-				bLog::AddLog(bLogEntry(msg, L"debug", LogType::Info));
+				bLog::AddLog(bLogEntry(msg, L"debug", eLogType::Debug));
 #endif
 			}
 			if (title) {
 				
-				PlayingNow->Track = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(title);
+				PlayingNow->Track = bString::Trim(bString::PointerToString(title));
 				if (artist) {
-					PlayingNow->Artist = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(artist);
+					PlayingNow->Artist = bString::Trim(bString::PointerToString(artist));
 					if (PlayingNow->Artist.size())
 					{
 						PlayingNow->Playing = PlayingNow->Artist + L" - ";
@@ -358,6 +435,10 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 					if (!PlayingNow->Name.size())
 						PlayingNow->Name = PlayingNow->Artist;
 				}
+				else
+				{
+					PlayingNow->Playing = PlayingNow->Track;
+				}
  				
 			}
 		}
@@ -365,14 +446,8 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	if (!PlayingNow->Playing.size() )
 		return;
 	_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
-
-	bLog::AddLog(bLogEntry(L"Track : " + PlayingNow->Playing, L"bPlayer", LogType::Info));
-	std::wstring tit= PlayingNow->Playing + L" -- .:: bTuner ::.";
-	::SetWindowText(hwnd, tit.c_str());
-	RECT r;
-	GetClientRect(hwnd, &r);
-	InvalidateRect(hwnd,&r, TRUE);
-	
+	bLog::AddLog(bLogEntry(L"Track : " + PlayingNow->Playing, L"bPlayer", eLogType::Track));
+	UpdateWnd();
 }
 
 bPlayer::~bPlayer()

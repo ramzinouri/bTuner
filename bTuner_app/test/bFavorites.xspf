@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+    <title>.:: bTuner ::. Favorites</title>
+    <trackList>
+        <track>
+			<title>I Love Radio</title>
+			<location>http://stream12.iloveradio.de/iloveradio1-aac.mp3</location>
+			<info>http://www.iloveradio.de/</info>
+		</track>
+		<track>
+			<title>I Love 2 Dance</title>
+			<location>http://stream12.iloveradio.de/iloveradio2-aac.mp3</location>
+			<info>http://www.iloveradio.de/</info>
+		</track>
+		<track>
+			<title>I Love The Battle</title>
+			<location>http://stream12.iloveradio.de/iloveradio3-aac.mp3</location>
+			<info>http://www.iloveradio.de/</info>
+		</track>
+		<track>
+			<title>I Love Mashup</title>
+			<location>http://stream12.iloveradio.de/iloveradio5-aac.mp3</location>
+			<info>http://www.iloveradio.de/</info>
+		</track>
+		<track>
+			<title>I Love Bravo Charts</title>
+			<location>http://stream12.iloveradio.de/iloveradio9-aac.mp3</location>
+			<info>http://www.iloveradio.de/</info>
+		</track>
+		<track>
+			<title>I Love Bravo Tubestars</title>
+			<location>http://stream12.iloveradio.de/iloveradio4-aac.mp3</location>
+			<info>http://www.iloveradio.de/</info>
+		</track>
+		
+		<track>
+			<title>I Love Bravo Love</title>
+			<location>http://stream12.iloveradio.de/iloveradio10-aac.mp3</location>
+			<info>http://www.iloveradio.de/</info>
+		</track>
+		
+		<track>
+			<title>.977 Today's Hits</title>
+			<location>http://provisioning.streamtheworld.com/pls/977_HITSAAC.pls</location>
+			<info>http://www.977music.com/</info>
+		</track>
+		
+		<track>
+			<title>#Pophits</title>
+			<location>http://streaming208.radionomy.com:80/-Pophits</location>
+			<info>http://pophitsradio.weebly.com/</info>
+		</track>
+		
+		<track>
+			<title>AnimeNfo Radio</title>
+			<location>http://emaru.animenfo.com:443/</location>
+			<info>http://www.animenfo.com/radio</info>
+		</track>
+
+    </trackList>
+</playlist>

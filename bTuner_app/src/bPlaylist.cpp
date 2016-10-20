@@ -146,15 +146,24 @@ bool bPlaylist::ParseXSPF(std::wstringstream* data)
 		return false;
 
 	xml_node nTrackList = doc.child(L"playlist").child(L"trackList");
-	bStation st;
-	st.Name = doc.child(L"playlist").child(L"title").text().as_string();
-	st.Url = doc.child(L"playlist").child(L"info").text().as_string();
+	
 
 	for (xml_node nTrack = nTrackList.first_child(); nTrack; nTrack = nTrack.next_sibling())
 	{
+		bStation st;
+		if (nTrack.child(L"title"))
+			st.Name = nTrack.child(L"title").text().as_string();
+		else
+			st.Name = doc.child(L"playlist").child(L"title").text().as_string();
+		if (nTrack.child(L"info"))
+			st.Url = nTrack.child(L"info").text().as_string();
+		else
+			st.Url = doc.child(L"playlist").child(L"info").text().as_string();
+
 		bStream s(nTrack.child(L"location").text().as_string());
 		st.Streams.push_back(s);
+		Stations.push_back(st);
 	}
-	Stations.push_back(st);
+	
 	return true;
 }

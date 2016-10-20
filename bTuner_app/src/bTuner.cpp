@@ -18,14 +18,14 @@ bTuner::~bTuner()
 
 BOOL bTuner::InitInstance()
 {
-	bLog::AddLog(bLogEntry(L"bTuner v0.0.0.1 Started", L"bTuner App", LogType::Info));
+	bLog::AddLog(bLogEntry(L"bTuner v0.0.0.1 Started", L"bTuner App", eLogType::Info));
 	_bTWin=new bTWin;
 
 	_bTWin->Create();
 
 	if (!_bTWin->GetHwnd())
 	{
-		bLog::AddLog(bLogEntry(L"Failed to create Main window", L"bTuner App", LogType::Error));
+		bLog::AddLog(bLogEntry(L"Failed to create Main window", L"bTuner App", eLogType::Error));
 		return FALSE;
 	}
 

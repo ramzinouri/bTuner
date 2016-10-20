@@ -70,8 +70,15 @@ int  bLogWin::OnCreate(CREATESTRUCT& cs)
 
 LRESULT bLogWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	PDRAWITEMSTRUCT pdis;
 	switch (uMsg)
 	{
+	case WM_DRAWITEM:
+
+		pdis = (PDRAWITEMSTRUCT)lParam;
+		if (pdis->hwndItem == _bLogList)
+			_bLogList.DrawItem(wParam, lParam);
+		break;
 	case WM_CLOSE:
 	case WM_DESTROY:
 		bLog::_bLogWin = NULL;
@@ -96,9 +103,46 @@ bLogList::bLogList()
 bLogList::~bLogList()
 {
 
+}
+void bLogList::DrawItem(WPARAM wParam, LPARAM lParam)
+{
+	PDRAWITEMSTRUCT pdis = (PDRAWITEMSTRUCT)lParam;
+	HFONT font;
+
+	if (pdis->itemID == -1)
+		return;
+
+	font = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
+
+	SelectObject(pdis->hDC, font);
+
+	FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(255, 255, 255)));
+	::SetTextColor(pdis->hDC, RGB(0, 0, 0));
+
+	if (bLog::Log->at(pdis->itemID).Type==eLogType::Error)
+		::SetTextColor(pdis->hDC, RGB(255, 0, 0));
+	if (bLog::Log->at(pdis->itemID).Type == eLogType::Player)
+		FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(40, 185, 220)));
+	if (bLog::Log->at(pdis->itemID).Type == eLogType::Info)
+		FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(255, 255, 255)));
+	if (bLog::Log->at(pdis->itemID).Type == eLogType::Debug)
+		::SetTextColor(pdis->hDC, RGB(0, 150, 0));
+	if (bLog::Log->at(pdis->itemID).Type == eLogType::Track)
+		FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(180, 230, 240)));
+
+	struct tm*  timeinfo;
+	timeinfo = localtime(&bLog::Log->at(pdis->itemID).Time);
+	CString ms;
+	ms.Format(L"%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+	ms += bLog::Log->at(pdis->itemID).Msg.c_str();
+
+	SetBkMode(pdis->hDC, TRANSPARENT);
+	TextOut(pdis->hDC, 5, pdis->rcItem.top , ms, ms.GetLength());
+
 };
 
 void bLogList::PreCreate(CREATESTRUCT &cs)
 {
-	cs.style = WS_CHILD| WS_VISIBLE| WS_VSCROLL | WS_BORDER |LBS_NOSEL;
+	cs.style = WS_CHILD| WS_VISIBLE| WS_VSCROLL | WS_BORDER |LBS_NOSEL| LBS_OWNERDRAWFIXED;
 };

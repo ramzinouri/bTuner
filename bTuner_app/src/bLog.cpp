@@ -5,11 +5,11 @@ bLogWin* bLog::_bLogWin=NULL;
 
 bLogEntry::bLogEntry()
 {
-	Type = LogType::Info;
+	Type = eLogType::Info;
 	time(&Time);
 };
 
-bLogEntry::bLogEntry(wstring _Msg, wstring _source, LogType _type)
+bLogEntry::bLogEntry(wstring _Msg, wstring _source, eLogType _type)
 {
 	Msg = _Msg;
 	Source = _source;

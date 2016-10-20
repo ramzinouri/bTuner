@@ -9,9 +9,7 @@
 #include <process.h>
 #include <cctype>
 #include <iomanip>
-#include <string>
-#include <locale>
-#include <codecvt>
+
 
 #include "pugixml/pugixml.hpp"
 using namespace pugi;
@@ -23,6 +21,7 @@ using namespace std;
 using namespace Win32xx;
 
 #include "bStation.h"
+#include "bString.h"
 
 enum eStatus { Playing,Stopped,Connecting,Buffering};
 enum eThread { Openurl,Fetchurl,Downloadcover};
@@ -48,6 +47,8 @@ public:
 	void OpenURL(std::wstring URL);
 	int GetVolume();
 	void SetVolume(int Vol);
+	void UpdateWnd();
+	void ProcessTags(const char *buffer);
 	void DownloadProc(const void *buffer, DWORD length, void *user);
 	void MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 	void EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
