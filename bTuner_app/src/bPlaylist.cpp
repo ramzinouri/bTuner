@@ -16,6 +16,9 @@ int bPlaylist::Locate(std::wstring name)
 	{
 		if (Stations.at(i).Name == name)
 			return i;
+		for (int j = 0; j < Stations.at(i).Streams.size(); j++)
+			if (Stations.at(i).Streams.at(j).Url == name)
+				return i;
 	}
 	return -1;
 }
@@ -147,7 +150,7 @@ bool bPlaylist::ParseXSPF(std::wstringstream* data)
 
 	xml_node nTrackList = doc.child(L"playlist").child(L"trackList");
 	
-
+	int i = 0;
 	for (xml_node nTrack = nTrackList.first_child(); nTrack; nTrack = nTrack.next_sibling())
 	{
 		bStation st;
@@ -155,14 +158,21 @@ bool bPlaylist::ParseXSPF(std::wstringstream* data)
 			st.Name = nTrack.child(L"title").text().as_string();
 		else
 			st.Name = doc.child(L"playlist").child(L"title").text().as_string();
+
 		if (nTrack.child(L"info"))
 			st.Url = nTrack.child(L"info").text().as_string();
 		else
 			st.Url = doc.child(L"playlist").child(L"info").text().as_string();
 
+		if (nTrack.child(L"image"))
+			st.Image = nTrack.child(L"image").text().as_string();
+		else
+			st.Image = doc.child(L"playlist").child(L"image").text().as_string();
+		st.ID = i;
 		bStream s(nTrack.child(L"location").text().as_string());
 		st.Streams.push_back(s);
 		Stations.push_back(st);
+		i++;
 	}
 	
 	return true;

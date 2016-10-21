@@ -22,6 +22,7 @@ using namespace Win32xx;
 
 #include "bStation.h"
 #include "bString.h"
+#include "bHttp.h"
 
 enum eStatus { Playing,Stopped,Connecting,Buffering};
 enum eThread { Openurl,Fetchurl,Downloadcover};
@@ -36,7 +37,8 @@ public:
 	HSTREAM chan;
 	eStatus status;
 	bStation *PlayingNow;
-
+	HANDLE  hThreadArray[3];
+	unsigned threadID[3];
 	bool CoverLoaded;
 	int BuffProgress;
 	bPlayer();
@@ -45,6 +47,7 @@ public:
 	void Stop();
 	void Resume();
 	void OpenURL(std::wstring URL);
+	void OpenStation(const bStation& Station);
 	int GetVolume();
 	void SetVolume(int Vol);
 	void UpdateWnd();
@@ -56,7 +59,7 @@ private:
 	void OpenThread();
 	bool FetchCover();
 	bool DownloadCover();
-	static void StaticThreadEntry(void* c);
+	static unsigned __stdcall StaticThreadEntry(void* c);
 	int Volume;
 	std::string url_encode(const std::wstring &input);
 	std::wstring CoverUrl;

@@ -6,6 +6,7 @@
 #include "Win32++\wxx_listview.h"
 
 #include "bStation.h"
+#include "bPlaylist.h"
 
 
 class bRadioList : public CListView
@@ -16,6 +17,7 @@ public:
 	void DrawItem(WPARAM wParam, LPARAM lParam);
 	void OnCreate();
 	void AddStation(const bStation& station);
+	int PlayingNowID;
 protected:
 	void PreCreate(CREATESTRUCT &cs);
 };

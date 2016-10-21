@@ -2,7 +2,7 @@
 
 bRadioList::bRadioList()
 {
-	
+	PlayingNowID = -1;
 };
 
 bRadioList::~bRadioList()
@@ -56,9 +56,14 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(15, 15, 15)));
 
 		if (pdis->itemState & ODS_SELECTED)
-			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(40, 185, 220)));
+			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(30, 150, 220)));
 
 		::SetTextColor(pdis->hDC, RGB(255, 255, 255));
+
+		if(PlayingNowID ==pdis->itemID)
+			::SetTextColor(pdis->hDC, RGB(140, 255, 140));
+
+		
 
 		SetBkMode(pdis->hDC, TRANSPARENT);
 		TextOut(pdis->hDC, 20, pdis->rcItem.top + 7, text.c_str(), text.GetLength());

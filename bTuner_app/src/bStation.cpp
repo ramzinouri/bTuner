@@ -12,6 +12,7 @@ bStation::bStation()
 	Name = L"";
 	Genre = L"";
 	Url = L"";
+	Image = L"";
 	Playing = L"";
 	Artist = L"";
 	Track = L"";

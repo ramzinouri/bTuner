@@ -21,6 +21,7 @@ public:
 	std::wstring Name;
 	std::wstring Genre;
 	std::wstring Url;
+	std::wstring Image;
 	unsigned int PlayedStreamID;
 	std::wstring Playing;
 	std::wstring Artist;

@@ -24,6 +24,7 @@ bTWin::bTWin()
 	Mouse.x = 0;
 	Mouse.y = 0;
 	Playlist = NULL;
+	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 };
 void  bTWin::OnClose()
 {
@@ -66,6 +67,11 @@ void  bTWin::OnTimer(int TimerID)
 
 }
 
+BOOL bTWin::OnEraseBkgnd(CDC & dc)
+{
+	return TRUE;
+}
+
 void bTWin::OnDestroy()
 {
 	
@@ -73,8 +79,7 @@ void bTWin::OnDestroy()
 		delete Playlist;
 	GdiplusShutdown(gdiplusToken);
 	Config.LastVolume= Player.GetVolume();
-	Config.LastPlayedName = Player.PlayingNow->Name;
-	Config.LastPlayedUrl = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Url;
+	Config.LastPlayed = *Player.PlayingNow;
 	Config.LastWindowPos.x = GetWindowRect().left;
 	Config.LastWindowPos.y = GetWindowRect().top;
 	
@@ -115,11 +120,11 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 };
 int bTWin::OnCreate(CREATESTRUCT& cs)
 {
-	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+	
 	Player.hwnd = this->GetHwnd();
 	if (!Config.Load())
 		bLog::AddLog(bLogEntry(L"Failed to Load Config File", L"bTuner Win", eLogType::Error));
-	if(!Config.LastPlayedUrl.size())
+	if(!Config.LastPlayed.Streams[0].Url.size())
 		GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	if (Config.LogWindow)
@@ -135,9 +140,13 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	if (Player.PlayingNow)
 		delete Player.PlayingNow;
 	Player.PlayingNow = new bStation;
-	Player.PlayingNow->Streams.push_back(bStream(Config.LastPlayedUrl));
-	Player.PlayingNow->Name = Config.LastPlayedName;
 
+	Player.PlayingNow->Streams.push_back(bStream(Config.LastPlayed.Streams.at(0)));
+	Player.PlayingNow->Name = Config.LastPlayed.Name;
+	Player.PlayingNow->Url = Config.LastPlayed.Url;
+	Player.PlayingNow->Image = Config.LastPlayed.Image;
+
+	
 	bList.Create(*this);
 	bList.OnCreate();
 
@@ -147,7 +156,6 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Playlist->LoadFile(L"../../../test/bFavorites.xspf");
 	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
 		bList.AddStation(Playlist->Stations.at(i));
-	
 
 	
 	/*
@@ -216,7 +224,27 @@ void bTWin::OnDraw(CDC& dc)
 {
 	//Graphics graphics(dc);
 
-	DrawPlayer(dc);
+	CRect cr=GetClientRect();
+	RECT r;
+	SetRect(&r, 0, 0, 150, cr.bottom-150);
+	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(20, 20, 20)));
+
+	HDC hdcBuffer = CreateCompatibleDC(dc);  // OFF screen DC
+	int h, w;
+	h = 150;
+	w = GetClientRect().Width();
+	HBITMAP hBitmapBuffer = CreateCompatibleBitmap(dc, w, h);  // create memory bitmap for that off screen DC
+
+	SelectObject(hdcBuffer, hBitmapBuffer); // Select the created memory bitmap into the OFF screen DC
+
+	DrawPlayer(CDC(hdcBuffer,*this));								/* Then do your painting job using hdcBuffer over off screen DC */
+
+	BitBlt(dc, 0,GetClientRect().bottom-150, w, h, hdcBuffer, 0, 0, SRCCOPY); // copy the content of OFF screen DC to actual screen DC
+
+	DeleteDC(hdcBuffer); // Release the OFF screen DC
+
+	DeleteObject(hBitmapBuffer); // Free the memory for bitmap
+	
 
 };
 
@@ -258,7 +286,12 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			InvalidateRect(VolumeRect, TRUE);
 			break;
 		}
-			
+		if (LinkRect.PtInRect(Mouse) && LinkRect.PtInRect(ClickP))
+		{
+			ShellExecuteW(NULL, L"open", Player.PlayingNow->Url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+			break;
+		}
+
 		if (PlayRect.PtInRect(Mouse) && !Clicked)
 		{
 			if (Player.status == eStatus::Playing)
@@ -278,12 +311,19 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		prv = Hover;
 		if (VolumeRect.PtInRect(Mouse))
 			Hover = bHover::Volume;
-		else
-			Hover = bHover::None;
-		if (PlayRect.PtInRect(Mouse))
+		else if (LinkRect.PtInRect(Mouse))
+		{
+			Hover = bHover::Link;
+			if (Player.status == eStatus::Playing)
+				SetCursor(LoadCursor(NULL, IDC_HAND));
+		}
+		else if (PlayRect.PtInRect(Mouse))
 			Hover = bHover::Play;
 		else
+		{
 			Hover = bHover::None;
+			
+		}
 		if (Clicked&&VolumeRect.PtInRect(Mouse)&& VolumeRect.PtInRect(ClickP))
 		{
 			Player.SetVolume(100 - VolumeRect.right + Mouse.x);
@@ -294,6 +334,10 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			if (Hover == bHover::Play|| prv == bHover::Play)
 				InvalidateRect(PlayRect, TRUE);
+			if (Hover == bHover::Link || prv == bHover::Link)
+				InvalidateRect(LinkRect, TRUE);
+			if (Hover == bHover::None )
+				SetCursor(LoadCursor(NULL, IDC_ARROW));
 		}
 		
 		break;
@@ -330,7 +374,7 @@ LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 			CString sID=bList.GetItemText(lpnmia->iItem, 1);
 			int index = std::stoi(sID.c_str());
 			if (index >= 0 && index <(int)Playlist->Stations.size())
-				Player.OpenURL(Playlist->Stations[index].Streams[0].Url);
+				Player.OpenStation(Playlist->Stations[index]);
 
 		}
 		break;
@@ -340,7 +384,7 @@ LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 
 BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	switch (LOWORD(wParam))
+	switch (LOWORD(wParam)) 
 	{
 	case ID_PLAYBACK_RESUME:
 		Player.Resume();
@@ -472,10 +516,20 @@ void  bTWin::DrawPlayer(CDC& dc)
 {
 
 	Graphics graphics(dc);
-	CRect cr = GetClientRect();
+	CRect cr(0,0,GetClientRect().right,150);
 	RECT r;
 	CFont font;
 	CBrush brush;
+
+	int id = Playlist->Locate(Player.PlayingNow->Streams.at(Player.PlayingNow->PlayedStreamID).Url);
+	if (id >= 0)
+	{
+		if (id != bList.PlayingNowID)
+		{
+			bList.PlayingNowID = id;
+			bList.RedrawWindow();
+		}
+	}
 
 	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
 	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
@@ -495,7 +549,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 
 		
 		dc.SelectObject(brush);
-		dc.RoundRect(r, 10, 10);
+		dc.FillRect(r, hBrush);
 	}
 
 	SetRect(&r, 150, cr.bottom - 75, cr.right - 5, cr.bottom - 25);
@@ -543,7 +597,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 		dc.Polygon(points, 3);
 	}
 
-	if (Player.status == eStatus::Playing)
+	if (Player.status != eStatus::Stopped)
 	{
 		dc.TextOut(195, cr.bottom - 65, L"Stop", 4);
 
@@ -619,9 +673,17 @@ void  bTWin::DrawPlayer(CDC& dc)
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		dc.SelectObject(font);
 		dc.SetTextColor(RGB(180, 180, 180));
-		dc.TextOut(150, cr.bottom - 20, Player.PlayingNow->Url.c_str(), Player.PlayingNow->Url.size());
+		
 
+		
 		CSize s = dc.GetTextExtentPoint32(Player.PlayingNow->Url.c_str(), Player.PlayingNow->Url.size());
+		LinkRect.top = GetClientRect().bottom - 20;
+		LinkRect.bottom = GetClientRect().bottom;
+		LinkRect.left = 150;
+		LinkRect.right = 150 + s.cx;
+		if (Hover == bHover::Link)
+			dc.SetTextColor(RGB(40, 185, 220));
+		dc.TextOut(150, cr.bottom - 20, Player.PlayingNow->Url.c_str(), Player.PlayingNow->Url.size());
 		font.CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
 		dc.SelectObject(font);
@@ -632,9 +694,7 @@ void  bTWin::DrawPlayer(CDC& dc)
 		wchar_t *codecT[] = { L" MP3 ",L" AAC ",L" OGG ",L" MPEG ",L" AAC+ ",L" Opus ",L" NSV ",L"" };
 		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
 		if (c < eCodecs::UNDIFINED)
-		{
 			dc.TextOut(150 + 10 + s.cx, cr.bottom - 20, codecT[c], wcslen(codecT[c]));
-		}
 
 		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate)
 		{

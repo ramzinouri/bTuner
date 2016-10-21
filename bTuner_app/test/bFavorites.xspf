@@ -6,55 +6,86 @@
 			<title>I Love Radio</title>
 			<location>http://stream12.iloveradio.de/iloveradio1-aac.mp3</location>
 			<info>http://www.iloveradio.de/</info>
+			<image>http://liveradio.de/station-images/b9c2242f-f5b4-4aba-b846-2bd18ef5c5f3/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love 2 Dance</title>
 			<location>http://stream12.iloveradio.de/iloveradio2-aac.mp3</location>
 			<info>http://www.iloveradio.de/</info>
+			<image>http://liveradio.de/station-images/4658b52b-7d4a-45fb-b919-2e23ad521bfe/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love The Battle</title>
 			<location>http://stream12.iloveradio.de/iloveradio3-aac.mp3</location>
 			<info>http://www.iloveradio.de/</info>
+			<image>http://liveradio.de/station-images/ec3f5b38-bd5c-4f04-b12a-5301fe9688f8/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love Mashup</title>
 			<location>http://stream12.iloveradio.de/iloveradio5-aac.mp3</location>
 			<info>http://www.iloveradio.de/</info>
+			<image>http://liveradio.de/station-images/6839db35-5831-4fdb-8b6b-d4dc1484b3f5/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love Bravo Charts</title>
 			<location>http://stream12.iloveradio.de/iloveradio9-aac.mp3</location>
 			<info>http://www.iloveradio.de/</info>
+			<image>http://liveradio.de/station-images/b562ca55-0183-47a1-b6a0-de3f8af661e1/fit-145x145.jpg</image>
 		</track>
 		<track>
-			<title>I Love Bravo Tubestars</title>
+			<title>I Love BRAVO TubeStars</title>
 			<location>http://stream12.iloveradio.de/iloveradio4-aac.mp3</location>
 			<info>http://www.iloveradio.de/</info>
+			<image>http://liveradio.de/station-images/0ecf2952-3935-4c0e-8b9b-5df5e920115f/fit-145x145.jpg</image>
 		</track>
 		
 		<track>
 			<title>I Love Bravo Love</title>
 			<location>http://stream12.iloveradio.de/iloveradio10-aac.mp3</location>
 			<info>http://www.iloveradio.de/</info>
+			<image>http://liveradio.de/station-images/ec3f5b38-bd5c-4f04-b12a-5301fe9688f8/fit-145x145.jpg</image>
 		</track>
 		
 		<track>
 			<title>.977 Today's Hits</title>
 			<location>http://provisioning.streamtheworld.com/pls/977_HITSAAC.pls</location>
 			<info>http://www.977music.com/</info>
+			<image>http://liveradio.de/station-images/692923e7-2944-488a-bd23-937845c4755d/fit-145x145.jpg</image>
+		</track>
+		
+		<track>
+			<title>HUNTER.FM -=[: The Hitz Channel :]=-</title>
+			<location>http://live.hunter.fm:80/mobile</location>
+			<info>http://hunter.fm</info>
+			<image>https://i3.radionomy.com/radios/145/423ab2d6-d0ed-4060-9aef-a61be8a077f2.jpg</image>
 		</track>
 		
 		<track>
 			<title>#Pophits</title>
 			<location>http://streaming208.radionomy.com:80/-Pophits</location>
 			<info>http://pophitsradio.weebly.com/</info>
+			<image>http://liveradio.de/station-images/c7f485f0-9cc2-4ed1-bdc3-abd8af3618a8/fit-145x145.jpg</image>
+		</track>
+		
+		<track>
+			<title>ClubHits</title>
+			<location>http://streaming211.radionomy.com:80/ClubHits</location>
+			<info>http://clubhits.playtheradio.com</info>
+			<image>https://i3.radionomy.com/radios/145/88d7f515-c183-4dba-b679-0cf9b3d7e451.jpg</image>
+		</track>
+
+		<track>
+			<title>[AnimeNexus]</title>
+			<location>http://www.nexusnet.com.mx:8000/animenexus-relay</location>
+			<image>https://i3.radionomy.com/radios/145/55dd6735-731f-45ef-9640-9682923ef368.png</image>
+			<info>http://www.animenexus.mx</info>
 		</track>
 		
 		<track>
 			<title>AnimeNfo Radio</title>
 			<location>http://emaru.animenfo.com:443/</location>
 			<info>http://www.animenfo.com/radio</info>
+			<image>http://liveradio.de/station-images/f5135003-dce4-4fd5-8c3f-ad6f893dd488/fit-145x145.jpg</image>
 		</track>
 
     </trackList>

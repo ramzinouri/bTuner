@@ -22,6 +22,7 @@
     <ClCompile Include="libs\JSON\jsoncpp.cpp" />
     <ClCompile Include="libs\pugixml\pugixml.cpp" />
     <ClCompile Include="src\bConfig.cpp" />
+    <ClCompile Include="src\bHttp.cpp" />
     <ClCompile Include="src\bLog.cpp" />
     <ClCompile Include="src\bLogWin.cpp" />
     <ClCompile Include="src\bPlayer.cpp" />
@@ -87,6 +88,7 @@
     <ClInclude Include="libs\Win32++\wxx_wincore0.h" />
     <ClInclude Include="libs\Win32++\wxx_winutils.h" />
     <ClInclude Include="src\bConfig.h" />
+    <ClInclude Include="src\bHttp.h" />
     <ClInclude Include="src\bLog.h" />
     <ClInclude Include="src\bLogWin.h" />
     <ClInclude Include="src\bPlayer.h" />
@@ -190,7 +192,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
-      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AssemblyDebug>true</AssemblyDebug>
@@ -239,7 +241,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
-      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <FullProgramDatabaseFile>false</FullProgramDatabaseFile>
       <AssemblyDebug>false</AssemblyDebug>
       <LinkTimeCodeGeneration />

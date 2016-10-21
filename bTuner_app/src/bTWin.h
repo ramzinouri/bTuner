@@ -16,15 +16,16 @@ using namespace Gdiplus;
 #include "bPlaylist.h"
 #include "bLog.h"
 
-enum bHover { None, Play, Volume, CoverArt };
+enum bHover { None, Play, Volume, CoverArt, Link };
 
 class bTWin : public CWnd
 {
+	
 public:
 	bTWin();
 	virtual ~bTWin();
 	INT_PTR Diagproc(HWND h, UINT m, WPARAM w, LPARAM l);
-
+	
 protected:
 
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -36,13 +37,15 @@ protected:
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	LRESULT OnNotify(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
+	bPlaylist* Playlist;
 	void DrawPlayer(CDC& dc);
 	void  OnClose();
 	void OnTimer(int TimerID);
-
+	BOOL OnEraseBkgnd(CDC& dc);
 private:
 	CRect VolumeRect;
 	CRect PlayRect;
+	CRect LinkRect;
 	int Hover;
 	POINT Mouse,ClickP;
 	BOOL Clicked;
@@ -50,8 +53,7 @@ private:
 	GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR           gdiplusToken;
 	bRadioList bList;
-	bPlaylist* Playlist;
-	
+
 };
 
 #endif
