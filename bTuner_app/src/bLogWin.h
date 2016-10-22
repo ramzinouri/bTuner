@@ -24,7 +24,7 @@ public:
 	bLogWin();
 	virtual ~bLogWin();
 	void UpdateLog();
-	void AddLog();
+	void AddLog(std::wstring _log);
 protected:
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void PreRegisterClass(WNDCLASS &wc);

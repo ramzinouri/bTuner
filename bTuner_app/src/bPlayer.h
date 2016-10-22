@@ -55,6 +55,7 @@ public:
 	void DownloadProc(const void *buffer, DWORD length, void *user);
 	void MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 	void EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
+	void InitBass();
 private:
 	void OpenThread();
 	bool FetchCover();

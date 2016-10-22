@@ -6,7 +6,6 @@
 #include "Win32++\wxx_listview.h"
 
 #include "bStation.h"
-#include "bPlaylist.h"
 
 
 class bRadioList : public CListView

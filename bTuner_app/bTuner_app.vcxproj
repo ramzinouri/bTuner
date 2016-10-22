@@ -98,6 +98,7 @@
     <ClInclude Include="src\bString.h" />
     <ClInclude Include="src\bTuner.h" />
     <ClInclude Include="src\bTWin.h" />
+    <ClInclude Include="src\bVersion.h" />
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -155,7 +156,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)build\bin\$(Configuration)\</OutDir>
     <TargetName>$(SolutionName)</TargetName>
     <IntDir>$(ProjectDir)build\$(Configuration)\</IntDir>
@@ -192,7 +193,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
-      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AssemblyDebug>true</AssemblyDebug>
@@ -241,7 +242,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <OutputFile>$(ProjectDir)build\bin\$(Configuration)\$(SolutionName)$(TargetExt)</OutputFile>
       <ManifestFile>$(ProjectDir)src\res\$(SolutionName).manifest</ManifestFile>
-      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)libs\bass\bass.lib;$(ProjectDir)libs\bass\bass_aac.lib;$(ProjectDir)libs\bass\bassopus.lib;ws2_32.lib;gdiplus.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <FullProgramDatabaseFile>false</FullProgramDatabaseFile>
       <AssemblyDebug>false</AssemblyDebug>
       <LinkTimeCodeGeneration />

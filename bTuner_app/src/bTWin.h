@@ -1,14 +1,14 @@
 #ifndef BTWIN_H
 #define BTWIN_H
 
-
 #include "Win32++\wxx_wincore.h"
 #include "Win32++\wxx_controls.h"
-#include "win32++\wxx_listview.h"
+
 #include <stdio.h>
 #include <gdiplus.h>
-using namespace Gdiplus;
 
+using namespace Gdiplus;
+#include "bVersion.h"
 #include "resource.h"
 #include "bPlayer.h"
 #include "bConfig.h"
@@ -27,7 +27,6 @@ public:
 	INT_PTR Diagproc(HWND h, UINT m, WPARAM w, LPARAM l);
 	
 protected:
-
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void PreRegisterClass(WNDCLASS &wc);
 	void PreCreate(CREATESTRUCT &cs);
@@ -38,7 +37,7 @@ protected:
 	LRESULT OnNotify(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
 	bPlaylist* Playlist;
-	void DrawPlayer(CDC& dc);
+	void DrawPlayer(HDC dc);
 	void  OnClose();
 	void OnTimer(int TimerID);
 	BOOL OnEraseBkgnd(CDC& dc);

@@ -1,5 +1,4 @@
 #include "bTuner.h"
-#include "bLogWin.h"
 #include "bLog.h"
 
 bTuner::bTuner()
@@ -11,14 +10,13 @@ bTuner::bTuner()
 #endif
 };
 
-bTuner::~bTuner()
-{
-
-};
-
 BOOL bTuner::InitInstance()
 {
-	bLog::AddLog(bLogEntry(L"bTuner v0.0.0.1 Started", L"bTuner App", eLogType::Info));
+	std::wstring msg = TEXT(APPNAME);
+	msg += TEXT(" ");
+	msg += TEXT(VERSION_TEXT);
+	msg += L" Started";
+	bLog::AddLog(bLogEntry(msg, L"bTuner App", eLogType::Info));
 	_bTWin=new bTWin;
 
 	_bTWin->Create();

@@ -25,14 +25,9 @@ void bLogWin::UpdateLog()
 		_bLogList.InsertString(i,ms.c_str());
 	}
 }
-void bLogWin::AddLog()
+void bLogWin::AddLog(std::wstring _log)
 {
-		struct tm*  timeinfo;
-		timeinfo = localtime(&bLog::Log->at(bLog::Log->size()-1).Time);
-		CString ms;
-		ms.Format(L"%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-		ms += bLog::Log->at(bLog::Log->size()-1).Msg.c_str();
-		_bLogList.AddString(ms.c_str());
+		_bLogList.AddString(_log.c_str());
 		_bLogList.SetCurSel(bLog::Log->size()-1);
 
 }

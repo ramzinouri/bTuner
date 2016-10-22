@@ -12,11 +12,11 @@ bPlaylist::~bPlaylist()
 
 int bPlaylist::Locate(std::wstring name)
 {
-	for (int i=0 ;i < (int)Stations.size(); i++ )
+	for (unsigned int i=0 ;i < (int)Stations.size(); i++ )
 	{
 		if (Stations.at(i).Name == name)
 			return i;
-		for (int j = 0; j < Stations.at(i).Streams.size(); j++)
+		for (unsigned int j = 0; j < Stations.at(i).Streams.size(); j++)
 			if (Stations.at(i).Streams.at(j).Url == name)
 				return i;
 	}

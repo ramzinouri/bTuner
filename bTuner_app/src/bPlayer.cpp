@@ -42,14 +42,7 @@ bPlayer::bPlayer()
 	PlayingNow = NULL;
 	status = eStatus::Stopped;
 	CoverLoaded = false;
-	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, 0, NULL)) {
-			bLog::AddLog(bLogEntry(L"Cant Initialize Bass Device", L"bPlayer", eLogType::Error));
-	}
-	BASS_PluginLoad("bass_aac.dll", 0);
-	BASS_PluginLoad("bassopus.dll", 0);
-	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1);
-	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0);
-	BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, (void*)NULL);
+	InitBass();
 
 }
 
@@ -97,9 +90,6 @@ void bPlayer::OpenStation(const bStation& Station)
 {
 	if (PlayingNow->ID != Station.ID || status == eStatus::Stopped)
 	{
-		if (PlayingNow)
-			delete PlayingNow;
-		PlayingNow = new bStation;
 		PlayingNow->Name = Station.Name;
 		PlayingNow->ID = Station.ID;
 		PlayingNow->Url = Station.Url;
@@ -108,8 +98,6 @@ void bPlayer::OpenStation(const bStation& Station)
 		PlayingNow->Streams = Station.Streams;
 
 		hThreadArray[0] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Openurl, 0, &threadID[0]);
-
-		//_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Openurl);
 	}
 
 }
@@ -129,15 +117,17 @@ unsigned __stdcall bPlayer::StaticThreadEntry(void* c)
 
 void bPlayer::OpenThread()
 {
+	BASS_ChannelStop(chan);
+	BASS_StreamFree(chan);
+	BASS_Free();
+	InitBass();
 	bLog::AddLog(bLogEntry(L"Connecting To: " + PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, L"bPlayer", eLogType::Info));
 	status = eStatus::Connecting;
 	UpdateWnd();
 	CoverLoaded = false;
-	KillTimer(hwnd, 0);
-	BASS_ChannelStop(chan);
-	BASS_StreamFree(chan);
+	KillTimer(hwnd, 0);	
+
 	chan = BASS_StreamCreateURL(PlayingNow->Streams[PlayingNow->PlayedStreamID].Url.c_str(), 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);
-	SetVolume(Volume);
 	if (!chan)
 	{
 		bLog::AddLog(bLogEntry(L"Can't Open Stream : " + PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, L"bPlayer", eLogType::Error));
@@ -146,17 +136,17 @@ void bPlayer::OpenThread()
 	}
 	else
 	{
+		SetVolume(Volume);
 		SetTimer(hwnd, 0, 50, 0);
 		if (PlayingNow->Image.size())
 		{
 			CoverUrl = PlayingNow->Image;
-			//hThreadArray[2]=(HANDLE)_beginthreadex(NULL,0,&bPlayer::StaticThreadEntry, 0, (void*)eThread::Downloadcover,);
-			WaitForSingleObject(hThreadArray[2], INFINITE);
-			hThreadArray[2]=(HANDLE)_beginthreadex(NULL,0,&bPlayer::StaticThreadEntry, (void*)eThread::Downloadcover,0, &threadID[2]);
-			SetTimer(hwnd, 0, 50, 0);
+			//WaitForSingleObject(hThreadArray[2], INFINITE);
+			hThreadArray[2] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Downloadcover, 0, &threadID[2]);
 		}
-		
+
 	}
+
 
 }
 bool bPlayer::FetchCover()
@@ -170,7 +160,8 @@ bool bPlayer::FetchCover()
 	url +=ser+ tr;
 	url += L"&api_key=c4eeb5aa39807b0d21d420ab64b42bf6&limit=1&page=1";
 	std::string data = bHttp::FetchString(url);
-
+	if (data.find("</lfm>")==std::string::npos)
+		return 0;
 	xml_document doc;
 	xml_parse_result result = doc.load_string(bString::ConvertToW(data).c_str());
 	if (result)
@@ -181,7 +172,7 @@ bool bPlayer::FetchCover()
 
 		if (CoverUrl.length() > 0)
 		{
-			WaitForSingleObject(hThreadArray[2], INFINITE);
+			//WaitForSingleObject(hThreadArray[2], INFINITE);
 			hThreadArray[2] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Downloadcover, 0, &threadID[2]);
 		}
 		else
@@ -189,7 +180,7 @@ bool bPlayer::FetchCover()
 			if (PlayingNow->Image.size())
 			{
 				CoverUrl = PlayingNow->Image;
-				WaitForSingleObject(hThreadArray[2], INFINITE);
+				//WaitForSingleObject(hThreadArray[2], INFINITE);
 				hThreadArray[2] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Downloadcover, 0, &threadID[2]);
 				return true;
 			}
@@ -342,6 +333,17 @@ void bPlayer::EndSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	status = eStatus::Stopped;
 	UpdateWnd();
 }
+void bPlayer::InitBass()
+{
+	if (!BASS_Init(-1, 44100, BASS_DEVICE_STEREO, 0, NULL)) {
+		bLog::AddLog(bLogEntry(L"Cant Initialize Bass Device", L"bPlayer", eLogType::Error));
+	}
+	BASS_PluginLoad("bass_aac.dll", 0);
+	BASS_PluginLoad("bassopus.dll", 0);
+	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1);
+	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0);
+	BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, (void*)NULL);
+}
 void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {	
 	char *meta = (char *)BASS_ChannelGetTags(chan, BASS_TAG_META);
@@ -405,10 +407,11 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	}
 	if (!PlayingNow->Playing.size() )
 		return;
-	if(hThreadArray[1])
-		WaitForSingleObject(hThreadArray[1], INFINITE);
+	
+	//if(hThreadArray[1])
+	//	WaitForSingleObject(hThreadArray[1], INFINITE);
 	hThreadArray[1] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Fetchurl, 0, &threadID[1]);
-	//_beginthread(&bPlayer::StaticThreadEntry, 0, (void*)eThread::Fetchurl);
+	
 	bLog::AddLog(bLogEntry(L"Track : " + PlayingNow->Playing, L"bPlayer", eLogType::Track));
 	UpdateWnd();
 }

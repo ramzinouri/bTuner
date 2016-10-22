@@ -1,16 +1,14 @@
 #ifndef BTUNER_H
 #define BTUNER_H
 
-#include "Win32++\wxx_wincore.h"
 #include "bTWin.h"
-#include "bLogWin.h"
+#include "bVersion.h"
 
 
 class bTuner : public CWinApp
 {
 public:
 	bTuner();
-	virtual ~bTuner();
 	virtual BOOL InitInstance();
 	bool bDebug;
 private:

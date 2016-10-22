@@ -1,23 +1,19 @@
 #include "bHttp.h"
 
+
+
 bool bHttp::DownloadFile(const std::wstring & url, const std::wstring & path)
 {
 	::HINTERNET handle =::InternetOpen(0, INTERNET_OPEN_TYPE_DIRECT, 0, 0, 0);
 	if (handle == 0)
 	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetOpen(): " << error << "."
-			<< std::endl;
+		bLog::AddLog(bLogEntry(L"InternetOpen Error", L"bHttp", eLogType::Error));
 		return false;
 	}
 	HINTERNET stream =::InternetOpenUrlW(handle, url.c_str(), 0, 0, 0, 0);
 	if (handle == 0)
 	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetOpenUrl(): " << error << "."
-			<< std::endl;
+		bLog::AddLog(bLogEntry(L"InternetOpenURL Error", L"bHttp", eLogType::Error));
 		return false;
 	}
 	std::ofstream ostream(path, std::ios::binary);
@@ -31,37 +27,26 @@ bool bHttp::DownloadFile(const std::wstring & url, const std::wstring & path)
 			::BOOL result = ::InternetReadFile(stream, data, SIZE, &size);
 			if (result == FALSE)
 			{
-				error = ::GetLastError();
-				std::cerr
-					<< "InternetReadFile(): " << error << "."
-					<< std::endl;
+				bLog::AddLog(bLogEntry(L"InternetReadFile Error", L"bHttp", eLogType::Error));
 				return false;
 			}
 			ostream.write((const char*)data, size);
 		} while ((error == ERROR_SUCCESS) && (size > 0));
+
+		ostream.close();
 	}
 	else 
 	{
-		std::cerr << "Could not open file." << std::endl;
+		bLog::AddLog(bLogEntry(L"Could not open file : "+path, L"bHttp", eLogType::Error));
 		return false;
 	}
 
 
-	if (::InternetCloseHandle(handle) == FALSE)
-	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetClose(): " << error << "."
-			<< std::endl;
-	}
 	if (::InternetCloseHandle(stream) == FALSE)
-	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetClose(): " << error << "."
-			<< std::endl;
-	}
-	
+		bLog::AddLog(bLogEntry(L"InternetCloseHandle 1 Error", L"bHttp", eLogType::Error));
+	if (::InternetCloseHandle(handle) == FALSE)
+		bLog::AddLog(bLogEntry(L"InternetCloseHandle 2 Error", L"bHttp", eLogType::Error));
+
 	return true;
 }
 
@@ -70,19 +55,13 @@ std::string bHttp::FetchString(const std::wstring & url)
 	::HINTERNET handle = ::InternetOpen(0, INTERNET_OPEN_TYPE_DIRECT, 0, 0, 0);
 	if (handle == 0)
 	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetOpen(): " << error << "."
-			<< std::endl;
+		bLog::AddLog(bLogEntry(L"InternetOpen FetchString Error", L"bHttp", eLogType::Error));
 		return std::string();
 	}
 	HINTERNET hstream = ::InternetOpenUrlW(handle, url.c_str(), 0, 0, 0, 0);
 	if (handle == 0)
 	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetOpenUrl(): " << error << "."
-			<< std::endl;
+		bLog::AddLog(bLogEntry(L"InternetOpenUrl FetchString Error", L"bHttp", eLogType::Error));
 		return std::string();
 	}
 	std::stringstream stream;
@@ -95,10 +74,7 @@ std::string bHttp::FetchString(const std::wstring & url)
 			::BOOL result = ::InternetReadFile(hstream, data, SIZE, &size);
 			if (result == FALSE)
 			{
-				error = ::GetLastError();
-				std::cerr
-					<< "InternetReadFile(): " << error << "."
-					<< std::endl;
+				bLog::AddLog(bLogEntry(L"InternetReadFile FetchString Error", L"bHttp", eLogType::Error));
 				return std::string();
 			}
 			stream.write((const char*)data,size);
@@ -106,19 +82,9 @@ std::string bHttp::FetchString(const std::wstring & url)
 
 
 
-	if (::InternetCloseHandle(handle) == FALSE)
-	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetClose(): " << error << "."
-			<< std::endl;
-	}
 	if (::InternetCloseHandle(hstream) == FALSE)
-	{
-		const ::DWORD error = ::GetLastError();
-		std::cerr
-			<< "InternetClose(): " << error << "."
-			<< std::endl;
-	}
+		bLog::AddLog(bLogEntry(L"InternetCloseHandle 1 Fetch String Error", L"bHttp", eLogType::Error));
+	if (::InternetCloseHandle(handle) == FALSE)
+		bLog::AddLog(bLogEntry(L"InternetCloseHandle 2 Fetch String Error", L"bHttp", eLogType::Error));
 	return stream.str();
 }

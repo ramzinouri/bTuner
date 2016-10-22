@@ -28,7 +28,7 @@ wstring bString::TrimLeft(wstring str) {
 	wstring::iterator it;
 
 	for (it = str.begin(); it != str.end(); ++it)
-		if (!isspace(*it))
+		if (!iswspace(*it))
 			break;
 
 	str.erase(str.begin(), it);
@@ -39,7 +39,7 @@ wstring bString::TrimRight(wstring str) {
 	wstring::reverse_iterator it;
 
 	for (it = str.rbegin(); it != str.rend(); ++it)
-		if (!isspace(*it))
+		if (!iswspace(*it))
 			break;
 
 	string::difference_type dt = str.rend() - it;

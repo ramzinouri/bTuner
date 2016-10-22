@@ -1,11 +1,14 @@
 #ifndef BLOG_H
 #define BLOG_H
 #include "bLogWin.h"
+#include "bString.h"
 
 #include <string>
 #include <ctime>
 #include <time.h>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 

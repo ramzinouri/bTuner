@@ -1,6 +1,8 @@
 #ifndef BHTTP_H
 #define BHTTP_H
 
+#include "bLog.h"
+
 
 #include <Windows.h>
 #include <Wininet.h>
@@ -8,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+
 
 
 class bHttp
