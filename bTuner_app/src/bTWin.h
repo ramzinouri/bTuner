@@ -40,7 +40,7 @@ protected:
 	void DrawPlayer(HDC dc);
 	void  OnClose();
 	void OnTimer(int TimerID);
-	//BOOL OnEraseBkgnd(CDC& dc);
+	BOOL OnEraseBkgnd(CDC& dc);
 private:
 	CRect VolumeRect;
 	CRect PlayRect;

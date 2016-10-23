@@ -156,7 +156,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)build\bin\$(Configuration)\</OutDir>
     <TargetName>$(SolutionName)</TargetName>
     <IntDir>$(ProjectDir)build\$(Configuration)\</IntDir>

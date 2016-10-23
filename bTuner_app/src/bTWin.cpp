@@ -67,37 +67,16 @@ void  bTWin::OnTimer(int TimerID)
 		else
 		{
 			Player.status = eStatus::Buffering;
-			//Player.UpdateWnd();
+			Player.UpdateWnd();
 		}
 	}
 
-	if (TimerID == 1)
-	{
-		CMenu menu(GetMenu());
-		if (Player.status != eStatus::Playing)
-			::SetWindowText(GetHwnd(), L".:: bTuner ::.");
 
-		if (Player.status == eStatus::Playing)
-		{
-			menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED);
-			menu.EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-		}
-		if (Player.status == eStatus::Stopped)
-		{
-			menu.EnableMenuItem(ID_PLAYBACK_RESUME, MF_ENABLED);
-			menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-		}
-		if (Player.status == eStatus::Playing&&Player.PlayingNow->Playing.size())
-		{
-			std::wstring title = Player.PlayingNow->Playing + L" -- .:: bTuner ::.";
-			::SetWindowText(GetHwnd(), title.c_str());
-		}
-		RECT cr, r;
-		cr=GetClientRect();
-		SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
-		InvalidateRect(&r, FALSE);
-	}
+}
 
+BOOL bTWin::OnEraseBkgnd(CDC & dc)
+{
+	return TRUE;
 }
 
 
@@ -182,17 +161,17 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	bList.Create(*this);
 	bList.OnCreate();
 
-
+	/*
 	
 	Playlist = new bPlaylist;
 	Playlist->LoadFile(L"../../../test/bFavorites.xspf");
 	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
 		bList.AddStation(Playlist->Stations.at(i));
 
+	*/
 	
-	/*
 	xml_document doc;
-	bLog::AddLog(bLogEntry(L"Loading .... yp.xml", L"bTuner Win", LogType::Info));
+	bLog::AddLog(bLogEntry(L"Loading .... yp.xml", L"bTuner Win", eLogType::Info));
 	xml_parse_result result = doc.load_file("../../../test/yp.xml");
 
 	if (result)
@@ -206,25 +185,10 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 			st.Name = nEntry.child(L"server_name").text().as_string();
 			bStream s(nEntry.child(L"listen_url").text().as_string());
 			st.Streams.push_back(s);
+			st.ID = i;
 			Playlist->Stations.push_back(st);
-			LV_ITEM *it = new LV_ITEM;
-			it->mask = LVIF_TEXT;
-			it->iSubItem = 0;
-			it->pszText = (LPWSTR)nEntry.child(L"server_name").text().as_string();
-			it->lParam = (LPARAM)i;
-			it->iItem = i;
-			bList.InsertItem(*it);
-
-
-			LV_ITEM *id = new LV_ITEM;
-			id->mask = LVIF_TEXT;
-			id->iSubItem = 1;
-			CString sID;
-			sID.Format(L"%u", i);
-			id->pszText = (LPWSTR)sID.c_str();
-			id->lParam = (LPARAM)sID.c_str();
-			id->iItem = i;
-			bList.SetItem(*id);
+			
+			bList.AddStation(st);
 			i++;
 		}
 
@@ -232,11 +196,11 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 
 		CString msg;
 		msg.Format(L"[ %u ] Station Loaded From yp.xml", Playlist->Stations.size());
-		bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", LogType::Info));
+		bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", eLogType::Info));
 
 	}
 	
-	*/
+	
 	UpdateWindow();
 
 	if (Config.LogWindow)
@@ -249,7 +213,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	}
 	SetFocus();
 
-	//SetTimer(1, 1000/60, 0);
+
 
 	return 0;
 };
@@ -468,10 +432,37 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		break;
 	case ID_FILE_OPEN_URL:
 		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_OPENURL), GetHwnd(), (DLGPROC)&g_Diagproc);
-		
 		break;
 	case ID_HELP_ABOUT:
 		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT),GetHwnd(), (DLGPROC)&g_Diagproc);
+		break;
+	case ID_FAVORITES_RELOADFAVORITES:
+		if (Playlist)
+			delete Playlist;
+		Playlist = new bPlaylist;
+		if (Playlist->LoadFile(L"bFavorites.xspf"))
+		{
+			bList.DeleteAllItems();
+			for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
+				bList.AddStation(Playlist->Stations.at(i));
+		}
+		else
+			bLog::AddLog(bLogEntry(L"Error Loading Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+		break;
+	case ID_FAVORITES_ADDTOFAVORITES:
+
+		break;
+	case ID_FAVORITES_QUICKADDTOFAVORITES:
+		bPlaylist fav;
+		if(!fav.LoadFile(L"bFavorites.xspf"))
+			bLog::AddLog(bLogEntry(L"Error Loading Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+		fav.title = L"bFavorites";
+		fav.Stations.push_back(*Player.PlayingNow);
+		if (!fav.SaveXSPF(L"bFavorites.xspf"))
+			bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+		if (Playlist->title.find(L"bFavorites")!=std::wstring::npos)
+			bList.AddStation(*Player.PlayingNow);
+
 		break;
 		
 	}
@@ -562,10 +553,14 @@ void  bTWin::DrawPlayer(HDC dc)
 	FillRect(dc, &r, brush);
 	DeleteObject(brush);
 
-	if (Player.CoverLoaded&&Player.status == eStatus::Playing)
+	if (Player.status == eStatus::Playing &&(Player.ImageLoaded || Player.CoverLoaded))
 	{
 		Graphics *graphics=new Graphics(dc);
-		Image *image=new Image(L"Cover.png");
+		Image *image;
+		if(Player.CoverLoaded)
+			image = new Image(L"Cover.png");
+		else if(Player.ImageLoaded)
+			image = new Image(L"Station.png");
 		graphics->DrawImage(image, 5, cr.bottom - 145, 140, 140);
 		delete image;
 		delete graphics;

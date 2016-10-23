@@ -25,7 +25,9 @@ public:
 	bool ParseXSPF(std::wstringstream* data);
 	bool LoadFile(std::wstring path);
 	bool SaveFile(std::wstring path);
+	bool SaveXSPF(std::wstring path);
 	std::vector<bStation> Stations;
+	std::wstring title;
 	int Locate(std::wstring name);
 	void Sort();
 

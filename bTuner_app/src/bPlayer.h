@@ -25,7 +25,7 @@ using namespace Win32xx;
 #include "bHttp.h"
 
 enum eStatus { Playing,Stopped,Connecting,Buffering};
-enum eThread { Openurl,Fetchurl,Downloadcover};
+enum eThread { Openurl,Fetchurl,Downloadcover, Downloadimage};
 void CALLBACK  g_MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 void CALLBACK g_DownloadProc(const void *buffer, DWORD length, void *user);
 void CALLBACK g_EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
@@ -40,6 +40,7 @@ public:
 	HANDLE  hThreadArray[3];
 	unsigned threadID[3];
 	bool CoverLoaded;
+	bool ImageLoaded;
 	int BuffProgress;
 	bPlayer();
 	virtual ~bPlayer();
@@ -60,9 +61,9 @@ private:
 	void OpenThread();
 	bool FetchCover();
 	bool DownloadCover();
+	bool DownloadImage();
 	static unsigned __stdcall StaticThreadEntry(void* c);
 	int Volume;
-	std::string url_encode(const std::wstring &input);
 	std::wstring CoverUrl;
 };
 

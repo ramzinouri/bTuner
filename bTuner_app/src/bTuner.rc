@@ -88,8 +88,8 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Open File",                  ID_FILE_OPEN_FILE
-        MENUITEM "Open &URL",                   ID_FILE_OPEN_URL
+        MENUITEM "&Open File...",               ID_FILE_OPEN_FILE
+        MENUITEM "Open &URL...",                ID_FILE_OPEN_URL
         MENUITEM SEPARATOR
         MENUITEM "E&xit             Alt+F4",    ID_FILE_EXIT
     END
@@ -98,6 +98,13 @@ BEGIN
         MENUITEM "&Resume",                     ID_PLAYBACK_RESUME
         MENUITEM SEPARATOR
         MENUITEM "&Stop",                       ID_PLAYBACK_STOP
+    END
+    POPUP "F&avorites"
+    BEGIN
+        MENUITEM "&Quick add to favorites",     ID_FAVORITES_QUICKADDTOFAVORITES
+        MENUITEM "&Add to favorites...",        ID_FAVORITES_ADDTOFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "&Reload favorites",           ID_FAVORITES_RELOADFAVORITES
     END
     POPUP "&Help"
     BEGIN

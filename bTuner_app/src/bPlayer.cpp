@@ -111,6 +111,8 @@ unsigned __stdcall bPlayer::StaticThreadEntry(void* c)
 		gp_bPlayer->FetchCover();
 	if (i == eThread::Downloadcover)
 		gp_bPlayer->DownloadCover();
+	if (i == eThread::Downloadimage)
+		gp_bPlayer->DownloadImage();
 	return  0;
 }
 
@@ -123,8 +125,9 @@ void bPlayer::OpenThread()
 	InitBass();
 	bLog::AddLog(bLogEntry(L"Connecting To: " + PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, L"bPlayer", eLogType::Info));
 	status = eStatus::Connecting;
-	UpdateWnd();
 	CoverLoaded = false;
+	ImageLoaded = false;
+	UpdateWnd();
 
 	KillTimer(hwnd, 0);	
 
@@ -141,9 +144,8 @@ void bPlayer::OpenThread()
 		SetTimer(hwnd, 0, 50, 0);
 		if (PlayingNow->Image.size())
 		{
-			CoverUrl = PlayingNow->Image;
 			//WaitForSingleObject(hThreadArray[2], INFINITE);
-			hThreadArray[2] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Downloadcover, 0, &threadID[2]);
+			hThreadArray[2] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Downloadimage, 0, &threadID[2]);
 		}
 
 	}
@@ -173,20 +175,20 @@ bool bPlayer::FetchCover()
 
 		if (CoverUrl.length() > 0)
 		{
-			//WaitForSingleObject(hThreadArray[2], INFINITE);
+			WaitForSingleObject(hThreadArray[2], INFINITE);
 			hThreadArray[2] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Downloadcover, 0, &threadID[2]);
 		}
 		else
 		{
-			if (PlayingNow->Image.size())
+			CoverLoaded = false;
+			if (PlayingNow->Image.size()&& !ImageLoaded)
 			{
-				CoverUrl = PlayingNow->Image;
-				//WaitForSingleObject(hThreadArray[2], INFINITE);
+				WaitForSingleObject(hThreadArray[2], INFINITE);
 				hThreadArray[2] = (HANDLE)_beginthreadex(NULL, 0, &bPlayer::StaticThreadEntry, (void*)eThread::Downloadcover, 0, &threadID[2]);
 				return true;
 			}
-			CoverLoaded = false;
-			UpdateWnd();
+			else
+				UpdateWnd();
 
 		}
 	}
@@ -201,21 +203,11 @@ bool bPlayer::DownloadCover()
 	return CoverLoaded;
 }
 
-std::string bPlayer::url_encode(const std::wstring &input) {
-	std::string output;
-	int cbNeeded = WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, NULL);
-	if (cbNeeded > 0) {
-		char *utf8 = new char[cbNeeded];
-		if (WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, utf8, cbNeeded, NULL, NULL) != 0) {
-			for (char *p = utf8; *p; *p++) {
-				char onehex[5];
-				_snprintf(onehex, sizeof(onehex), "%%%02.2X", (unsigned char)*p);
-				output.append(onehex);
-			}
-		}
-		delete[] utf8;
-	}
-	return output;
+bool bPlayer::DownloadImage()
+{
+	ImageLoaded = bHttp::DownloadFile(PlayingNow->Image, L"Station.png");
+	UpdateWnd();
+	return ImageLoaded;
 }
 
 int bPlayer::GetVolume()

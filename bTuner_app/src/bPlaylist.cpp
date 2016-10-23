@@ -96,13 +96,7 @@ bool bPlaylist::ParsePLS(std::wstringstream* data)
 	return result;
 }
 
-bool bPlaylist::SaveFile(std::wstring path)
-{
-	bool result = false;
 
-
-	return result;
-}
 
 bool bPlaylist::LoadFile(std::wstring path)
 {
@@ -177,3 +171,62 @@ bool bPlaylist::ParseXSPF(std::wstringstream* data)
 	
 	return true;
 }
+
+bool bPlaylist::SaveFile(std::wstring path)
+{
+	bool result = false;
+
+
+	return result;
+}
+
+bool bPlaylist::SaveXSPF(std::wstring path)
+{
+	bool result = false;
+	if (!Stations.size())
+		return false;
+	xml_document doc;
+	xml_node playlist=doc.append_child(L"playlist");
+	playlist.append_attribute(L"version");
+	playlist.attribute(L"version") = 1;
+	playlist.append_attribute(L"xmlns");
+	playlist.attribute(L"xmlns") = L"http://xspf.org/ns/0/";
+	if (title.size())
+	{
+		playlist.append_child(L"title");
+		playlist.child(L"title").append_child(pugi::node_pcdata);
+		playlist.child(L"title").text() = title.c_str();
+	}
+
+
+	xml_node trackList = playlist.append_child(L"trackList");
+
+	for (unsigned int i = 0; i < Stations.size(); i++)
+	{
+		xml_node track=trackList.append_child(L"track");
+		track.append_child(L"title");
+		track.child(L"title").append_child(pugi::node_pcdata);
+		track.child(L"title").text() = Stations.at(i).Name.c_str();
+
+		for (unsigned int j = 0; j < Stations.at(i).Streams.size(); j++)
+		{
+			track.append_child(L"location");
+			track.child(L"location").append_child(pugi::node_pcdata);
+			track.child(L"location").text() = Stations.at(i).Streams.at(j).Url.c_str();
+		}
+		track.append_child(L"info");
+		track.child(L"info").append_child(pugi::node_pcdata);
+		track.child(L"info").text() = Stations.at(i).Url.c_str();
+
+		track.append_child(L"image");
+		track.child(L"image").append_child(pugi::node_pcdata);
+		track.child(L"image").text() = Stations.at(i).Image.c_str();
+
+	}
+	
+	result=doc.save_file(path.c_str(), L"\t", 1U, pugi::encoding_utf8);
+
+
+	return result;
+}
+
