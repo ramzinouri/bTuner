@@ -32,48 +32,75 @@ void  bTWin::OnClose()
 
 void  bTWin::OnTimer(int TimerID)
 {
-	QWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER)* 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END); 
-	Player.BuffProgress = (int)progress;
-	if (progress>90 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED))
+	if (TimerID == 0)
 	{
-		::KillTimer(GetHwnd(), 0);
-		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == eCodecs::UNDIFINED)
+		QWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER) * 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END);
+		Player.BuffProgress = (int)progress;
+		if (progress > 90 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED))
 		{
-			BASS_CHANNELINFO  info2;
-			BASS_ChannelGetInfo(Player.chan, &info2);
-			if (info2.ctype == BASS_CTYPE_STREAM_MP3)
-				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
-			if (info2.ctype == BASS_CTYPE_STREAM_OGG)
-				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
-			if (info2.ctype == BASS_CTYPE_STREAM_AAC)
-				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
-			if (info2.ctype == BASS_CTYPE_STREAM_OPUS)
-				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OPUS;
+			::KillTimer(GetHwnd(), 0);
+			if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == eCodecs::UNDIFINED)
+			{
+				BASS_CHANNELINFO  info2;
+				BASS_ChannelGetInfo(Player.chan, &info2);
+				if (info2.ctype == BASS_CTYPE_STREAM_MP3)
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
+				if (info2.ctype == BASS_CTYPE_STREAM_OGG)
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OGG;
+				if (info2.ctype == BASS_CTYPE_STREAM_AAC)
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
+				if (info2.ctype == BASS_CTYPE_STREAM_OPUS)
+					Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding = eCodecs::OPUS;
+			}
+			if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate == 0)
+			{
+				float bit = 0;
+				BASS_ChannelGetAttribute(Player.chan, BASS_ATTRIB_BITRATE, &bit);
+				Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate = (unsigned int)bit;
+			}
+			BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0);
+			BASS_ChannelSetSync(Player.chan, BASS_SYNC_OGG_CHANGE, 0, &g_MetaSync, 0);
+			BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &g_EndSync, 0);
+
+			Player.Play();
 		}
-		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate == 0)
+		else
 		{
-			float bit = 0;
-			BASS_ChannelGetAttribute(Player.chan,BASS_ATTRIB_BITRATE,&bit);
-			Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate = (unsigned int)bit;
+			Player.status = eStatus::Buffering;
+			//Player.UpdateWnd();
 		}
-		BASS_ChannelSetSync(Player.chan, BASS_SYNC_META, 0, g_MetaSync, 0); 
-		BASS_ChannelSetSync(Player.chan, BASS_SYNC_OGG_CHANGE, 0, &g_MetaSync, 0); 
-		BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &g_EndSync, 0);
-	
-		Player.Play();
 	}
-	else
+
+	if (TimerID == 1)
 	{
-		Player.status = eStatus::Buffering;
-		Player.UpdateWnd();
+		CMenu menu(GetMenu());
+		if (Player.status != eStatus::Playing)
+			::SetWindowText(GetHwnd(), L".:: bTuner ::.");
+
+		if (Player.status == eStatus::Playing)
+		{
+			menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED);
+			menu.EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+		}
+		if (Player.status == eStatus::Stopped)
+		{
+			menu.EnableMenuItem(ID_PLAYBACK_RESUME, MF_ENABLED);
+			menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+		}
+		if (Player.status == eStatus::Playing&&Player.PlayingNow->Playing.size())
+		{
+			std::wstring title = Player.PlayingNow->Playing + L" -- .:: bTuner ::.";
+			::SetWindowText(GetHwnd(), title.c_str());
+		}
+		RECT cr, r;
+		cr=GetClientRect();
+		SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
+		InvalidateRect(&r, FALSE);
 	}
 
 }
 
-BOOL bTWin::OnEraseBkgnd(CDC & dc)
-{
-	return TRUE;
-}
+
 
 void bTWin::OnDestroy()
 {
@@ -221,40 +248,38 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 			bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", eLogType::Error));
 	}
 	SetFocus();
+
+	//SetTimer(1, 1000/60, 0);
+
 	return 0;
 };
 
 
 void bTWin::OnDraw(CDC& dc)
 {
-	//Graphics graphics(dc);
-	if (!dc.GetHDC())
-	{
-		bLog::AddLog(bLogEntry(L"HDC error 1111", L"bTuner App", eLogType::Error));
-		return;
-	}
-
 	CRect cr=GetClientRect();
 	RECT r;
+	HBRUSH color = CreateSolidBrush(RGB(20, 20, 20));
 	SetRect(&r, 0, 0, 150, cr.bottom-150);
-	dc.FillRect(r, (HBRUSH)CreateSolidBrush(RGB(20, 20, 20)));
-
+	FillRect(dc,&r, color);
+	DeleteObject(color);
+	
 	HDC hdcBuffer = CreateCompatibleDC(::GetDC(GetHwnd()));  // OFF screen DC
+	int iOldState = SaveDC(hdcBuffer);
 	int h, w;
 	h = GetClientRect().Height();
 	w = GetClientRect().Width();
 	HBITMAP hBitmapBuffer = CreateCompatibleBitmap(::GetDC(GetHwnd()), w, h);  // create memory bitmap for that off screen DC
 
 	SelectObject(hdcBuffer, hBitmapBuffer); // Select the created memory bitmap into the OFF screen DC
-
+	
 	DrawPlayer(hdcBuffer);						/* Then do your painting job using hdcBuffer over off screen DC */
 
-	if(hdcBuffer)
-		dc.BitBlt(0,GetClientRect().bottom-150, w, h, hdcBuffer, 0, GetClientRect().bottom - 150, SRCCOPY); // copy the content of OFF screen DC to actual screen DC
-
-
+	BitBlt(dc,0,0, w, h, hdcBuffer, 0, 0, SRCCOPY); // copy the content of OFF screen DC to actual screen DC
+	RestoreDC(hdcBuffer, iOldState);
 	DeleteObject(hBitmapBuffer); // Free the memory for bitmap
 	DeleteDC(hdcBuffer); // Release the OFF screen DC
+	
 };
 
 LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -268,7 +293,7 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		pmis = (PMEASUREITEMSTRUCT)lParam;
 		pmis->itemHeight = 30;
-		return TRUE;
+		break;
 	case WM_DRAWITEM:
 
 		pdis = (PDRAWITEMSTRUCT)lParam;
@@ -526,73 +551,63 @@ INT_PTR bTWin::Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 
 void  bTWin::DrawPlayer(HDC dc)
 {
-	if (!dc)
-	{
-		bLog::AddLog(bLogEntry(L"HDC error", L"bTuner App", eLogType::Error));
-		return;
-	}
-	Graphics graphics(dc);
+
 	CRect cr=GetClientRect();
 	RECT r;
-	CFont font;
-	CBrush brush;
+	HFONT font;
+	HBRUSH brush;
 
-	
-	int id = Playlist->Locate(Player.PlayingNow->Streams.at(Player.PlayingNow->PlayedStreamID).Url);
-	if (id >= 0)
-	{
-		if (id != bList.PlayingNowID)
-		{
-			bList.PlayingNowID = id;
-			bList.RedrawWindow();
-		}
-	}
-	
+	brush = CreateSolidBrush(RGB(0, 0, 0));
 	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
-	FillRect(dc, &r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+	FillRect(dc, &r, brush);
+	DeleteObject(brush);
 
 	if (Player.CoverLoaded&&Player.status == eStatus::Playing)
 	{
-		Image image(L"Cover.png");
-		graphics.DrawImage(&image, 5, cr.bottom - 145, 140, 140);
+		Graphics *graphics=new Graphics(dc);
+		Image *image=new Image(L"Cover.png");
+		graphics->DrawImage(image, 5, cr.bottom - 145, 140, 140);
+		delete image;
+		delete graphics;
 	}
 	else
 	{
 		SetRect(&r, 5, cr.bottom - 145, 145, cr.bottom - 5);
-		//brush.CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
 		HBRUSH hBrush = ::CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 0));
-		if (hBrush != 0)
-			brush.Attach(hBrush);
-
-		
-		SelectObject(dc, brush);
+		HPEN pen = CreatePen(PS_SOLID,3,RGB(200,200,200));
+		SelectObject(dc, pen);
 		FillRect(dc, &r, hBrush);
+		DeleteObject(hBrush);
+		DeleteObject(pen);
 	}
 
 	SetRect(&r, 150, cr.bottom - 75, cr.right - 5, cr.bottom - 25);
-	FillRect(dc, &r, (HBRUSH)CreateSolidBrush(RGB(20, 20, 20)));
+	brush = CreateSolidBrush(RGB(20, 20, 20));
+	FillRect(dc, &r, brush);
+	DeleteObject(brush);
 
-
-	brush.CreateSolidBrush(RGB(200, 200, 200));
+	brush=CreateSolidBrush(RGB(200, 200, 200));
 	if (Hover == bHover::Play)
-		brush.CreateSolidBrush(RGB(255, 255, 255));
+		brush=CreateSolidBrush(RGB(255, 255, 255));
 	SelectObject(dc, brush);
 	SetRect(&r, 160, cr.bottom - 70, 250, cr.bottom - 30);
 	RoundRect(dc, r.left,r.top,r.right,r.bottom, 8, 8);
 
-	brush.CreateSolidBrush(RGB(0, 0, 0));
+	DeleteObject(brush);
+	brush=CreateSolidBrush(RGB(0, 0, 0));
 	SelectObject(dc, brush);
 	SetRect(&r, 163, cr.bottom - 67, 247, cr.bottom - 33);
 	RoundRect(dc, r.left, r.top, r.right, r.bottom, 8, 8);
 
-	brush.CreateSolidBrush(RGB(200, 200, 200));
+	DeleteObject(brush);
+	brush=CreateSolidBrush(RGB(200, 200, 200));
 	SelectObject(dc, brush);
 	SetRect(&r, 165, cr.bottom - 65, 245, cr.bottom - 35);
 	RoundRect(dc, r.left, r.top, r.right, r.bottom, 5, 5);
 
 
 
-	font.CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+	font=CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
 	SelectObject(dc,font);
 	SetTextColor(dc, RGB(0, 0, 0));
@@ -600,8 +615,9 @@ void  bTWin::DrawPlayer(HDC dc)
 	if (Player.status == eStatus::Stopped)
 	{
 		TextOut(dc, 195, cr.bottom - 65, L"Play", 4);
-
-		brush.CreateSolidBrush(RGB(0, 0, 0));
+		DeleteObject(font);
+		DeleteObject(brush);
+		brush=CreateSolidBrush(RGB(0, 0, 0));
 		SelectObject(dc, brush);
 		POINT points[3];
 		points[0].x = 172;
@@ -617,12 +633,11 @@ void  bTWin::DrawPlayer(HDC dc)
 	if (Player.status != eStatus::Stopped)
 	{
 		TextOut(dc, 195, cr.bottom - 65, L"Stop", 4);
-
-		brush.CreateSolidBrush(RGB(0, 0, 0));
-		SelectObject(dc, brush);
+		DeleteObject(brush);
+		brush=CreateSolidBrush(RGB(0, 0, 0));
 
 		SetRect(&r, 172, cr.bottom - 58, 185, cr.bottom - 42);
-		FillRect(dc, &r, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+		FillRect(dc, &r, brush);
 	}
 
 	// Volume 
@@ -631,14 +646,19 @@ void  bTWin::DrawPlayer(HDC dc)
 		v = 100 - VolumeRect.right + Mouse.x;
 
 	SetRect(&r, cr.right - 120, cr.bottom - 54, cr.right - 20, cr.bottom - 46);
-	FillRect(dc,&r, (HBRUSH)CreateSolidBrush(RGB(100, 100, 100)));
+	DeleteObject(brush);
+	brush = CreateSolidBrush(RGB(100, 100, 100));
+	
+	FillRect(dc,&r, brush);
 
 	SetRect(&r, cr.right - 120, cr.bottom - 57, cr.right - 20 - (100 - v), cr.bottom - 43);
-	FillRect(dc,&r, (HBRUSH)CreateSolidBrush(RGB(200, 200, 200)));
+	DeleteObject(brush);
+	brush = CreateSolidBrush(RGB(200, 200, 200));
+	FillRect(dc,&r, brush);
 
 	SetTextColor(dc,RGB(0, 0, 0));
 	SetBkMode(dc, TRANSPARENT);
-	font.CreateFont(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+	font=CreateFont(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
 	SelectObject(dc,font);
 
@@ -647,7 +667,7 @@ void  bTWin::DrawPlayer(HDC dc)
 	SIZE sv;
 	GetTextExtentPoint32W(dc, bf, bf.GetLength(),&sv);
 	TextOut(dc, cr.right - 70 - (sv.cx / 2), cr.bottom - 57, bf, bf.GetLength());
-
+	DeleteObject(font);
 
 
 	//Playing Now info
@@ -655,15 +675,15 @@ void  bTWin::DrawPlayer(HDC dc)
 	SetTextColor(dc, RGB(245, 245, 245));
 	SetBkColor(dc, RGB(0, 0, 0));
 
-	font.CreateFont(45, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+	font=CreateFont(45, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
 	SelectObject(dc, font);
 	if (Player.status != eStatus::Playing)
 		SetTextColor(dc, RGB(150, 150, 150));
 	if (Player.PlayingNow && Player.PlayingNow->Name.size())
 		TextOut(dc, 150, cr.bottom - 145, Player.PlayingNow->Name.c_str(), Player.PlayingNow->Name.size());
-
-	font.CreateFont(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+	DeleteObject(font);
+	font=CreateFont(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 	SelectObject(dc, font);
 	SetTextColor(dc, RGB(180, 180, 180));
@@ -677,17 +697,17 @@ void  bTWin::DrawPlayer(HDC dc)
 		TextOut(dc, 150, cr.bottom - 20, L"Connecting...", 13);
 	if (Player.status == eStatus::Stopped)
 		TextOut(dc, 150, cr.bottom - 20, L"Not Connected", 13);
-
+	DeleteObject(font);
 
 	if (Player.status == eStatus::Playing)
 	{
-		font.CreateFont(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		font=CreateFont(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		SelectObject(dc, font);
 		SetTextColor(dc, RGB(200, 200, 200));
 		TextOut(dc, 150, cr.bottom - 105, Player.PlayingNow->Playing.c_str(), Player.PlayingNow->Playing.size());
-
-		font.CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		DeleteObject(font);
+		font=CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		SelectObject(dc, font);
 		SetTextColor(dc, RGB(180, 180, 180));
@@ -702,7 +722,8 @@ void  bTWin::DrawPlayer(HDC dc)
 		if (Hover == bHover::Link)
 			SetTextColor(dc, RGB(40, 185, 220));
 		TextOut(dc, 150, cr.bottom - 20, Player.PlayingNow->Url.c_str(), Player.PlayingNow->Url.size());
-		font.CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		DeleteObject(font);
+		font=CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
 		SelectObject(dc, font);
 		SetTextColor(dc, RGB(0, 0, 0));
@@ -722,7 +743,7 @@ void  bTWin::DrawPlayer(HDC dc)
 			bf.Format(L" %u Kbps " , Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate);
 			TextOut(dc, 150 + 10 + s.cx + 5 + s2.cx, cr.bottom - 20, bf.c_str(), bf.GetLength());
 		}
+		DeleteObject(font);
 	}
-
 
 }

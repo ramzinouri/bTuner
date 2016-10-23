@@ -33,37 +33,34 @@ void bRadioList::AddStation(const bStation& station)
 	id->lParam = (LPARAM)sID.c_str();
 	id->iItem = i;
 	SetItem(*id);
+
+	delete it;
+	delete id;
 }
 
 void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 {
 	PDRAWITEMSTRUCT pdis = (PDRAWITEMSTRUCT)lParam;
-	HFONT font;
-
+	HBRUSH brush;
 	if (pdis->itemID == -1)
 		return;
-
-		font=CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
-			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
-		SelectObject(pdis->hDC, font);
-		
 
 		CString text=GetItemText(pdis->itemID, 0);
 
 		if(pdis->itemID%2)
-			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)));
+			brush=CreateSolidBrush(RGB(0, 0, 0));
 		else
-			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(15, 15, 15)));
+			brush=CreateSolidBrush(RGB(15, 15, 15));
 
 		if (pdis->itemState & ODS_SELECTED)
-			FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(30, 150, 220)));
+			brush=CreateSolidBrush(RGB(30, 150, 220));
 
+		FillRect(pdis->hDC, &pdis->rcItem, brush);
+
+		DeleteObject(brush);
 		::SetTextColor(pdis->hDC, RGB(255, 255, 255));
-
 		if(PlayingNowID ==pdis->itemID)
 			::SetTextColor(pdis->hDC, RGB(140, 255, 140));
-
-		
 
 		SetBkMode(pdis->hDC, TRANSPARENT);
 		TextOut(pdis->hDC, 20, pdis->rcItem.top + 7, text.c_str(), text.GetLength());
@@ -80,4 +77,8 @@ void bRadioList::OnCreate()
 	SetBkColor(RGB(0, 0, 0));
 	SetTextColor(RGB(255, 255, 255));
 	SetTextBkColor(RGB(0, 0, 0));
+	HFONT font;
+	font = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
+	SetFont(font);
 }

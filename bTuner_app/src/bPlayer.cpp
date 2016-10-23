@@ -125,6 +125,7 @@ void bPlayer::OpenThread()
 	status = eStatus::Connecting;
 	UpdateWnd();
 	CoverLoaded = false;
+
 	KillTimer(hwnd, 0);	
 
 	chan = BASS_StreamCreateURL(PlayingNow->Streams[PlayingNow->PlayedStreamID].Url.c_str(), 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);

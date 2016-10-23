@@ -34,7 +34,7 @@ void bLog::AddLog(bLogEntry _Entry)
 	ms += bLog::Log->at(bLog::Log->size() - 1).Msg.c_str();
 
 	if(_bLogWin)
-		_bLogWin->AddLog(ms.c_str());
+		_bLogWin->AddLog(bLog::Log->size(),ms.c_str());
 	std::fstream ostream;
 	if(Log->size()==1)
 		ostream.open(L"bTuner.log", std::ios::trunc | std::ios::out);

@@ -4,7 +4,7 @@
 
 bLogWin::bLogWin()
 {
-	bLog::_bLogWin = this;
+	bLog::_bLogWin = NULL;
 };
 
 bLogWin::~bLogWin()
@@ -14,7 +14,7 @@ bLogWin::~bLogWin()
 
 void bLogWin::UpdateLog()
 {
-	_bLogList.ResetContent();
+	_bLogList.DeleteAllItems();
 	for (int i = 0; i <(int)bLog::Log->size(); i++)
 	{
 		struct tm*  timeinfo;
@@ -22,13 +22,25 @@ void bLogWin::UpdateLog()
 		CString ms;
 		ms.Format(L"%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 		ms  += bLog::Log->at(i).Msg.c_str();
-		_bLogList.InsertString(i,ms.c_str());
+		AddLog(i,ms.c_str());
 	}
 }
-void bLogWin::AddLog(std::wstring _log)
+void bLogWin::AddLog(int pos,std::wstring _log)
 {
-		_bLogList.AddString(_log.c_str());
-		_bLogList.SetCurSel(bLog::Log->size()-1);
+	LV_ITEM *it = new LV_ITEM;
+	it->mask = LVIF_TEXT;
+	it->iSubItem = 0;
+	it->pszText = (LPWSTR)_log.c_str();
+	it->iItem = pos;
+	_bLogList.InsertItem(*it);
+
+	CRect rect;
+	_bLogList.GetItemRect(0, rect, LVIR_BOUNDS);
+
+	CSize cs;
+	cs.cx = 0;
+	cs.cy = pos *rect.Height();
+	_bLogList.Scroll(cs);
 
 }
 
@@ -53,11 +65,10 @@ void bLogWin::PreCreate(CREATESTRUCT &cs)
 
 int  bLogWin::OnCreate(CREATESTRUCT& cs)
 {
-	_bLogList.Create(this->GetHwnd());
-	HFONT _font;
-	_font= CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
-	_bLogList.SetFont(_font);
+	bLog::_bLogWin = this;
+	_bLogList.Create(GetHwnd());
+	_bLogList.OnCreate();
+	
 
 	UpdateLog();
 	return 0;
@@ -81,11 +92,14 @@ LRESULT bLogWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_SIZE:
 		if (::IsWindow(_bLogList) != NULL)
+		{
 			_bLogList.MoveWindow(0, 0, GetClientRect().right, GetClientRect().bottom);
+			_bLogList.SetColumnWidth(0, GetClientRect().right - GetSystemMetrics(SM_CXVSCROLL));
+			_bLogList.RedrawWindow();
+		}
 		
 		break;
 	}
-
 	return WndProcDefault(uMsg, wParam, lParam);
 }
 
@@ -101,6 +115,7 @@ bLogList::~bLogList()
 }
 void bLogList::DrawItem(WPARAM wParam, LPARAM lParam)
 {
+	HBRUSH brush;
 	PDRAWITEMSTRUCT pdis = (PDRAWITEMSTRUCT)lParam;
 	HFONT font;
 
@@ -112,32 +127,47 @@ void bLogList::DrawItem(WPARAM wParam, LPARAM lParam)
 
 	SelectObject(pdis->hDC, font);
 
-	FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(255, 255, 255)));
 	::SetTextColor(pdis->hDC, RGB(0, 0, 0));
 
-	if (bLog::Log->at(pdis->itemID).Type==eLogType::Error)
+
+	if (bLog::Log->at(pdis->itemID).Type == eLogType::Error)
+	{
 		::SetTextColor(pdis->hDC, RGB(255, 0, 0));
+		brush = CreateSolidBrush(RGB(255, 255, 255));
+	}
 	if (bLog::Log->at(pdis->itemID).Type == eLogType::Player)
-		FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(40, 185, 220)));
+		brush=CreateSolidBrush(RGB(40, 185, 220));
 	if (bLog::Log->at(pdis->itemID).Type == eLogType::Info)
-		FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(255, 255, 255)));
+		brush=CreateSolidBrush(RGB(255, 255, 255));
 	if (bLog::Log->at(pdis->itemID).Type == eLogType::Debug)
+	{
 		::SetTextColor(pdis->hDC, RGB(0, 150, 0));
+		brush = CreateSolidBrush(RGB(255, 255, 255));
+	}
 	if (bLog::Log->at(pdis->itemID).Type == eLogType::Track)
-		FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)CreateSolidBrush(RGB(180, 230, 240)));
+		brush=CreateSolidBrush(RGB(180, 230, 240));
 
-	struct tm*  timeinfo;
-	timeinfo = localtime(&bLog::Log->at(pdis->itemID).Time);
-	CString ms;
-	ms.Format(L"%02d:%02d:%02d :: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-	ms += bLog::Log->at(pdis->itemID).Msg.c_str();
+	FillRect(pdis->hDC, &pdis->rcItem, brush);
+	
 
-	SetBkMode(pdis->hDC, TRANSPARENT);
-	TextOut(pdis->hDC, 5, pdis->rcItem.top , ms, ms.GetLength());
+	CString  text = GetItemText(pdis->itemID, 0);
+	TextOut(pdis->hDC, 5, pdis->rcItem.top , text, text.GetLength());
 
+	DeleteObject(brush);
+	DeleteObject(font);
 };
 
 void bLogList::PreCreate(CREATESTRUCT &cs)
 {
-	cs.style = WS_CHILD| WS_VISIBLE| WS_VSCROLL | WS_BORDER |LBS_NOSEL| LBS_OWNERDRAWFIXED;
+	cs.style = cs.style = WS_BORDER | WS_VISIBLE | WS_TABSTOP | WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_OWNERDRAWFIXED;
 };
+
+void bLogList::OnCreate()
+{
+	InsertColumn(0, L"Logs", LVCFMT_LEFT, 500 - GetSystemMetrics(SM_CXVSCROLL), 0);
+	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+	SetBkColor(RGB(255, 255, 255));
+	SetTextColor(RGB(0, 0, 0));
+	SetTextBkColor(RGB(255, 255, 255));
+	ShowScrollBar(SB_VERT,TRUE);
+}
