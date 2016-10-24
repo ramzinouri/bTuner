@@ -209,7 +209,6 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 				st.ID = i;
 				Playlist->Stations.push_back(st);
 
-				bList.AddStation(st);
 				i++;
 			}
 
@@ -221,7 +220,8 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 
 		}
 	}
-	
+	bList.Playlist = Playlist;
+	bList.RedrawPlaylist();
 	
 	UpdateWindow();
 
@@ -422,17 +422,12 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		if (searchbox.GetWindowTextLength() > 2 && searchbox.GetWindowText() != L"Search")
 		{
 			std::wstring q=searchbox.GetWindowText();
-			Displayed_Playlist = new bPlaylist;
 			std::vector<unsigned int> result = Playlist->Search(q);
-			for (unsigned int i = 0; i < result.size(); i++)
-				Displayed_Playlist->Stations.push_back(Playlist->Stations.at(result[i]));
-			bList.Playlist = Displayed_Playlist;
-			bList.RedrawPlaylist();
+			bList.DrawOnly(result);
 		}
-		else if(Playlist)
+		else if(Playlist&&searchbox.GetWindowTextLength()==0&& searchbox.GetWindowText() != L"Search")
 		{
-
-			bList.Playlist = Playlist;
+			//bList.Playlist = Playlist;
 			bList.RedrawPlaylist();
 		}
 		return TRUE;

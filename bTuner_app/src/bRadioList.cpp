@@ -1,8 +1,19 @@
 #include"bRadioList.h"
 
+
+namespace
+{
+	bRadioList *gp_bRadioList = NULL;
+}
+
+bool bRadioList::killthread = false;
+
 bRadioList::bRadioList()
 {
 	PlayingNowID = -1;
+	//killthread=false;
+	hThread = NULL;
+	gp_bRadioList = this;
 };
 
 bRadioList::~bRadioList()
@@ -28,7 +39,7 @@ void bRadioList::AddStation(const bStation& station)
 	id->mask = LVIF_TEXT;
 	id->iSubItem = 1;
 	CString sID;
-	sID.Format(L"%u", i);
+	sID.Format(L"%u", station.ID);
 	id->pszText = (LPWSTR)sID.c_str();
 	id->lParam = (LPARAM)sID.c_str();
 	id->iItem = i;
@@ -37,12 +48,95 @@ void bRadioList::AddStation(const bStation& station)
 	delete it;
 	delete id;
 }
+unsigned __stdcall bRadioList::StaticThreadEntry(void* c)
+{
+	int i= (int)c;
+	if (i == eRadioThread::RedrawPlaylist)
+		gp_bRadioList->T_RedrawPlaylist();
+	if (i == eRadioThread::DrawOnly)
+		gp_bRadioList->T_DrawOnly();
+
+	return  0;
+}
 
 void bRadioList::RedrawPlaylist()
 {
+	if (hThread)
+	{
+		/*
+		std::unique_lock<std::mutex> lk(m);
+		killthread = true;
+		cv.notify_all();
+		//WaitForSingleObject(hThread, INFINITE);
+		*/
+		TerminateThread(hThread, 0);
+		CloseHandle(hThread);
+		hThread = NULL;
+	}
+	else
+		hThread = (HANDLE)_beginthreadex(NULL, 0, &bRadioList::StaticThreadEntry, (void*)eRadioThread::RedrawPlaylist , 0, &threadID);
+
+
+}
+void bRadioList::T_RedrawPlaylist()
+{
 	DeleteAllItems();
 	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
+	{
 		AddStation(Playlist->Stations.at(i));
+		std::unique_lock<std::mutex> lk(m);
+		if (killthread || cv.wait_for(lk, std::chrono::milliseconds(2)) == std::cv_status::no_timeout)
+		{
+			killthread = false;
+			CloseHandle(hThread);
+			hThread = NULL;
+			cv.notify_all();
+			return;
+		}
+	}
+
+	CloseHandle(hThread);
+	hThread = NULL;
+}
+
+void bRadioList::DrawOnly(std::vector<unsigned int> items)
+{
+	m_items = items;
+	if (hThread)
+	{
+		/*
+		std::unique_lock<std::mutex> lk(m);
+		killthread = true;
+		cv.notify_all();
+		//WaitForSingleObject(hThread, INFINITE);
+		*/
+		TerminateThread(hThread, 0);
+		CloseHandle(hThread);
+		hThread = NULL;
+
+	}
+	
+	hThread = (HANDLE)_beginthreadex(NULL, 0, &bRadioList::StaticThreadEntry, (void*)eRadioThread::DrawOnly, 0, &threadID);
+	
+	
+}
+void bRadioList::T_DrawOnly()
+{
+	DeleteAllItems();
+	for (unsigned int i = 0; i < m_items.size(); i++)
+	{
+		AddStation(Playlist->Stations.at(m_items[i]));
+		std::unique_lock<std::mutex> lk(m);
+		if (killthread || cv.wait_for(lk, std::chrono::milliseconds(2)) == std::cv_status::no_timeout)
+		{
+			killthread = false;
+			CloseHandle(hThread);
+			hThread = NULL;
+			return;
+		}
+	}
+	CloseHandle(hThread);
+	hThread = NULL;
 }
 
 void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
