@@ -1,6 +1,7 @@
 #include "bTWin.h"
 #include "bLog.h"
 #include "bString.h"
+#include "bHttp.h"
 
 namespace
 {
@@ -125,7 +126,7 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 #endif
 	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 	cs.cx=700;
-	cs.cy=500;
+	cs.cy=550;
 };
 int bTWin::OnCreate(CREATESTRUCT& cs)
 {
@@ -147,7 +148,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
 
 	Player.SetVolume(Config.LastVolume);
-	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,500);
+	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,700,550);
 	if (Player.PlayingNow)
 		delete Player.PlayingNow;
 	Player.PlayingNow = new bStation;
@@ -157,47 +158,68 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.PlayingNow->Url = Config.LastPlayed.Url;
 	Player.PlayingNow->Image = Config.LastPlayed.Image;
 
-	
 	bList.Create(*this);
 	bList.OnCreate();
 
-	/*
-	
-	Playlist = new bPlaylist;
-	Playlist->LoadFile(L"../../../test/bFavorites.xspf");
-	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
-		bList.AddStation(Playlist->Stations.at(i));
 
+	
+	searchbox.Create(*this);
+	searchbox.MoveWindow(GetClientRect().right-205,5,200,20);
+	HFONT font;
+	font = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
+	searchbox.SetFont(font);
+	searchbox.SetWindowTextW(L"Search");
+	searchbox.SetMargins(10, 10);
+
+
+
+
+
+	
+	/*
+	Playlist = new bPlaylist;
+	Displayed_Playlist = Playlist;
+	Playlist->LoadFile(L"bFavorites.xspf");
+	bList.Playlist = Displayed_Playlist;
+	bList.RedrawPlaylist();
 	*/
 	
-	xml_document doc;
-	bLog::AddLog(bLogEntry(L"Loading .... yp.xml", L"bTuner Win", eLogType::Info));
-	xml_parse_result result = doc.load_file("../../../test/yp.xml");
-
-	if (result)
+	bLog::AddLog(bLogEntry(L"Start Downloading .... [http://dir.xiph.org/yp.xml]", L"bTuner Win", eLogType::Info));
+	if (bHttp::DownloadFile(L"http://dir.xiph.org/yp.xml", L"yp.xml"))
 	{
-		xml_node nDir = doc.child(L"directory");
-		Playlist = new bPlaylist;
-		int i = 0;
-		for (xml_node nEntry = nDir.first_child(); nEntry; nEntry = nEntry.next_sibling())
+		bLog::AddLog(bLogEntry(L"Finish Downloading [http://dir.xiph.org/yp.xml]", L"bTuner Win", eLogType::Info));
+		xml_document doc;
+		bLog::AddLog(bLogEntry(L"Loading .... yp.xml", L"bTuner Win", eLogType::Info));
+		xml_parse_result result = doc.load_file("yp.xml");
+
+		if (result)
 		{
-			bStation st;
-			st.Name = nEntry.child(L"server_name").text().as_string();
-			bStream s(nEntry.child(L"listen_url").text().as_string());
-			st.Streams.push_back(s);
-			st.ID = i;
-			Playlist->Stations.push_back(st);
-			
-			bList.AddStation(st);
-			i++;
+			xml_node nDir = doc.child(L"directory");
+			Playlist = new bPlaylist;
+			int i = 0;
+			for (xml_node nEntry = nDir.first_child(); nEntry; nEntry = nEntry.next_sibling())
+			{
+				bStation st;
+				st.Name = nEntry.child(L"server_name").text().as_string();
+				st.Genre = nEntry.child(L"genre").text().as_string();
+				bStream s(nEntry.child(L"listen_url").text().as_string());
+				s.Bitrate= nEntry.child(L"bitrate").text().as_int();
+				st.Streams.push_back(s);
+				st.ID = i;
+				Playlist->Stations.push_back(st);
+
+				bList.AddStation(st);
+				i++;
+			}
+
+			//Playlist->Sort();
+
+			CString msg;
+			msg.Format(L"[ %u ] Station Loaded From yp.xml", Playlist->Stations.size());
+			bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", eLogType::Info));
+
 		}
-
-		//Playlist->Sort();
-
-		CString msg;
-		msg.Format(L"[ %u ] Station Loaded From yp.xml", Playlist->Stations.size());
-		bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", eLogType::Info));
-
 	}
 	
 	
@@ -207,7 +229,7 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	{
 		bLog::_bLogWin = new bLogWin;
 		bLog::_bLogWin->Create();
-		bLog::_bLogWin->MoveWindow(GetWindowRect().right, GetWindowRect().top, 500, 500);
+		bLog::_bLogWin->MoveWindow(GetWindowRect().right, GetWindowRect().top, 500, GetWindowRect().Height());
 		if (!bLog::_bLogWin->GetHwnd())
 			bLog::AddLog(bLogEntry(L"Failed to create Log window", L"bTuner App", eLogType::Error));
 	}
@@ -253,6 +275,9 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	PMEASUREITEMSTRUCT pmis;
 	switch (uMsg)
 	{
+		
+	case WM_CTLCOLOREDIT:
+		return (LRESULT)CreateSolidBrush(RGB(200,200,200));
 	case WM_MEASUREITEM:
 
 		pmis = (PMEASUREITEMSTRUCT)lParam;
@@ -376,14 +401,45 @@ LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 
 		}
 		break;
+
 	}
 	return NULL;
 }
 
 BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 {
+	switch (HIWORD(wParam))
+	{
+	case EN_SETFOCUS:
+		//if(searchbox.GetWindowText()== L"Search")
+		//	searchbox.SetWindowTextW(L"");
+		return TRUE;
+	case EN_KILLFOCUS:
+		//if (searchbox.GetWindowTextLength()==0)
+		//	searchbox.SetWindowTextW(L"Search");
+		return TRUE;
+	case EN_CHANGE:
+		if (searchbox.GetWindowTextLength() > 2 && searchbox.GetWindowText() != L"Search")
+		{
+			std::wstring q=searchbox.GetWindowText();
+			Displayed_Playlist = new bPlaylist;
+			std::vector<unsigned int> result = Playlist->Search(q);
+			for (unsigned int i = 0; i < result.size(); i++)
+				Displayed_Playlist->Stations.push_back(Playlist->Stations.at(result[i]));
+			bList.Playlist = Displayed_Playlist;
+			bList.RedrawPlaylist();
+		}
+		else if(Playlist)
+		{
+
+			bList.Playlist = Playlist;
+			bList.RedrawPlaylist();
+		}
+		return TRUE;
+	}
 	switch (LOWORD(wParam)) 
 	{
+	
 	case ID_PLAYBACK_RESUME:
 		Player.Resume();
 
@@ -442,9 +498,9 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		Playlist = new bPlaylist;
 		if (Playlist->LoadFile(L"bFavorites.xspf"))
 		{
-			bList.DeleteAllItems();
-			for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
-				bList.AddStation(Playlist->Stations.at(i));
+			Displayed_Playlist = Playlist;
+			bList.Playlist = Displayed_Playlist;
+			bList.RedrawPlaylist();
 		}
 		else
 			bLog::AddLog(bLogEntry(L"Error Loading Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));

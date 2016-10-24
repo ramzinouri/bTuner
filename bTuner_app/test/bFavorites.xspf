@@ -2,7 +2,6 @@
 <playlist version="http://xspf.org/ns/0/" xmlns="">
 	<title>bFavorites</title>
 	<trackList>
-		<trackList>
         <track>
 			<title>I Love Radio</title>
 			<location>http://stream12.iloveradio.de/iloveradio1-aac.mp3</location>

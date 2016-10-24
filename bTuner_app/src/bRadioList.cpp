@@ -38,6 +38,13 @@ void bRadioList::AddStation(const bStation& station)
 	delete id;
 }
 
+void bRadioList::RedrawPlaylist()
+{
+	DeleteAllItems();
+	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
+		AddStation(Playlist->Stations.at(i));
+}
+
 void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 {
 	PDRAWITEMSTRUCT pdis = (PDRAWITEMSTRUCT)lParam;
@@ -70,7 +77,7 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 
 void bRadioList::OnCreate()
 {
-	MoveWindow(150, 0, GetParent().GetClientRect().Width() - 150, GetParent().GetClientRect().Height() - 150);
+	MoveWindow(150, 35, GetParent().GetClientRect().Width() - 150, GetParent().GetClientRect().bottom - 185);
 	InsertColumn(0, L"Stations", LVCFMT_LEFT, GetParent().GetClientRect().Width() - 150 - GetSystemMetrics(SM_CXVSCROLL),0);
 	InsertColumn(1, L"ID", LVCFMT_LEFT | LVCFMT_FIXED_WIDTH,0,1);
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_TWOCLICKACTIVATE);

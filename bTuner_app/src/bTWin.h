@@ -37,6 +37,7 @@ protected:
 	LRESULT OnNotify(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
 	bPlaylist* Playlist;
+	bPlaylist* Displayed_Playlist;
 	void DrawPlayer(HDC dc);
 	void  OnClose();
 	void OnTimer(int TimerID);
@@ -52,6 +53,7 @@ private:
 	GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR           gdiplusToken;
 	bRadioList bList;
+	CEdit searchbox;
 
 };
 

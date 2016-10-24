@@ -10,7 +10,9 @@ bool bHttp::DownloadFile(const std::wstring & url, const std::wstring & path)
 		bLog::AddLog(bLogEntry(L"InternetOpen Error", L"bHttp", eLogType::Error));
 		return false;
 	}
-	HINTERNET stream =::InternetOpenUrlW(handle, url.c_str(), 0, 0, 0, 0);
+	BOOL op = TRUE;
+	InternetSetOption(handle, INTERNET_OPTION_HTTP_DECODING, (LPVOID)&op, sizeof(BOOL));
+	HINTERNET stream =::InternetOpenUrlW(handle, url.c_str(), L"Accept-Encoding: gzip", 21, INTERNET_FLAG_NO_COOKIES, 0);
 	if (handle == 0)
 	{
 		bLog::AddLog(bLogEntry(L"InternetOpenURL Error", L"bHttp", eLogType::Error));
@@ -58,7 +60,9 @@ std::string bHttp::FetchString(const std::wstring & url)
 		bLog::AddLog(bLogEntry(L"InternetOpen FetchString Error", L"bHttp", eLogType::Error));
 		return std::string();
 	}
-	HINTERNET hstream = ::InternetOpenUrlW(handle, url.c_str(), 0, 0, 0, 0);
+	BOOL op = TRUE;
+	InternetSetOption(handle, INTERNET_OPTION_HTTP_DECODING, (LPVOID)&op, sizeof(BOOL));
+	HINTERNET hstream = ::InternetOpenUrlW(handle, url.c_str(), L"Accept-Encoding: gzip", 21, INTERNET_FLAG_NO_COOKIES, 0);
 	if (handle == 0)
 	{
 		bLog::AddLog(bLogEntry(L"InternetOpenUrl FetchString Error", L"bHttp", eLogType::Error));

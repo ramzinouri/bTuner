@@ -22,6 +22,32 @@ int bPlaylist::Locate(std::wstring name)
 	}
 	return -1;
 }
+std::vector<unsigned int> bPlaylist::Search(std::wstring name)
+{
+	std::vector<unsigned int> result;
+	std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+
+	for (unsigned int i = 0; i < (int)Stations.size(); i++)
+	{
+		std::wstring LName;
+		std::wstring LGenre;
+		LName.resize(Stations.at(i).Name.size());
+		LGenre.resize(Stations.at(i).Genre.size());
+
+		std::transform(Stations.at(i).Name.begin(), Stations.at(i).Name.end(), LName.begin(),::tolower);
+		std::transform(Stations.at(i).Genre.begin(), Stations.at(i).Genre.end(), LGenre.begin(), ::tolower);
+
+		if (LName.find(name) != std::wstring::npos)
+		{
+			result.push_back(i);
+			continue;
+		}
+		if (LGenre.find(name) != std::wstring::npos)
+			result.push_back(i);
+	}
+	return result;
+}
 
 void bPlaylist::Sort()
 {

@@ -29,6 +29,7 @@ public:
 	std::vector<bStation> Stations;
 	std::wstring title;
 	int Locate(std::wstring name);
+	std::vector<unsigned int> Search(std::wstring name);
 	void Sort();
 
 };
