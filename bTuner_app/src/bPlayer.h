@@ -9,6 +9,8 @@
 #include <process.h>
 #include <cctype>
 #include <iomanip>
+#include <ctime>
+#include <time.h>
 
 
 #include "pugixml/pugixml.hpp"
@@ -57,6 +59,7 @@ public:
 	void MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 	void EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 	void InitBass();
+	time_t *StationTime;
 private:
 	void OpenThread();
 	bool FetchCover();

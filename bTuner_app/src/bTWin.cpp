@@ -2,6 +2,8 @@
 #include "bLog.h"
 #include "bString.h"
 #include "bHttp.h"
+#include <ctime>
+#include <time.h>
 
 namespace
 {
@@ -26,6 +28,7 @@ bTWin::bTWin(): Clicked(FALSE), Playlist(NULL), Hover(bHover::None)
 };
 void  bTWin::OnClose()
 {
+	bLog::AddLog(bLogEntry(L"bTunner Closed", L"bTuner Win", eLogType::Info));
 	if (bLog::_bLogWin)
 		bLog::_bLogWin->CloseWindow();
 	CWnd::OnClose();
@@ -71,7 +74,26 @@ void  bTWin::OnTimer(int TimerID)
 			Player.UpdateWnd();
 		}
 	}
+	if (TimerID == 1)
+	{
+		Player.UpdateWnd();
+	}
 
+	if (TimerID == 2)
+	{
+		::KillTimer(GetHwnd(), 2);
+		if (searchbox.GetWindowTextLength() > 0 && searchbox.GetWindowText() != L"Search")
+		{
+			std::wstring q = searchbox.GetWindowText();
+			std::vector<unsigned int> result = Playlist->Search(q);
+			if (result.size())
+				bList.DrawOnly(result);
+			else
+				bList.DeleteAllItems();
+		}
+		else if (Playlist&&searchbox.GetWindowTextLength() == 0 && searchbox.GetWindowText() != L"Search")
+			bList.RedrawPlaylist();
+	}
 
 }
 
@@ -84,7 +106,6 @@ BOOL bTWin::OnEraseBkgnd(CDC & dc)
 
 void bTWin::OnDestroy()
 {
-	
 	if (Playlist)
 		delete Playlist;
 	GdiplusShutdown(gdiplusToken);
@@ -95,12 +116,12 @@ void bTWin::OnDestroy()
 	
 	if (!Config.Save())
 		bLog::AddLog(bLogEntry(L"Failed to Save Config File", L"bTuner Win", eLogType::Error));
-};
+}
 
 bTWin::~bTWin()
 {
 	
-};
+}
 
 void bTWin::PreRegisterClass(WNDCLASS &wc)
 {
@@ -112,11 +133,10 @@ void bTWin::PreRegisterClass(WNDCLASS &wc)
 	wc.hbrBackground=(HBRUSH) CreateSolidBrush(RGB(30,30,30));
 	wc.lpszClassName=L"bTuner";
 	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
-};
+}
 
 void bTWin::PreCreate(CREATESTRUCT &cs)
 {
-
 	cs.dwExStyle = WS_EX_ACCEPTFILES;
 	cs.lpszClass=L"bTuner";
 #ifdef  _DEBUG
@@ -127,10 +147,10 @@ void bTWin::PreCreate(CREATESTRUCT &cs)
 	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
 	cs.cx=700;
 	cs.cy=550;
-};
+}
+
 int bTWin::OnCreate(CREATESTRUCT& cs)
-{
-	
+{	
 	Player.hwnd = this->GetHwnd();
 	if (!Config.Load())
 		bLog::AddLog(bLogEntry(L"Failed to Load Config File", L"bTuner Win", eLogType::Error));
@@ -167,24 +187,20 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	searchbox.MoveWindow(GetClientRect().right-205,5,200,20);
 	HFONT font;
 	font = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
-		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
 	searchbox.SetFont(font);
 	searchbox.SetWindowTextW(L"Search");
 	searchbox.SetMargins(10, 10);
 
 
-
-
-
 	
-	/*
+	
 	Playlist = new bPlaylist;
 	Displayed_Playlist = Playlist;
 	Playlist->LoadFile(L"bFavorites.xspf");
-	bList.Playlist = Displayed_Playlist;
-	bList.RedrawPlaylist();
-	*/
+
 	
+	/*
 	bLog::AddLog(bLogEntry(L"Start Downloading .... [http://dir.xiph.org/yp.xml]", L"bTuner Win", eLogType::Info));
 	if (bHttp::DownloadFile(L"http://dir.xiph.org/yp.xml", L"yp.xml"))
 	{
@@ -197,14 +213,25 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 		{
 			xml_node nDir = doc.child(L"directory");
 			Playlist = new bPlaylist;
+			Playlist->title = L"dir.xiph.org/yp.xml";
 			int i = 0;
 			for (xml_node nEntry = nDir.first_child(); nEntry; nEntry = nEntry.next_sibling())
 			{
+				
+				int pos=Playlist->Locate(nEntry.child(L"server_name").text().as_string());
+				if (pos > 0)
+				{
+					bStream s(nEntry.child(L"listen_url").text().as_string());
+					s.Bitrate = nEntry.child(L"bitrate").text().as_int();
+					Playlist->Stations.at(pos).Streams.push_back(s);
+					continue;
+				}
+				
 				bStation st;
 				st.Name = nEntry.child(L"server_name").text().as_string();
 				st.Genre = nEntry.child(L"genre").text().as_string();
 				bStream s(nEntry.child(L"listen_url").text().as_string());
-				s.Bitrate= nEntry.child(L"bitrate").text().as_int();
+				s.Bitrate = nEntry.child(L"bitrate").text().as_int();
 				st.Streams.push_back(s);
 				st.ID = i;
 				Playlist->Stations.push_back(st);
@@ -212,18 +239,17 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 				i++;
 			}
 
-			//Playlist->Sort();
-
 			CString msg;
 			msg.Format(L"[ %u ] Station Loaded From yp.xml", Playlist->Stations.size());
 			bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", eLogType::Info));
-
 		}
 	}
+	*/
 	bList.Playlist = Playlist;
 	bList.RedrawPlaylist();
 	
 	UpdateWindow();
+	SetTimer(1, 1000, NULL);
 
 	if (Config.LogWindow)
 	{
@@ -240,33 +266,31 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	return 0;
 };
 
-
 void bTWin::OnDraw(CDC& dc)
 {
-	CRect cr=GetClientRect();
-	RECT r;
-	HBRUSH color = CreateSolidBrush(RGB(20, 20, 20));
-	SetRect(&r, 0, 0, 150, cr.bottom-150);
-	FillRect(dc,&r, color);
-	DeleteObject(color);
-	
-	HDC hdcBuffer = CreateCompatibleDC(::GetDC(GetHwnd()));  // OFF screen DC
+	HDC hdcBuffer = CreateCompatibleDC(::GetDC(GetHwnd()));
 	int iOldState = SaveDC(hdcBuffer);
 	int h, w;
 	h = GetClientRect().Height();
 	w = GetClientRect().Width();
-	HBITMAP hBitmapBuffer = CreateCompatibleBitmap(::GetDC(GetHwnd()), w, h);  // create memory bitmap for that off screen DC
-
-	SelectObject(hdcBuffer, hBitmapBuffer); // Select the created memory bitmap into the OFF screen DC
+	HBITMAP hBitmapBuffer = CreateCompatibleBitmap(::GetDC(GetHwnd()), w, h);
+	SelectObject(hdcBuffer, hBitmapBuffer); 
 	
-	DrawPlayer(hdcBuffer);						/* Then do your painting job using hdcBuffer over off screen DC */
+	HFONT font = CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+	SelectObject(hdcBuffer,font);
+	SetTextColor(hdcBuffer,RGB(200, 200, 200));
+	SetBkMode(hdcBuffer,TRANSPARENT);
+	TextOut(hdcBuffer,160, 5, Playlist->title.c_str(), Playlist->title.size());
+	DeleteObject(font);
+	DrawPlayer(hdcBuffer);						
 
-	BitBlt(dc,0,0, w, h, hdcBuffer, 0, 0, SRCCOPY); // copy the content of OFF screen DC to actual screen DC
+	BitBlt(dc,0,0, w, h, hdcBuffer, 0, 0, SRCCOPY);
 	RestoreDC(hdcBuffer, iOldState);
-	DeleteObject(hBitmapBuffer); // Free the memory for bitmap
-	DeleteDC(hdcBuffer); // Release the OFF screen DC
+	DeleteObject(hBitmapBuffer);
+	DeleteDC(hdcBuffer); 
 	
-};
+}
 
 LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -283,12 +307,14 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		pmis = (PMEASUREITEMSTRUCT)lParam;
 		pmis->itemHeight = 30;
 		break;
+
 	case WM_DRAWITEM:
 
 		pdis = (PDRAWITEMSTRUCT)lParam;
 		if (pdis->CtlType == ODT_LISTVIEW)
 			bList.DrawItem(wParam, lParam);
 		break;
+
 	case WM_LBUTTONDOWN:
 		Clicked = TRUE;
 		ClickP.x = LOWORD(lParam);
@@ -299,6 +325,7 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			InvalidateRect(VolumeRect, TRUE);
 		}
 		break;
+
 	case WM_LBUTTONUP:
 		Clicked = FALSE;
 		Mouse.x = LOWORD(lParam);
@@ -327,8 +354,8 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 		break;
-	case WM_MOUSEMOVE:
 
+	case WM_MOUSEMOVE:
 		Mouse.x = LOWORD(lParam);
 		Mouse.y = HIWORD(lParam);
 		prv = Hover;
@@ -364,8 +391,8 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		
 		break;
-	case WM_MOUSEWHEEL:
 
+	case WM_MOUSEWHEEL:
 		if (((short)HIWORD(wParam)) / 120 > 0 )
 			Player.SetVolume(Player.GetVolume() + 5);
 		if (((short)HIWORD(wParam)) / 120 < 0 )
@@ -376,13 +403,13 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_TIMER:
 		OnTimer((int)wParam);
 	break;
+
 	case WM_DESTROY:
 		::PostQuitMessage(0);
 		break;
 	}
-
 	return WndProcDefault(uMsg, wParam, lParam);
-};
+}
 
 LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 {
@@ -411,25 +438,15 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 	switch (HIWORD(wParam))
 	{
 	case EN_SETFOCUS:
-		//if(searchbox.GetWindowText()== L"Search")
-		//	searchbox.SetWindowTextW(L"");
+		if(searchbox.GetWindowText()== L"Search")
+			searchbox.SetWindowTextW(L"");
 		return TRUE;
 	case EN_KILLFOCUS:
-		//if (searchbox.GetWindowTextLength()==0)
-		//	searchbox.SetWindowTextW(L"Search");
+		if (searchbox.GetWindowTextLength()==0)
+			searchbox.SetWindowTextW(L"Search");
 		return TRUE;
 	case EN_CHANGE:
-		if (searchbox.GetWindowTextLength() > 2 && searchbox.GetWindowText() != L"Search")
-		{
-			std::wstring q=searchbox.GetWindowText();
-			std::vector<unsigned int> result = Playlist->Search(q);
-			bList.DrawOnly(result);
-		}
-		else if(Playlist&&searchbox.GetWindowTextLength()==0&& searchbox.GetWindowText() != L"Search")
-		{
-			//bList.Playlist = Playlist;
-			bList.RedrawPlaylist();
-		}
+		SetTimer(2, 1200, 0);
 		return TRUE;
 	}
 	switch (LOWORD(wParam)) 
@@ -499,6 +516,7 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		else
 			bLog::AddLog(bLogEntry(L"Error Loading Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+		RedrawWindow();
 		break;
 	case ID_FAVORITES_ADDTOFAVORITES:
 
@@ -513,13 +531,14 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 			bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
 		if (Playlist->title.find(L"bFavorites")!=std::wstring::npos)
 			bList.AddStation(*Player.PlayingNow);
+		
 
 		break;
 		
 	}
 
 	return TRUE;
-};
+}
 
 INT_PTR bTWin::Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 {
@@ -589,7 +608,7 @@ INT_PTR bTWin::Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 		break;
 	}
 	return 0;
-};
+}
 
 void  bTWin::DrawPlayer(HDC dc)
 {
@@ -790,6 +809,48 @@ void  bTWin::DrawPlayer(HDC dc)
 			TextOut(dc, 150 + 10 + s.cx + 5 + s2.cx, cr.bottom - 20, bf.c_str(), bf.GetLength());
 		}
 		DeleteObject(font);
+
+		
 	}
+	font = CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+	SelectObject(dc, font);
+	SetTextColor(dc, RGB(220, 220, 220));
+	SetBkMode(dc, TRANSPARENT);
+	time_t Time;
+	time(&Time);
+	
+	if (Player.StationTime&&Player.status == eStatus::Playing)
+	{
+
+		time_t Time2 = Time - *Player.StationTime;
+		struct tm*  timeinfo2;
+		timeinfo2 = localtime(&Time2);
+		CString tms;
+		tms.Format(L"%02d:%02d", timeinfo2->tm_min, timeinfo2->tm_sec);
+
+		SIZE s4;
+		GetTextExtentPoint32(dc, tms.c_str(), tms.GetLength(), &s4);
+		TextOut(dc, cr.right - 150 - s4.cx, cr.bottom - 65, tms.c_str(), tms.GetLength());
+	}
+	else
+	{
+		SIZE s4;
+		GetTextExtentPoint32(dc, L"00:00",5, &s4);
+		TextOut(dc, cr.right - 150 - s4.cx, cr.bottom - 65, L"00:00", 5);
+	}
+	font = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
+	SelectObject(dc, font);
+	SetTextColor(dc, RGB(180, 180, 180));
+	SetBkMode(dc, TRANSPARENT);
+	struct tm*  timeinfo;
+	timeinfo = localtime(&Time);
+	CString tms;
+	tms.Format(L"%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
+	SIZE s3;
+	GetTextExtentPoint32(dc, tms.c_str(), tms.GetLength(), &s3);
+	TextOut(dc, cr.right - 10 - s3.cx, cr.bottom - 20, tms.c_str(), tms.GetLength());
 
 }

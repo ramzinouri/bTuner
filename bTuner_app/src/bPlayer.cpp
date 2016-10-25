@@ -42,6 +42,7 @@ bPlayer::bPlayer()
 	PlayingNow = NULL;
 	status = eStatus::Stopped;
 	CoverLoaded = false;
+	StationTime = NULL;
 	InitBass();
 
 }
@@ -52,6 +53,10 @@ int bPlayer::Play()
 	if (BASS_ChannelPlay(chan, FALSE))
 	{
 		status = eStatus::Playing;
+		if (StationTime)
+			delete StationTime;
+		StationTime = new time_t;
+		time(StationTime);
 		MetaSync(NULL, NULL, NULL, NULL);
 		UpdateWnd();
 		return true;
@@ -232,6 +237,14 @@ void bPlayer::UpdateWnd()
 	if (status != eStatus::Playing)
 		::SetWindowText(hwnd, L".:: bTuner ::.");
 
+	if (status != eStatus::Playing)
+	{
+		if (StationTime)
+		{
+			delete StationTime;
+			StationTime = NULL;
+		}
+	}
 	if (status == eStatus::Playing)
 	{
 		menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED);

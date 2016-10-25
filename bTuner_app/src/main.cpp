@@ -19,13 +19,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int 
 	HANDLE hMutex;
 	DWORD  dwReturn;
 	BOOL   fGotMutex;
-	wchar_t   szAppname[_MAX_PATH];
-	wchar_t   szFname[_MAX_FNAME];
-	GetModuleFileName(GetModuleHandle(NULL), szAppname,sizeof(szAppname));
-	_wsplitpath(szAppname, NULL, NULL, szFname, NULL);
-	wcsupr(szFname);
-	hMutex = CreateMutex(NULL,FALSE,szFname);
-	dwReturn = WaitForSingleObject(hMutex,500);
+
+	hMutex = CreateMutex(NULL,FALSE, L"BTUNER");
+	dwReturn = WaitForSingleObject(hMutex,200);
 	fGotMutex = (dwReturn == WAIT_OBJECT_0) || (dwReturn == WAIT_ABANDONED);
 	if (fGotMutex)
 	{
