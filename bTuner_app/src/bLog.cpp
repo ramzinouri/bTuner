@@ -7,7 +7,7 @@ bLogEntry::bLogEntry()
 {
 	Type = eLogType::Info;
 	time(&Time);
-};
+}
 
 bLogEntry::bLogEntry(wstring _Msg, wstring _source, eLogType _type)
 {
@@ -15,14 +15,7 @@ bLogEntry::bLogEntry(wstring _Msg, wstring _source, eLogType _type)
 	Source = _source;
 	Type = _type;
 	time(&Time);
-};
-
-
-
-bLog::bLog()
-{
-	MessageBoxA(NULL,"blog","blog created",MB_OK);
-};
+}
 
 void bLog::AddLog(bLogEntry _Entry)
 {
@@ -34,7 +27,7 @@ void bLog::AddLog(bLogEntry _Entry)
 	ms += bLog::Log->at(bLog::Log->size() - 1).Msg.c_str();
 
 	if(_bLogWin)
-		_bLogWin->AddLog(bLog::Log->size(),ms.c_str());
+		_bLogWin->AddLog((int)bLog::Log->size(),ms.c_str());
 	std::fstream ostream;
 	if(Log->size()==1)
 		ostream.open(L"bTuner.log", std::ios::trunc | std::ios::out);
@@ -48,4 +41,4 @@ void bLog::AddLog(bLogEntry _Entry)
 		ostream.close();
 	}
 
-};
+}

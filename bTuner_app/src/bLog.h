@@ -14,7 +14,7 @@ using namespace std;
 
 enum  eLogType
 {
-	Error,Info,Track,Player,Debug
+	Error, Info, Track, Player, Debug
 };
 
 class bLogEntry
@@ -22,7 +22,6 @@ class bLogEntry
 public:
 	bLogEntry();
 	bLogEntry(wstring _Msg, wstring _source, eLogType _type);
-
 
 	wstring Msg;
 	wstring Source;
@@ -33,7 +32,6 @@ public:
 class bLog
 {
 public:
-	bLog();
 	static vector<bLogEntry>* Log;
 	static void AddLog(bLogEntry _Entry);
 	static bLogWin* _bLogWin;

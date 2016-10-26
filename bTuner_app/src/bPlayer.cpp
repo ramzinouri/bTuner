@@ -93,7 +93,7 @@ void bPlayer::OpenURL(wstring URL)
 }
 void bPlayer::OpenStation(const bStation& Station)
 {
-	if (PlayingNow->ID != Station.ID || status == eStatus::Stopped)
+	if (PlayingNow->ID != Station.ID || status == eStatus::Stopped || PlayingNow->PlayedStreamID != Station.PlayedStreamID)
 	{
 		PlayingNow->Name = Station.Name;
 		PlayingNow->ID = Station.ID;
@@ -109,7 +109,7 @@ void bPlayer::OpenStation(const bStation& Station)
 
 unsigned __stdcall bPlayer::StaticThreadEntry(void* c)
 {
-	int i = (int)c;
+	UINT_PTR i = (UINT_PTR)c;
 	if(i == eThread::Openurl)
 		gp_bPlayer->OpenThread();
 	if (i == eThread::Fetchurl)

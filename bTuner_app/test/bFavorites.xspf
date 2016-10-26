@@ -1,65 +1,69 @@
 <?xml version="1.0"?>
-<playlist version="http://xspf.org/ns/0/" xmlns="">
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
 	<title>bFavorites</title>
 	<trackList>
-        <track>
+		<track>
 			<title>I Love Radio</title>
 			<location>http://stream12.iloveradio.de/iloveradio1-aac.mp3</location>
+			<location>http://stream01.iloveradio.de/iloveradio1.mp3</location>
 			<info>http://www.iloveradio.de/</info>
 			<image>http://liveradio.de/station-images/b9c2242f-f5b4-4aba-b846-2bd18ef5c5f3/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love 2 Dance</title>
 			<location>http://stream12.iloveradio.de/iloveradio2-aac.mp3</location>
+			<location>http://stream01.iloveradio.de/iloveradio2.mp3</location>
 			<info>http://www.iloveradio.de/</info>
 			<image>http://liveradio.de/station-images/4658b52b-7d4a-45fb-b919-2e23ad521bfe/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love The Battle</title>
 			<location>http://stream12.iloveradio.de/iloveradio3-aac.mp3</location>
+			<location>http://stream01.iloveradio.de/iloveradio3.mp3</location>
 			<info>http://www.iloveradio.de/</info>
 			<image>http://liveradio.de/station-images/ec3f5b38-bd5c-4f04-b12a-5301fe9688f8/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love Mashup</title>
 			<location>http://stream12.iloveradio.de/iloveradio5-aac.mp3</location>
+			<location>http://stream01.iloveradio.de/iloveradio5.mp3</location>
 			<info>http://www.iloveradio.de/</info>
 			<image>http://liveradio.de/station-images/6839db35-5831-4fdb-8b6b-d4dc1484b3f5/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love Bravo Charts</title>
 			<location>http://stream12.iloveradio.de/iloveradio9-aac.mp3</location>
+			<location>http://stream01.iloveradio.de/iloveradio9.mp3</location>
 			<info>http://www.iloveradio.de/</info>
 			<image>http://liveradio.de/station-images/b562ca55-0183-47a1-b6a0-de3f8af661e1/fit-145x145.jpg</image>
 		</track>
 		<track>
 			<title>I Love BRAVO TubeStars</title>
 			<location>http://stream12.iloveradio.de/iloveradio4-aac.mp3</location>
+			<location>http://stream01.iloveradio.de/iloveradio9.mp3</location>
 			<info>http://www.iloveradio.de/</info>
 			<image>http://liveradio.de/station-images/0ecf2952-3935-4c0e-8b9b-5df5e920115f/fit-145x145.jpg</image>
 		</track>
-		
 		<track>
 			<title>I Love Bravo Love</title>
 			<location>http://stream12.iloveradio.de/iloveradio10-aac.mp3</location>
+			<location>http://stream01.iloveradio.de/iloveradio10.mp3</location>
 			<info>http://www.iloveradio.de/</info>
 			<image>http://liveradio.de/station-images/ec3f5b38-bd5c-4f04-b12a-5301fe9688f8/fit-145x145.jpg</image>
 		</track>
-		
 		<track>
 			<title>.977 Today's Hits</title>
 			<location>http://provisioning.streamtheworld.com/pls/977_HITSAAC.pls</location>
+			<location>http://provisioning.streamtheworld.com/pls/977_HITS.pls</location>
 			<info>http://www.977music.com/</info>
 			<image>http://liveradio.de/station-images/692923e7-2944-488a-bd23-937845c4755d/fit-145x145.jpg</image>
 		</track>
-		
 		<track>
 			<title>HUNTER.FM -=[: The Hitz Channel :]=-</title>
 			<location>http://live.hunter.fm:80/mobile</location>
 			<info>http://hunter.fm</info>
 			<image>https://i3.radionomy.com/radios/145/423ab2d6-d0ed-4060-9aef-a61be8a077f2.jpg</image>
 		</track>
-		
 		<track>
 			<title>#Pophits</title>
 			<location>http://streaming214.radionomy.com:80/-Pophits</location>
@@ -75,8 +79,8 @@
 		<track>
 			<title>[AnimeNexus]</title>
 			<location>http://www.nexusnet.com.mx:8000/animenexus-relay</location>
-			<image>https://i3.radionomy.com/radios/145/55dd6735-731f-45ef-9640-9682923ef368.png</image>
 			<info>http://www.animenexus.mx</info>
+			<image>https://i3.radionomy.com/radios/145/55dd6735-731f-45ef-9640-9682923ef368.png</image>
 		</track>
 		<track>
 			<title>AnimeNfo Radio</title>
@@ -86,7 +90,11 @@
 		</track>
 		<track>
 			<title>Hits24</title>
+			<location>http://streaming207.radionomy.com:80/Hits-24</location>
 			<location>http://streaming214.radionomy.com:80/Hits-24</location>
+			<location>http://streaming211.radionomy.com:80/Hits-24</location>
+			<location>http://streaming208.radionomy.com:80/Hits-24</location>
+			<location>http://streaming210.radionomy.com:80/Hits-24</location>
 			<info>http://hits-24.playtheradio.com</info>
 			<image>http://i.radionomy.com/radio/145/ab95b35a-56c0-45ee-a172-03563fbd4162.jpg</image>
 		</track>

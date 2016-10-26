@@ -186,8 +186,12 @@ bool bPlaylist::ParseXSPF(std::wstringstream* data)
 		else
 			st.Image = doc.child(L"playlist").child(L"image").text().as_string();
 		st.ID = i;
-		bStream s(nTrack.child(L"location").text().as_string());
-		st.Streams.push_back(s);
+
+		for (xml_node location = nTrack.child(L"location"); location; location = location.next_sibling(L"location"))
+		{
+			bStream s(location.text().as_string());
+			st.Streams.push_back(s);
+		}
 		Stations.push_back(st);
 		i++;
 	}
@@ -233,18 +237,22 @@ bool bPlaylist::SaveXSPF(std::wstring path)
 
 		for (unsigned int j = 0; j < Stations.at(i).Streams.size(); j++)
 		{
-			track.append_child(L"location");
-			track.child(L"location").append_child(pugi::node_pcdata);
-			track.child(L"location").text() = Stations.at(i).Streams.at(j).Url.c_str();
+			xml_node location=track.append_child(L"location");;
+			location.append_child(pugi::node_pcdata);
+			location.text() = Stations.at(i).Streams.at(j).Url.c_str();
 		}
-		track.append_child(L"info");
-		track.child(L"info").append_child(pugi::node_pcdata);
-		track.child(L"info").text() = Stations.at(i).Url.c_str();
-
-		track.append_child(L"image");
-		track.child(L"image").append_child(pugi::node_pcdata);
-		track.child(L"image").text() = Stations.at(i).Image.c_str();
-
+		if (Stations.at(i).Url.size())
+		{
+			track.append_child(L"info");
+			track.child(L"info").append_child(pugi::node_pcdata);
+			track.child(L"info").text() = Stations.at(i).Url.c_str();
+		}
+		if (Stations.at(i).Image.size())
+		{
+			track.append_child(L"image");
+			track.child(L"image").append_child(pugi::node_pcdata);
+			track.child(L"image").text() = Stations.at(i).Image.c_str();
+		}
 	}
 	
 	result=doc.save_file(path.c_str(), L"\t", 1U, pugi::encoding_utf8);

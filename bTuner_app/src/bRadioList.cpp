@@ -6,21 +6,21 @@ namespace
 	bRadioList *gp_bRadioList = NULL;
 }
 
-
 bRadioList::bRadioList(): PlayingNowID(-1), killthread(false), hThread (NULL)
 {
 	gp_bRadioList = this;
-};
+}
 
 bRadioList::~bRadioList()
 {
 
-};
+}
 
 void bRadioList::PreCreate(CREATESTRUCT &cs)
 {
 	cs.style = WS_BORDER | WS_VISIBLE | WS_TABSTOP | WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_OWNERDRAWFIXED;
-};
+}
+
 void bRadioList::AddStation(const bStation station)
 {
 	int i = GetItemCount();
@@ -39,9 +39,10 @@ void bRadioList::AddStation(const bStation station)
 
 	delete it;
 }
+
 unsigned __stdcall bRadioList::StaticThreadEntry(void* c)
 {
-	int i= (int)c;
+	UINT_PTR i= (UINT_PTR)c;
 	if (i == eRadioThread::RedrawPlaylist)
 		gp_bRadioList->T_RedrawPlaylist();
 	if (i == eRadioThread::DrawOnly)
@@ -64,6 +65,7 @@ void bRadioList::RedrawPlaylist()
 	hThread = (HANDLE)_beginthreadex(NULL, 0, &bRadioList::StaticThreadEntry, (void*)eRadioThread::RedrawPlaylist , 0, &threadID);
 
 }
+
 void bRadioList::T_RedrawPlaylist()
 {
 	DeleteAllItems();
@@ -95,6 +97,7 @@ void bRadioList::DrawOnly(std::vector<unsigned int> items)
 	hThread = (HANDLE)_beginthreadex(NULL, 0, &bRadioList::StaticThreadEntry, (void*)eRadioThread::DrawOnly, 0, &threadID);
 	
 }
+
 void bRadioList::T_DrawOnly()
 {
 	DeleteAllItems();
@@ -139,8 +142,6 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 
 		SetBkMode(pdis->hDC, TRANSPARENT);
 		TextOut(pdis->hDC, 20, pdis->rcItem.top + 7, text.c_str(), text.GetLength());
-
-
 }
 
 void bRadioList::OnCreate()

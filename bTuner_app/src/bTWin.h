@@ -42,6 +42,8 @@ protected:
 	void  OnClose();
 	void OnTimer(int TimerID);
 	BOOL OnEraseBkgnd(CDC& dc);
+	void OnContextMenu(HWND wnd, CPoint point);
+	void OnMenuCommand(HMENU menu, int idx);
 private:
 	CRect VolumeRect;
 	CRect PlayRect;
@@ -54,6 +56,8 @@ private:
 	ULONG_PTR           gdiplusToken;
 	bRadioList bList;
 	CEdit searchbox;
+	HMENU StreamMenu;
+	HMENU ContextMenu;
 
 };
 

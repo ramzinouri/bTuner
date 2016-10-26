@@ -18,17 +18,17 @@ INT_PTR CALLBACK  g_Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 		return 0;
 }
 
-
 bTWin::bTWin(): Clicked(FALSE), Playlist(NULL), Hover(bHover::None)
 {
 	gp_bTWin = this;
 	Mouse.x = 0;
 	Mouse.y = 0;
 	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-};
+}
+
 void  bTWin::OnClose()
 {
-	bLog::AddLog(bLogEntry(L"bTunner Closed", L"bTuner Win", eLogType::Info));
+	bLog::AddLog(bLogEntry(L"bTuner Closed", L"bTuner Win", eLogType::Info));
 	if (bLog::_bLogWin)
 		bLog::_bLogWin->CloseWindow();
 	CWnd::OnClose();
@@ -102,7 +102,131 @@ BOOL bTWin::OnEraseBkgnd(CDC & dc)
 	return TRUE;
 }
 
+void bTWin::OnContextMenu(HWND wnd, CPoint point)
+{
+	if (wnd == bList.GetHwnd())
+	{
 
+		int id = bList.GetNextItem(-1, LVNI_FOCUSED);
+		if (id < 0)
+			return;
+		CString sID = bList.GetItemText(id, 1);
+		int index = std::stoi(sID.c_str());
+		if (index >= 0 && index < (int)Playlist->Stations.size())
+		{
+			ContextMenu = ::CreatePopupMenu();
+			StreamMenu = ::CreatePopupMenu();
+			CMenu menu(ContextMenu);
+			CMenu Streammenu(StreamMenu);
+
+			MENUINFO mi;
+			memset(&mi, 0, sizeof(mi));
+			mi.cbSize = sizeof(mi);
+			mi.fMask = MIM_STYLE;
+			mi.dwStyle = MNS_NOTIFYBYPOS;
+			mi.dwMenuData = 0;
+			Streammenu.SetMenuInfo(mi);
+			for (unsigned int i = 0; i < Playlist->Stations[index].Streams.size(); i++)
+			{
+				CString s;
+				s.Format(L"[%02u] ", i + 1);
+				s += Playlist->Stations[index].Streams[i].Url.c_str();
+				Streammenu.AppendMenuW(MF_STRING, NULL, s.c_str());
+			}
+
+			mi.dwMenuData = 1;
+			menu.SetMenuInfo(mi);
+			menu.InsertMenu(0, MF_STRING, NULL, L"Play Station");
+			menu.InsertMenu(1, MF_SEPARATOR);
+			menu.InsertMenu(2, MF_POPUP, (UINT_PTR)Streammenu.GetHandle(), L"Streams");
+			menu.InsertMenu(3, MF_SEPARATOR);
+			
+			if (Playlist->title.find(L"bFavorites") != std::wstring::npos)
+			{
+				menu.InsertMenu(4, MF_STRING | MF_DISABLED | MF_GRAYED, NULL, L"Add to favorites");
+				menu.InsertMenu(5, MF_STRING | MF_DISABLED | MF_GRAYED, NULL, L"Quick add to favorites");
+				menu.InsertMenu(6, MF_STRING, NULL, L"Remove from favorites");
+			}
+			else
+			{
+				menu.InsertMenu(4, MF_STRING, NULL, L"Add to favorites");
+				menu.InsertMenu(5, MF_STRING, NULL, L"Quick add to favorites");
+				menu.InsertMenu(6, MF_STRING | MF_DISABLED | MF_GRAYED, NULL, L"Remove from favorites");
+			}
+			menu.InsertMenu(7, MF_SEPARATOR);
+			menu.InsertMenu(8, MF_STRING, NULL, L"Go to website");
+
+			::SetForegroundWindow(wnd);
+			int ret=menu.TrackPopupMenu(TPM_RIGHTBUTTON | TPM_HORPOSANIMATION, point.x, point.y, *this);
+			Streammenu.DestroyMenu();
+			menu.DestroyMenu();
+		}
+		
+	}
+	return;
+}
+
+void bTWin::OnMenuCommand(HMENU menu, int idx)
+{
+	if (ContextMenu == menu)
+	{
+		if (idx == 0)
+		{
+			int id = bList.GetNextItem(-1, LVNI_SELECTED);
+			if (id < 0)
+				return;
+			CString sID = bList.GetItemText(id, 1);
+			unsigned int index = std::stoi(sID.c_str());
+			if (index >= 0 && index < (int)Playlist->Stations.size())
+				Player.OpenStation(Playlist->Stations.at(index));
+		}
+		if (idx == 5)
+		{
+			int id = bList.GetNextItem(-1, LVNI_SELECTED);
+			if (id < 0)
+				return;
+			CString sID = bList.GetItemText(id, 1);
+			unsigned int index = std::stoi(sID.c_str());
+			if (index >= 0 && index < (int)Playlist->Stations.size())
+			{
+				bPlaylist fav;
+				if (!fav.LoadFile(L"bFavorites.xspf"))
+					bLog::AddLog(bLogEntry(L"Error Loading Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+				fav.Stations.push_back(Playlist->Stations.at(index));
+				if (!fav.SaveXSPF(L"bFavorites.xspf"))
+					bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+				if (Playlist->title.find(L"bFavorites") != std::wstring::npos)
+					bList.AddStation(Playlist->Stations.at(index));
+			}
+		}
+		if (idx == 8)
+		{
+			int id = bList.GetNextItem(-1, LVNI_SELECTED);
+			if (id < 0)
+				return;
+			CString sID = bList.GetItemText(id, 1);
+			unsigned int index = std::stoi(sID.c_str());
+			if (index >= 0 && index < (int)Playlist->Stations.size())
+			{
+				ShellExecuteW(NULL, L"open", Playlist->Stations.at(index).Url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+			}
+		}
+
+	}
+	else if (StreamMenu == menu)
+	{
+		int id = bList.GetNextItem(-1, LVNI_SELECTED);
+		if (id < 0)
+			return;
+		CString sID = bList.GetItemText(id, 1);
+		unsigned int index = std::stoi(sID.c_str());
+		if (index >= 0 && index < (int)Playlist->Stations.size())
+		{
+			Playlist->Stations.at(index).PlayedStreamID = idx;
+			Player.OpenStation(Playlist->Stations.at(index));
+		}
+	}
+}
 
 void bTWin::OnDestroy()
 {
@@ -137,14 +261,10 @@ void bTWin::PreRegisterClass(WNDCLASS &wc)
 
 void bTWin::PreCreate(CREATESTRUCT &cs)
 {
-	cs.dwExStyle = WS_EX_ACCEPTFILES;
+	cs.dwExStyle = WS_EX_ACCEPTFILES | WS_EX_TOPMOST;
 	cs.lpszClass=L"bTuner";
-#ifdef  _DEBUG
-	cs.lpszName = L"[Debug] .:: bTuner ::.";
-#else
 	cs.lpszName = L".:: bTuner ::.";
-#endif
-	cs.style=WS_OVERLAPPED|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_VISIBLE;
+	cs.style = WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE ;
 	cs.cx=700;
 	cs.cy=550;
 }
@@ -193,14 +313,16 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	searchbox.SetMargins(10, 10);
 
 
-	
+#define TESTSWITCH
+
+#ifdef TESTSWITCH
 	
 	Playlist = new bPlaylist;
 	Displayed_Playlist = Playlist;
 	Playlist->LoadFile(L"bFavorites.xspf");
 
+#else
 	
-	/*
 	bLog::AddLog(bLogEntry(L"Start Downloading .... [http://dir.xiph.org/yp.xml]", L"bTuner Win", eLogType::Info));
 	if (bHttp::DownloadFile(L"http://dir.xiph.org/yp.xml", L"yp.xml"))
 	{
@@ -244,7 +366,9 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 			bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", eLogType::Info));
 		}
 	}
-	*/
+
+#endif
+	
 	bList.Playlist = Playlist;
 	bList.RedrawPlaylist();
 	
@@ -281,7 +405,7 @@ void bTWin::OnDraw(CDC& dc)
 	SelectObject(hdcBuffer,font);
 	SetTextColor(hdcBuffer,RGB(200, 200, 200));
 	SetBkMode(hdcBuffer,TRANSPARENT);
-	TextOut(hdcBuffer,160, 5, Playlist->title.c_str(), Playlist->title.size());
+	TextOut(hdcBuffer,160, 5, Playlist->title.c_str(), (int)Playlist->title.size());
 	DeleteObject(font);
 	DrawPlayer(hdcBuffer);						
 
@@ -299,11 +423,19 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	PMEASUREITEMSTRUCT pmis;
 	switch (uMsg)
 	{
-		
+	case WM_MENUCOMMAND:
+	{		
+		HMENU menu = (HMENU)lParam;
+		int idx =(int)wParam;
+		OnMenuCommand(menu, idx);
+		break; 
+	}
+	case WM_CONTEXTMENU:
+		OnContextMenu((HWND)wParam,CPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)));
+		break;
 	case WM_CTLCOLOREDIT:
 		return (LRESULT)CreateSolidBrush(RGB(200,200,200));
 	case WM_MEASUREITEM:
-
 		pmis = (PMEASUREITEMSTRUCT)lParam;
 		pmis->itemHeight = 30;
 		break;
@@ -449,9 +581,9 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		SetTimer(2, 1200, 0);
 		return TRUE;
 	}
-	switch (LOWORD(wParam)) 
+	switch (LOWORD(wParam))
 	{
-	
+
 	case ID_PLAYBACK_RESUME:
 		Player.Resume();
 
@@ -465,7 +597,7 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		if (!Config.LogWindow)
 		{
-			GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW,MF_CHECKED);
+			GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW, MF_CHECKED);
 			Config.LogWindow = true;
 			Config.Save();
 			if (!bLog::_bLogWin)
@@ -502,7 +634,7 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_OPENURL), GetHwnd(), (DLGPROC)&g_Diagproc);
 		break;
 	case ID_HELP_ABOUT:
-		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT),GetHwnd(), (DLGPROC)&g_Diagproc);
+		DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), GetHwnd(), (DLGPROC)&g_Diagproc);
 		break;
 	case ID_FAVORITES_RELOADFAVORITES:
 		if (Playlist)
@@ -522,19 +654,19 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		break;
 	case ID_FAVORITES_QUICKADDTOFAVORITES:
+	{
 		bPlaylist fav;
-		if(!fav.LoadFile(L"bFavorites.xspf"))
+		if (!fav.LoadFile(L"bFavorites.xspf"))
 			bLog::AddLog(bLogEntry(L"Error Loading Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
 		fav.title = L"bFavorites";
 		fav.Stations.push_back(*Player.PlayingNow);
 		if (!fav.SaveXSPF(L"bFavorites.xspf"))
 			bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
-		if (Playlist->title.find(L"bFavorites")!=std::wstring::npos)
+		if (Playlist->title.find(L"bFavorites") != std::wstring::npos)
 			bList.AddStation(*Player.PlayingNow);
-		
-
 		break;
-		
+	}
+
 	}
 
 	return TRUE;
@@ -585,12 +717,9 @@ INT_PTR bTWin::Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 		  case NM_CLICK:
 			  if (((LPNMHDR)l)->idFrom == IDC_SYSLINK2|| ((LPNMHDR)l)->idFrom == IDC_SYSLINK3)
 			  {
-				
 				  PNMLINK pNMLink = (PNMLINK)((LPNMHDR)l);
 				  ShellExecuteW(NULL, L"open", pNMLink->item.szUrl, NULL, NULL, SW_SHOWNORMAL);
 			  }
-		      break;
-
 		}
 		break;
 
@@ -746,7 +875,7 @@ void  bTWin::DrawPlayer(HDC dc)
 	if (Player.status != eStatus::Playing)
 		SetTextColor(dc, RGB(150, 150, 150));
 	if (Player.PlayingNow && Player.PlayingNow->Name.size())
-		TextOut(dc, 150, cr.bottom - 145, Player.PlayingNow->Name.c_str(), Player.PlayingNow->Name.size());
+		TextOut(dc, 150, cr.bottom - 145, Player.PlayingNow->Name.c_str(), (int)Player.PlayingNow->Name.size());
 	DeleteObject(font);
 	font=CreateFont(16, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
@@ -770,7 +899,7 @@ void  bTWin::DrawPlayer(HDC dc)
 			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 		SelectObject(dc, font);
 		SetTextColor(dc, RGB(200, 200, 200));
-		TextOut(dc, 150, cr.bottom - 105, Player.PlayingNow->Playing.c_str(), Player.PlayingNow->Playing.size());
+		TextOut(dc, 150, cr.bottom - 105, Player.PlayingNow->Playing.c_str(), (int)Player.PlayingNow->Playing.size());
 		DeleteObject(font);
 		font=CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
@@ -779,14 +908,14 @@ void  bTWin::DrawPlayer(HDC dc)
 		
 
 		SIZE s;
-		GetTextExtentPoint32(dc, Player.PlayingNow->Url.c_str(), Player.PlayingNow->Url.size(),&s);
+		GetTextExtentPoint32(dc, Player.PlayingNow->Url.c_str(), (int)Player.PlayingNow->Url.size(),&s);
 		LinkRect.top = GetClientRect().bottom - 20;
 		LinkRect.bottom = GetClientRect().bottom;
 		LinkRect.left = 150;
 		LinkRect.right = 150 + s.cx;
 		if (Hover == bHover::Link)
 			SetTextColor(dc, RGB(40, 185, 220));
-		TextOut(dc, 150, cr.bottom - 20, Player.PlayingNow->Url.c_str(), Player.PlayingNow->Url.size());
+		TextOut(dc, 150, cr.bottom - 20, Player.PlayingNow->Url.c_str(), (int)Player.PlayingNow->Url.size());
 		DeleteObject(font);
 		font=CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 			CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Arial"));
@@ -798,12 +927,12 @@ void  bTWin::DrawPlayer(HDC dc)
 		wchar_t *codecT[] = { L" MP3 ",L" AAC ",L" OGG ",L" MPEG ",L" AAC+ ",L" Opus ",L" NSV ",L"" };
 		int c = Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding;
 		if (c < eCodecs::UNDIFINED)
-			TextOut(dc, 150 + 10 + s.cx, cr.bottom - 20, codecT[c], wcslen(codecT[c]));
+			TextOut(dc, 150 + 10 + s.cx, cr.bottom - 20, codecT[c], (int)wcslen(codecT[c]));
 
 		if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate)
 		{
 			SIZE s2;
-			GetTextExtentPoint32(dc, codecT[c], wcslen(codecT[c]),&s2);
+			GetTextExtentPoint32(dc, codecT[c], (int)wcslen(codecT[c]),&s2);
 			CString bf;
 			bf.Format(L" %u Kbps " , Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Bitrate);
 			TextOut(dc, 150 + 10 + s.cx + 5 + s2.cx, cr.bottom - 20, bf.c_str(), bf.GetLength());

@@ -6,6 +6,7 @@ bStream::bStream(std::wstring URL)
 	Bitrate = 0;
 	Encoding = eCodecs::UNDIFINED;
 }
+
 bStation::bStation()
 {
 	int ID=-1;

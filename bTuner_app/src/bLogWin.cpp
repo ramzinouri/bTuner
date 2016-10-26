@@ -5,12 +5,12 @@
 bLogWin::bLogWin()
 {
 	bLog::_bLogWin = NULL;
-};
+}
 
 bLogWin::~bLogWin()
 {
 	bLog::_bLogWin = NULL;
-};
+}
 
 void bLogWin::UpdateLog()
 {
@@ -25,6 +25,7 @@ void bLogWin::UpdateLog()
 		AddLog(i,ms.c_str());
 	}
 }
+
 void bLogWin::AddLog(int pos,std::wstring _log)
 {
 	LV_ITEM *it = new LV_ITEM;
@@ -43,7 +44,6 @@ void bLogWin::AddLog(int pos,std::wstring _log)
 	_bLogList.Scroll(cs);
 
 }
-
 
 void bLogWin::PreRegisterClass(WNDCLASS &wc)
 {
@@ -68,7 +68,6 @@ int  bLogWin::OnCreate(CREATESTRUCT& cs)
 	bLog::_bLogWin = this;
 	_bLogList.Create(GetHwnd());
 	_bLogList.OnCreate();
-	
 
 	UpdateLog();
 	return 0;
@@ -103,7 +102,6 @@ LRESULT bLogWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return WndProcDefault(uMsg, wParam, lParam);
 }
 
-
 bLogList::bLogList()
 {
 
@@ -113,6 +111,7 @@ bLogList::~bLogList()
 {
 
 }
+
 void bLogList::DrawItem(WPARAM wParam, LPARAM lParam)
 {
 	HBRUSH brush;
@@ -124,9 +123,7 @@ void bLogList::DrawItem(WPARAM wParam, LPARAM lParam)
 
 	font = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
-
 	SelectObject(pdis->hDC, font);
-
 	::SetTextColor(pdis->hDC, RGB(0, 0, 0));
 
 
@@ -148,7 +145,6 @@ void bLogList::DrawItem(WPARAM wParam, LPARAM lParam)
 		brush=CreateSolidBrush(RGB(180, 230, 240));
 
 	FillRect(pdis->hDC, &pdis->rcItem, brush);
-	
 
 	CString  text = GetItemText(pdis->itemID, 0);
 	TextOut(pdis->hDC, 5, pdis->rcItem.top , text, text.GetLength());

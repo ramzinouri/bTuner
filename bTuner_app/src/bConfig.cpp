@@ -71,7 +71,6 @@ bool bConfig::Save()
 
 }
 
-
 void bConfig::Default()
 {
 	LogWindow = false;
