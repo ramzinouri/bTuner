@@ -15,6 +15,7 @@ using namespace Gdiplus;
 #include "bRadioList.h"
 #include "bPlaylist.h"
 #include "bLog.h"
+#include "bModulesList.h"
 
 enum bHover { None, Play, Volume, CoverArt, Link };
 
@@ -56,6 +57,7 @@ private:
 	ULONG_PTR           gdiplusToken;
 	bRadioList bList;
 	CEdit searchbox;
+	bModulesList Modulelist;
 	HMENU StreamMenu;
 	HMENU ContextMenu;
 

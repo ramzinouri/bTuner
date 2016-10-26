@@ -43,6 +43,7 @@ bPlayer::bPlayer()
 	status = eStatus::Stopped;
 	CoverLoaded = false;
 	StationTime = NULL;
+	TrackTime = NULL;
 	InitBass();
 
 }
@@ -56,7 +57,11 @@ int bPlayer::Play()
 		if (StationTime)
 			delete StationTime;
 		StationTime = new time_t;
+		if (TrackTime)
+			delete TrackTime;
+		TrackTime = new time_t;
 		time(StationTime);
+		time(TrackTime);
 		MetaSync(NULL, NULL, NULL, NULL);
 		UpdateWnd();
 		return true;
@@ -244,7 +249,13 @@ void bPlayer::UpdateWnd()
 			delete StationTime;
 			StationTime = NULL;
 		}
+		if (TrackTime)
+		{
+			delete TrackTime;
+			TrackTime = NULL;
+		}
 	}
+
 	if (status == eStatus::Playing)
 	{
 		menu.EnableMenuItem(ID_PLAYBACK_STOP, MF_ENABLED);
@@ -413,6 +424,11 @@ void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 	}
 	if (!PlayingNow->Playing.size() )
 		return;
+
+	if (TrackTime)
+		delete TrackTime;
+	TrackTime = new time_t;
+	time(TrackTime);
 	
 	//if(hThreadArray[1])
 	//	WaitForSingleObject(hThreadArray[1], INFINITE);

@@ -199,6 +199,29 @@ void bTWin::OnMenuCommand(HMENU menu, int idx)
 					bList.AddStation(Playlist->Stations.at(index));
 			}
 		}
+		if (idx == 6)
+		{
+			int id = bList.GetNextItem(-1, LVNI_SELECTED);
+			if (id < 0)
+				return;
+			CString sID = bList.GetItemText(id, 1);
+			unsigned int index = std::stoi(sID.c_str());
+			if (index >= 0 && index < (int)Playlist->Stations.size())
+			{
+				bPlaylist fav;
+				if (!fav.LoadFile(L"bFavorites.xspf"))
+					bLog::AddLog(bLogEntry(L"Error Loading Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+				int i = fav.Locate(Playlist->Stations.at(index).Name);
+				if(i<0)
+					fav.Stations.erase(fav.Stations.begin() + index);
+				else
+					fav.Stations.erase(fav.Stations.begin() + i);
+				if (!fav.SaveXSPF(L"bFavorites.xspf"))
+					bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+				Playlist->Stations.erase(Playlist->Stations.begin() + index);
+				bList.RedrawPlaylist();
+			}
+		}
 		if (idx == 8)
 		{
 			int id = bList.GetNextItem(-1, LVNI_SELECTED);
@@ -261,7 +284,7 @@ void bTWin::PreRegisterClass(WNDCLASS &wc)
 
 void bTWin::PreCreate(CREATESTRUCT &cs)
 {
-	cs.dwExStyle = WS_EX_ACCEPTFILES | WS_EX_TOPMOST;
+	cs.dwExStyle = WS_EX_ACCEPTFILES;
 	cs.lpszClass=L"bTuner";
 	cs.lpszName = L".:: bTuner ::.";
 	cs.style = WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE ;
@@ -301,7 +324,10 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	bList.Create(*this);
 	bList.OnCreate();
 
-
+	Modulelist.Create(*this);
+	Modulelist.OnCreate();
+	Modulelist.AddString(L"bFavorites");
+	Modulelist.AddString(L"Xiph.org");
 	
 	searchbox.Create(*this);
 	searchbox.MoveWindow(GetClientRect().right-205,5,200,20);
@@ -437,7 +463,10 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return (LRESULT)CreateSolidBrush(RGB(200,200,200));
 	case WM_MEASUREITEM:
 		pmis = (PMEASUREITEMSTRUCT)lParam;
-		pmis->itemHeight = 30;
+		if (pmis->CtlType == ODT_LISTVIEW)
+			pmis->itemHeight = 30;
+		if (pmis->CtlType == ODT_LISTBOX)
+			pmis->itemHeight = 40;
 		break;
 
 	case WM_DRAWITEM:
@@ -445,6 +474,8 @@ LRESULT bTWin::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		pdis = (PDRAWITEMSTRUCT)lParam;
 		if (pdis->CtlType == ODT_LISTVIEW)
 			bList.DrawItem(wParam, lParam);
+		if (pdis->CtlType == ODT_LISTBOX)
+			Modulelist.DrawItem(wParam, lParam);
 		break;
 
 	case WM_LBUTTONDOWN:
@@ -941,42 +972,58 @@ void  bTWin::DrawPlayer(HDC dc)
 
 		
 	}
-	font = CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+	font = CreateFont(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 	SelectObject(dc, font);
 	SetTextColor(dc, RGB(220, 220, 220));
 	SetBkMode(dc, TRANSPARENT);
 	time_t Time;
 	time(&Time);
-	
-	if (Player.StationTime&&Player.status == eStatus::Playing)
+	tm  nowinfo;
+	localtime_s(&nowinfo, &Time);
+	if (Player.StationTime&&Player.TrackTime&&Player.status == eStatus::Playing)
 	{
 
-		time_t Time2 = Time - *Player.StationTime;
-		struct tm*  timeinfo2;
-		timeinfo2 = localtime(&Time2);
+		time_t _StationTime = static_cast<time_t>(difftime (Time , *Player.StationTime));
+		time_t _TrackTime = static_cast<time_t>(difftime(Time, *Player.TrackTime));
+		tm  _StationTimeinfo;
+		localtime_s(&_StationTimeinfo,&_StationTime);
+		tm  _TrackTimeinfo;
+		localtime_s(&_TrackTimeinfo,&_TrackTime);
+		tm  _hinfo;
+		time_t h_t = static_cast<time_t>(difftime(Time, Time));;
+		localtime_s(&_hinfo, &h_t);
 		CString tms;
-		tms.Format(L"%02d:%02d", timeinfo2->tm_min, timeinfo2->tm_sec);
+		unsigned int h = _hinfo.tm_hour;
+		if (_StationTimeinfo.tm_hour-h)
+		{
+			if (_TrackTimeinfo.tm_hour-h)
+				tms.Format(L"%u:%02u:%02u I %u:%02u:%02u", _TrackTimeinfo.tm_hour-h, _TrackTimeinfo.tm_min, _TrackTimeinfo.tm_sec, _StationTimeinfo.tm_hour-h, _StationTimeinfo.tm_min, _StationTimeinfo.tm_sec);
+			else
+				tms.Format(L"%02u:%02u I %u:%02u:%02u", _TrackTimeinfo.tm_min, _TrackTimeinfo.tm_sec, _StationTimeinfo.tm_hour-h, _StationTimeinfo.tm_min, _StationTimeinfo.tm_sec);
+
+		}
+		else
+			tms.Format(L"%02u:%02u I %02u:%02u", _TrackTimeinfo.tm_min, _TrackTimeinfo.tm_sec, _StationTimeinfo.tm_min, _StationTimeinfo.tm_sec);
 
 		SIZE s4;
 		GetTextExtentPoint32(dc, tms.c_str(), tms.GetLength(), &s4);
-		TextOut(dc, cr.right - 150 - s4.cx, cr.bottom - 65, tms.c_str(), tms.GetLength());
+		TextOut(dc, cr.right - 150 - s4.cx, cr.bottom - 63, tms.c_str(), tms.GetLength());
 	}
 	else
 	{
 		SIZE s4;
-		GetTextExtentPoint32(dc, L"00:00",5, &s4);
-		TextOut(dc, cr.right - 150 - s4.cx, cr.bottom - 65, L"00:00", 5);
+		GetTextExtentPoint32(dc, L"00:00 I 00:00",13, &s4);
+		TextOut(dc, cr.right - 150 - s4.cx, cr.bottom - 63, L"00:00 I 00:00", 13);
 	}
 	font = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Arial Black"));
 	SelectObject(dc, font);
 	SetTextColor(dc, RGB(180, 180, 180));
 	SetBkMode(dc, TRANSPARENT);
-	struct tm*  timeinfo;
-	timeinfo = localtime(&Time);
+	
 	CString tms;
-	tms.Format(L"%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+	tms.Format(L"%02u:%02u:%02u", nowinfo.tm_hour, nowinfo.tm_min, nowinfo.tm_sec);
 
 	SIZE s3;
 	GetTextExtentPoint32(dc, tms.c_str(), tms.GetLength(), &s3);

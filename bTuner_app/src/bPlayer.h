@@ -60,6 +60,7 @@ public:
 	void EndSync(HSYNC handle, DWORD channel, DWORD data, void *user);
 	void InitBass();
 	time_t *StationTime;
+	time_t *TrackTime;
 private:
 	void OpenThread();
 	bool FetchCover();

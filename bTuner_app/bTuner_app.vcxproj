@@ -25,6 +25,7 @@
     <ClCompile Include="src\bHttp.cpp" />
     <ClCompile Include="src\bLog.cpp" />
     <ClCompile Include="src\bLogWin.cpp" />
+    <ClCompile Include="src\bModulesList.cpp" />
     <ClCompile Include="src\bPlayer.cpp" />
     <ClCompile Include="src\bPlaylist.cpp" />
     <ClCompile Include="src\bRadioList.cpp" />
@@ -91,6 +92,7 @@
     <ClInclude Include="src\bHttp.h" />
     <ClInclude Include="src\bLog.h" />
     <ClInclude Include="src\bLogWin.h" />
+    <ClInclude Include="src\bModulesList.h" />
     <ClInclude Include="src\bPlayer.h" />
     <ClInclude Include="src\bPlaylist.h" />
     <ClInclude Include="src\bRadioList.h" />
