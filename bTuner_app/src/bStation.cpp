@@ -10,13 +10,6 @@ bStream::bStream(std::wstring URL)
 bStation::bStation()
 {
 	int ID=-1;
-	Name = L"";
-	Genre = L"";
-	Url = L"";
-	Image = L"";
-	Playing = L"";
-	Artist = L"";
-	Track = L"";
 	PlayedStreamID = 0;
 }
 

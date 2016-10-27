@@ -101,8 +101,8 @@ BEGIN
     END
     POPUP "F&avorites"
     BEGIN
-        MENUITEM "&Quick add to favorites",     ID_FAVORITES_QUICKADDTOFAVORITES
-        MENUITEM "&Add to favorites...",        ID_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Quick current station to favorites", ID_FAVORITES_QUICKADDTOFAVORITES
+        MENUITEM "&Add current station to favorites...", ID_FAVORITES_ADDTOFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "&Reload favorites",           ID_FAVORITES_RELOADFAVORITES
     END
@@ -208,6 +208,60 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ADDTOFAVORITES DIALOGEX 0, 0, 287, 167
+STYLE DS_SYSMODAL | DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Add Station To Favorites"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Add",ID_ADD,176,146,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,230,146,50,14
+    LTEXT           "Title :",IDC_STATIC,15,14,22,8
+    EDITTEXT        IDC_TITLE,50,11,230,13,ES_AUTOHSCROLL
+    LTEXT           "Image :",IDC_STATIC,16,33,29,8
+    EDITTEXT        IDC_IMAGE,50,30,230,13,ES_AUTOHSCROLL
+    LTEXT           "Website :",IDC_STATIC,15,52,32,8
+    EDITTEXT        IDC_WEBSITE,50,49,230,13,ES_AUTOHSCROLL
+    LTEXT           "Sources :",IDC_STATIC,16,71,34,8
+    EDITTEXT        IDC_SOURCES,50,68,230,73,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ADDTOFAVORITES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 280
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 160
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ADDTOFAVORITES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

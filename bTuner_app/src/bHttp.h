@@ -16,7 +16,7 @@
 class bHttp
 {
 public:
-	static bool DownloadFile(const std::wstring &url, const std::wstring &path);
+	static bool DownloadFile(const std::wstring &url, const std::wstring &path, bool UseCache = true);
 	static std::string FetchString(const std::wstring &url);
 };
 

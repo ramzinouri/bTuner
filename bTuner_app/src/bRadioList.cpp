@@ -80,7 +80,9 @@ void bRadioList::T_RedrawPlaylist()
 			break;
 		}
 	}
+	CloseHandle(hThread);
 	hThread = NULL;
+	_endthreadex(0);
 }
 
 void bRadioList::DrawOnly(std::vector<unsigned int> items)
@@ -112,6 +114,7 @@ void bRadioList::T_DrawOnly()
 			break;
 		}
 	}
+	CloseHandle(hThread);
 	hThread = NULL;
 	_endthreadex(0);
 }
@@ -146,15 +149,16 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 
 void bRadioList::OnCreate()
 {
-	MoveWindow(150, 35, GetParent().GetClientRect().Width() - 150, GetParent().GetClientRect().bottom - 185);
-	InsertColumn(0, L"Stations", LVCFMT_LEFT, GetParent().GetClientRect().Width() - 150 - GetSystemMetrics(SM_CXVSCROLL),0);
-	InsertColumn(1, L"ID", LVCFMT_LEFT | LVCFMT_FIXED_WIDTH,0,1);
+	MoveWindow(220, 35, GetParent().GetClientRect().right-220, GetParent().GetClientRect().bottom - 185);
+	InsertColumn(0, L"Stations", LVCFMT_LEFT, GetClientRect().Width() - GetSystemMetrics(SM_CXVSCROLL),0);
+	InsertColumn(1, L"ID", LVCFMT_RIGHT | LVCFMT_FIXED_WIDTH,0,1);
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_TWOCLICKACTIVATE);
 	SetBkColor(RGB(0, 0, 0));
 	SetTextColor(RGB(255, 255, 255));
 	SetTextBkColor(RGB(0, 0, 0));
 	HFONT font;
 	font = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
-		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
 	SetFont(font);
+	DeleteObject(font);
 }

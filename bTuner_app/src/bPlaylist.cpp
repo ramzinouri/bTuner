@@ -19,6 +19,7 @@ int bPlaylist::Locate(std::wstring name)
 	}
 	return -1;
 }
+
 std::vector<unsigned int> bPlaylist::Search(std::wstring name)
 {
 	std::vector<unsigned int> result;
@@ -50,7 +51,6 @@ void bPlaylist::Sort()
 {
 	std::sort(Stations.begin(), Stations.end());
 }
-
 
 bool bPlaylist::ParsePLS(std::wstringstream* data)
 {
@@ -119,8 +119,6 @@ bool bPlaylist::ParsePLS(std::wstringstream* data)
 	return result;
 }
 
-
-
 bool bPlaylist::LoadFile(std::wstring path)
 {
 	bool result = false;
@@ -138,6 +136,7 @@ bool bPlaylist::LoadFile(std::wstring path)
 	file.read(buffer, length);
 	file.close();
 	std::wstringstream data(buffer);
+	
 	std::wstring line;
 	std::getline(data, line);
 	if (line.find(L"[playlist]") != std::wstring::npos)
@@ -149,7 +148,6 @@ bool bPlaylist::LoadFile(std::wstring path)
 			return ParseXSPF(new std::wstringstream(buffer));
 	}
 
-		
 
 	return result;
 }

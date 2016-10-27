@@ -122,7 +122,7 @@ void bLogList::DrawItem(WPARAM wParam, LPARAM lParam)
 		return;
 
 	font = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
 	SelectObject(pdis->hDC, font);
 	::SetTextColor(pdis->hDC, RGB(0, 0, 0));
 

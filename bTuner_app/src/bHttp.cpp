@@ -2,7 +2,7 @@
 
 
 
-bool bHttp::DownloadFile(const std::wstring & url, const std::wstring & path)
+bool bHttp::DownloadFile(const std::wstring & url, const std::wstring & path, bool UseCache)
 {
 	::HINTERNET handle =::InternetOpen(0, INTERNET_OPEN_TYPE_DIRECT, 0, 0, 0);
 	if (handle == 0)
@@ -12,7 +12,9 @@ bool bHttp::DownloadFile(const std::wstring & url, const std::wstring & path)
 	}
 	BOOL op = TRUE;
 	InternetSetOption(handle, INTERNET_OPTION_HTTP_DECODING, (LPVOID)&op, sizeof(BOOL));
-	HINTERNET stream =::InternetOpenUrlW(handle, url.c_str(), L"Accept-Encoding: gzip", 21, INTERNET_FLAG_NO_COOKIES, 0);
+	if(!UseCache)
+		DeleteUrlCacheEntryW(url.c_str());
+	HINTERNET stream =::InternetOpenUrlW(handle, url.c_str(), L"Accept-Encoding: gzip, deflate", 30, INTERNET_FLAG_NO_COOKIES, 0);
 	if (handle == 0)
 	{
 		bLog::AddLog(bLogEntry(L"InternetOpenURL Error", L"bHttp", eLogType::Error));

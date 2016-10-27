@@ -37,6 +37,10 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR CmdLine,int 
 			MessageBox(NULL, e.GetText(), A2T(e.what()), MB_ICONERROR);
 			return -1;
 		}
+#ifdef _DEBUG
+		_CrtDumpMemoryLeaks();
+#endif
+
 		ReleaseMutex(hMutex);
 	}
 	else

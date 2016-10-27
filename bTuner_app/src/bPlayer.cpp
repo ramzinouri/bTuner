@@ -237,8 +237,7 @@ void bPlayer::SetVolume(int Vol)
 }
 void bPlayer::UpdateWnd()
 {
-	HMENU hmenu = GetMenu(hwnd);
-	CMenu menu(hmenu);
+	CMenu menu(GetMenu(hwnd));
 	if (status != eStatus::Playing)
 		::SetWindowText(hwnd, L".:: bTuner ::.");
 
@@ -271,10 +270,13 @@ void bPlayer::UpdateWnd()
 		std::wstring title = PlayingNow->Playing + L" -- .:: bTuner ::.";
 		::SetWindowText(hwnd, title.c_str());
 	}
-	RECT cr, r;
-	GetClientRect(hwnd,&cr);
-	SetRect(&r, 0, cr.bottom - 150, cr.right, cr.bottom);
-	InvalidateRect(hwnd,&r,FALSE);
+	RECT *cr = new RECT;
+	RECT*r = new RECT;
+	GetClientRect(hwnd,cr);
+	SetRect(r, 0, cr->bottom - 150, cr->right, cr->bottom);
+	InvalidateRect(hwnd,r,FALSE);
+	delete cr;
+	delete r;
 }
 void bPlayer::ProcessTags(const char * buffer)
 {
