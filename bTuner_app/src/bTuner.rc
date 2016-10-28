@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "bVersion.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -45,8 +46,8 @@ IDI_ICON                ICON                    "res/bTuner.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,0
- PRODUCTVERSION 0,0,1,0
+ FILEVERSION VERSION_
+ PRODUCTVERSION VERSION_
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -63,13 +64,13 @@ BEGIN
         BEGIN
             VALUE "Comments", "bl_ackrain@yahoo.com"
             VALUE "CompanyName", "bl_ackrain Soft"
-            VALUE "FileDescription", ".:: bTuner ::. Internet Radio Player"
-            VALUE "FileVersion", "0, 0, 1, 0"
-            VALUE "InternalName", "bTuner"
+            VALUE "FileDescription", DESCRIPTION
+            VALUE "FileVersion", VERSION_TEXT_
+            VALUE "InternalName", APP_NAME
             VALUE "LegalCopyright", "Copyright (C) bl_ackrain 2016"
             VALUE "OriginalFilename", "bTuner.exe"
-            VALUE "ProductName", "bTuner"
-            VALUE "ProductVersion", "0, 0, 1, 0"
+            VALUE "ProductName", APP_NAME
+            VALUE "ProductVersion", VERSION_TEXT_
         END
     END
     BLOCK "VarFileInfo"

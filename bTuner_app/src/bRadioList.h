@@ -15,8 +15,6 @@
 
 enum eRadioThread { DrawOnly,RedrawPlaylist };
 
-
-
 class bRadioList : public CListView
 {
 public:

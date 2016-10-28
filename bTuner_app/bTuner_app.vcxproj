@@ -21,9 +21,11 @@
   <ItemGroup>
     <ClCompile Include="libs\pugixml\pugixml.cpp" />
     <ClCompile Include="src\bConfig.cpp" />
+    <ClCompile Include="src\bFavorites.cpp" />
     <ClCompile Include="src\bHttp.cpp" />
     <ClCompile Include="src\bLog.cpp" />
     <ClCompile Include="src\bLogWin.cpp" />
+    <ClCompile Include="src\bModule.cpp" />
     <ClCompile Include="src\bModulesList.cpp" />
     <ClCompile Include="src\bPlayer.cpp" />
     <ClCompile Include="src\bPlaylist.cpp" />
@@ -86,9 +88,11 @@
     <ClInclude Include="libs\Win32++\wxx_wincore0.h" />
     <ClInclude Include="libs\Win32++\wxx_winutils.h" />
     <ClInclude Include="src\bConfig.h" />
+    <ClInclude Include="src\bFavorites.h" />
     <ClInclude Include="src\bHttp.h" />
     <ClInclude Include="src\bLog.h" />
     <ClInclude Include="src\bLogWin.h" />
+    <ClInclude Include="src\bModule.h" />
     <ClInclude Include="src\bModulesList.h" />
     <ClInclude Include="src\bPlayer.h" />
     <ClInclude Include="src\bPlaylist.h" />

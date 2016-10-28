@@ -31,14 +31,14 @@ protected:
 	virtual LRESULT WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void PreRegisterClass(WNDCLASS &wc);
 	void PreCreate(CREATESTRUCT &cs);
-	void OnDraw(CDC& dc);
+	void OnDraw(HDC dc);
 	int  OnCreate(CREATESTRUCT& cs);
 	void OnDestroy();
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	LRESULT OnNotify(WPARAM wParam, LPARAM lParam);
 	bPlayer Player;
-	bPlaylist* Playlist;
-	bPlaylist* Displayed_Playlist;
+	//bPlaylist* Playlist;
+	//bPlaylist* Favorites;
 	void DrawPlayer(HDC dc);
 	void  OnClose();
 	void OnTimer(int TimerID);
@@ -60,7 +60,6 @@ private:
 	bModulesList Modulelist;
 	HMENU StreamMenu;
 	HMENU ContextMenu;
-
 };
 
 #endif

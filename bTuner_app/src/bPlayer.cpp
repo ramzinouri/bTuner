@@ -1,6 +1,6 @@
 #include "bPlayer.h"
 #include "bLog.h"
-
+#include "bVersion.h"
 
 
 namespace
@@ -237,9 +237,10 @@ void bPlayer::SetVolume(int Vol)
 }
 void bPlayer::UpdateWnd()
 {
+	
 	CMenu menu(GetMenu(hwnd));
 	if (status != eStatus::Playing)
-		::SetWindowText(hwnd, L".:: bTuner ::.");
+		::SetWindowText(hwnd, TEXT(APP_TITLE));
 
 	if (status != eStatus::Playing)
 	{
@@ -267,16 +268,19 @@ void bPlayer::UpdateWnd()
 	}
 	if (status == eStatus::Playing&&PlayingNow->Playing.size())
 	{
-		std::wstring title = PlayingNow->Playing + L" -- .:: bTuner ::.";
+		std::wstring title = PlayingNow->Playing + L" -- "+ TEXT(APP_TITLE);
 		::SetWindowText(hwnd, title.c_str());
 	}
+	
 	RECT *cr = new RECT;
 	RECT*r = new RECT;
 	GetClientRect(hwnd,cr);
 	SetRect(r, 0, cr->bottom - 150, cr->right, cr->bottom);
-	InvalidateRect(hwnd,r,FALSE);
+	InvalidateRect(hwnd,r,TRUE);
 	delete cr;
 	delete r;
+	
+
 }
 void bPlayer::ProcessTags(const char * buffer)
 {

@@ -121,6 +121,9 @@ bool bPlaylist::ParsePLS(std::wstringstream* data)
 
 bool bPlaylist::LoadFile(std::wstring path)
 {
+	int s = Stations.size();
+	if (s)
+		Stations.erase(Stations.begin(), Stations.end());
 	bool result = false;
 	std::wifstream file;
 

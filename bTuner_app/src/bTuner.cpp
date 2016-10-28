@@ -12,7 +12,7 @@ bTuner::bTuner()
 
 BOOL bTuner::InitInstance()
 {
-	std::wstring msg = TEXT(APPNAME);
+	std::wstring msg = TEXT(APP_NAME);
 	msg += TEXT(" ");
 	msg += TEXT(VERSION_TEXT);
 	msg += L" Started";

@@ -123,6 +123,11 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 {
 	PDRAWITEMSTRUCT pdis = (PDRAWITEMSTRUCT)lParam;
 	HBRUSH brush;
+	HFONT font;
+	font = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Open Sans"));
+	SelectObject(pdis->hDC,font);
+	
 	if (pdis->itemID == -1)
 		return;
 
@@ -134,7 +139,10 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 			brush=CreateSolidBrush(RGB(15, 15, 15));
 
 		if (pdis->itemState & ODS_SELECTED)
-			brush=CreateSolidBrush(RGB(30, 150, 220));
+		{
+			DeleteObject(brush);
+			brush = CreateSolidBrush(RGB(30, 150, 220));
+		}
 
 		FillRect(pdis->hDC, &pdis->rcItem, brush);
 
@@ -145,6 +153,7 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 
 		SetBkMode(pdis->hDC, TRANSPARENT);
 		TextOut(pdis->hDC, 20, pdis->rcItem.top + 7, text.c_str(), text.GetLength());
+		DeleteObject(font);
 }
 
 void bRadioList::OnCreate()
@@ -152,13 +161,8 @@ void bRadioList::OnCreate()
 	MoveWindow(220, 35, GetParent().GetClientRect().right-220, GetParent().GetClientRect().bottom - 185);
 	InsertColumn(0, L"Stations", LVCFMT_LEFT, GetClientRect().Width() - GetSystemMetrics(SM_CXVSCROLL),0);
 	InsertColumn(1, L"ID", LVCFMT_RIGHT | LVCFMT_FIXED_WIDTH,0,1);
-	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_TWOCLICKACTIVATE);
+	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP );
 	SetBkColor(RGB(0, 0, 0));
 	SetTextColor(RGB(255, 255, 255));
 	SetTextBkColor(RGB(0, 0, 0));
-	HFONT font;
-	font = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Verdana"));
-	SetFont(font);
-	DeleteObject(font);
 }
