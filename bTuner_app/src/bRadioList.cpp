@@ -131,7 +131,10 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 	if (pdis->itemID == -1)
 		return;
 
-		CString text=GetItemText(pdis->itemID, 0);
+		CString text1=GetItemText(pdis->itemID, 0);
+		CString text = text1;
+		if (Playlist->title == L"History")
+			text.Format(L"[ %u ]- %s", pdis->itemID+1, text1.c_str());
 
 		if(pdis->itemID%2)
 			brush=CreateSolidBrush(RGB(0, 0, 0));

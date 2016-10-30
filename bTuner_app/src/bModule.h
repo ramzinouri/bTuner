@@ -10,6 +10,8 @@ public:
 	bModule();
 	virtual ~bModule();
 	virtual bool UpdateStations();
+	virtual bool AddStation(bStation& station);
+	virtual bool SaveStations();
 	virtual std::vector<unsigned int> Search(std::wstring query);
 	std::wstring Name;
 	bPlaylist *Playlist;

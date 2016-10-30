@@ -22,6 +22,7 @@
     <ClCompile Include="libs\pugixml\pugixml.cpp" />
     <ClCompile Include="src\bConfig.cpp" />
     <ClCompile Include="src\bFavorites.cpp" />
+    <ClCompile Include="src\bHistory.cpp" />
     <ClCompile Include="src\bHttp.cpp" />
     <ClCompile Include="src\bLog.cpp" />
     <ClCompile Include="src\bLogWin.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="libs\Win32++\wxx_winutils.h" />
     <ClInclude Include="src\bConfig.h" />
     <ClInclude Include="src\bFavorites.h" />
+    <ClInclude Include="src\bHistory.h" />
     <ClInclude Include="src\bHttp.h" />
     <ClInclude Include="src\bLog.h" />
     <ClInclude Include="src\bLogWin.h" />

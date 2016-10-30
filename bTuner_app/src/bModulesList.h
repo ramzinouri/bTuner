@@ -9,6 +9,7 @@
 
 #include "bModule.h"
 #include "bFavorites.h"
+#include "bHistory.h"
 #include "bLog.h"
 
 class bModulesList : public CListView

@@ -48,7 +48,11 @@ void bModulesList::OnCreate()
 	SetTextBkColor(RGB(30, 30, 30));
 
 	Modules.emplace(std::make_pair(std::wstring(L"Favorites"), new bFavorites));
+	Modules.emplace(std::make_pair(std::wstring(L"History"), new bHistory));
+	
+	
 	SetActiveModule(L"Favorites");
+	int i = 0;
 	for (auto &pair : Modules) {
 		if (pair.second->UpdateStations())
 		{
@@ -56,11 +60,12 @@ void bModulesList::OnCreate()
 			it->mask = LVIF_TEXT;
 			it->iSubItem = 0;
 			it->pszText = (LPWSTR)pair.first.c_str();
-			it->iItem = 0;
+			it->iItem = i;
 			InsertItem(*it);
 		}
 		else
 			bLog::AddLog(bLogEntry(L"Error Loading Module:"+pair.first, L"Module list", eLogType::Error));
+		i++;
 	}
 }
 

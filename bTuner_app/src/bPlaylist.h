@@ -23,9 +23,12 @@ public:
 	~bPlaylist();
 	bool ParsePLS(std::wstringstream* data);
 	bool ParseXSPF(std::wstringstream* data);
+	bool ParseXML(std::wstringstream* data);
 	bool LoadFile(std::wstring path);
 	bool SaveFile(std::wstring path);
 	bool SaveXSPF(std::wstring path);
+	bool SaveXML(std::wstring path);
+	bool SavePLS(std::wstring path);
 	std::vector<bStation> Stations;
 	std::wstring title;
 	int Locate(std::wstring name);

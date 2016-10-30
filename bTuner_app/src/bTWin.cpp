@@ -36,11 +36,11 @@ void  bTWin::OnClose()
 
 void  bTWin::OnTimer(int TimerID)
 {
-	if (TimerID == 0)
+	if (TimerID == 0)  //Buffering Monitor
 	{
-		QWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_BUFFER) * 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END);
+		QWORD progress = BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_DOWNLOAD) * 100 / BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_END);
 		Player.BuffProgress = (int)progress;
-		if (progress > 90 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED))
+		if (progress > 95 || !BASS_StreamGetFilePosition(Player.chan, BASS_FILEPOS_CONNECTED))
 		{
 			::KillTimer(GetHwnd(), 0);
 			if (Player.PlayingNow->Streams[Player.PlayingNow->PlayedStreamID].Encoding == eCodecs::UNDIFINED)
@@ -67,6 +67,7 @@ void  bTWin::OnTimer(int TimerID)
 			BASS_ChannelSetSync(Player.chan, BASS_SYNC_END, 0, &g_EndSync, 0);
 
 			Player.Play();
+			Modulelist.Modules[L"History"]->AddStation(*Player.PlayingNow);
 		}
 		else
 		{
@@ -74,12 +75,15 @@ void  bTWin::OnTimer(int TimerID)
 			Player.UpdateWnd();
 		}
 	}
-	if (TimerID == 1)
+	if (TimerID == 1) //Update Clock
 	{
-		Player.UpdateWnd();
+		RECT *r = new RECT;
+		SetRect(r, 0, GetClientRect().bottom - 150, GetClientRect().right, GetClientRect().bottom);
+		InvalidateRect(r, TRUE);
+		delete r;
 	}
 
-	if (TimerID == 2)
+	if (TimerID == 2) // Search Timer
 	{
 		::KillTimer(GetHwnd(), 2);
 		if (searchbox.GetWindowTextLength() > 0 && searchbox.GetWindowText() != L"Search")
@@ -144,7 +148,7 @@ void bTWin::OnContextMenu(HWND wnd, CPoint point)
 			menu.InsertMenu(2, MF_POPUP, (UINT_PTR)Streammenu.GetHandle(), L"Streams");
 			menu.InsertMenu(3, MF_SEPARATOR);
 			
-			if (bList.Playlist->title.find(L"bFavorites") != std::wstring::npos)
+			if (Modulelist.ActiveModuleName==L"Favorites")
 			{
 				menu.InsertMenu(4, MF_STRING | MF_DISABLED | MF_GRAYED, NULL, L"Add station to favorites");
 				menu.InsertMenu(5, MF_STRING | MF_DISABLED | MF_GRAYED, NULL, L"Quick add station to favorites");
@@ -217,10 +221,8 @@ void bTWin::OnMenuCommand(HMENU menu, int idx)
 			unsigned int index = std::stoi(sID.c_str());
 			if (index >= 0 && index < (int)bList.Playlist->Stations.size())
 			{
-				Modulelist.Modules[L"Favorites"]->Playlist->Stations.push_back(bList.Playlist->Stations.at(index));
-				if (!Modulelist.Modules[L"Favorites"]->Playlist->SaveXSPF(L"bFavorites.xspf"))
-					bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
-				Modulelist.Modules[L"Favorites"]->UpdateStations();
+				Modulelist.Modules[L"Favorites"]->AddStation(bList.Playlist->Stations.at(index));
+
 				if (Modulelist.ActiveModuleName == L"Favorites")
 					bList.RedrawPlaylist();
 			}
@@ -241,8 +243,8 @@ void bTWin::OnMenuCommand(HMENU menu, int idx)
 					Modulelist.Modules[L"Favorites"]->Playlist->Stations.erase(Modulelist.Modules[L"Favorites"]->Playlist->Stations.begin() + index);
 				else
 					Modulelist.Modules[L"Favorites"]->Playlist->Stations.erase(Modulelist.Modules[L"Favorites"]->Playlist->Stations.begin() + i);
-				if (!Modulelist.Modules[L"Favorites"]->Playlist->SaveXSPF(L"bFavorites.xspf"))
-					bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
+				if (!Modulelist.Modules[L"Favorites"]->SaveStations())
+					bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xml]", L"bTWin", eLogType::Error));
 				Modulelist.Modules[L"Favorites"]->UpdateStations();
 				if (Modulelist.ActiveModuleName == L"Favorites")
 					bList.RedrawPlaylist();
@@ -289,7 +291,6 @@ void bTWin::OnDestroy()
 {
 	GdiplusShutdown(gdiplusToken);
 	Config.LastVolume= Player.GetVolume();
-	Config.LastPlayed = *Player.PlayingNow;
 	Config.LastWindowPos.x = GetWindowRect().left;
 	Config.LastWindowPos.y = GetWindowRect().top;
 	
@@ -329,8 +330,8 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	Player.hwnd = this->GetHwnd();
 	if (!Config.Load())
 		bLog::AddLog(bLogEntry(L"Failed to Load Config File", L"bTuner Win", eLogType::Error));
-	if(!Config.LastPlayed.Streams[0].Url.size())
-		GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+
+	GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	GetMenu().EnableMenuItem(ID_PLAYBACK_STOP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	if (Config.LogWindow)
 		GetMenu().CheckMenuItem(ID_HELP_LOGWINDOW, MF_CHECKED );
@@ -341,19 +342,25 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	SetRect(&PlayRect, 160, GetClientRect().bottom - 70, 250, GetClientRect().bottom - 30);
 	Player.SetVolume(Config.LastVolume);
 	MoveWindow(Config.LastWindowPos.x,Config.LastWindowPos.y,800,565);
-	Player.PlayingNow = new bStation;
-	Player.PlayingNow->Streams.push_back(bStream(Config.LastPlayed.Streams.at(0)));
-	Player.PlayingNow->Name = Config.LastPlayed.Name;
-	Player.PlayingNow->Url = Config.LastPlayed.Url;
-	Player.PlayingNow->Image = Config.LastPlayed.Image;
+
 
 	bList.Create(*this);
 	bList.OnCreate();
 
 	Modulelist.Create(*this);
 	Modulelist.OnCreate();
-
-
+	if (Modulelist.Modules[L"History"]->Playlist->Stations.size())
+	{
+		Player.PlayingNow = new bStation;
+		
+		Player.PlayingNow->Name = Modulelist.Modules[L"History"]->Playlist->Stations.at(Modulelist.Modules[L"History"]->Playlist->Stations.size() - 1).Name;
+		Player.PlayingNow->Url = Modulelist.Modules[L"History"]->Playlist->Stations.at(Modulelist.Modules[L"History"]->Playlist->Stations.size() - 1).Url;
+		Player.PlayingNow->Image = Modulelist.Modules[L"History"]->Playlist->Stations.at(Modulelist.Modules[L"History"]->Playlist->Stations.size() - 1).Image;
+		Player.PlayingNow->Genre = Modulelist.Modules[L"History"]->Playlist->Stations.at(Modulelist.Modules[L"History"]->Playlist->Stations.size() - 1).Genre;
+		Player.PlayingNow->PlayedStreamID = Modulelist.Modules[L"History"]->Playlist->Stations.at(Modulelist.Modules[L"History"]->Playlist->Stations.size() - 1).PlayedStreamID;
+		Player.PlayingNow->Streams = Modulelist.Modules[L"History"]->Playlist->Stations.at(Modulelist.Modules[L"History"]->Playlist->Stations.size() - 1).Streams;
+		GetMenu().EnableMenuItem(ID_PLAYBACK_RESUME, MF_ENABLED);
+	}
 	searchbox.Create(*this);
 	searchbox.MoveWindow(GetClientRect().right-205,7,200,20);
 	HFONT font;
@@ -417,7 +424,8 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 
 	bList.Playlist = Modulelist.GetActiveModule()->Playlist;
 	bList.RedrawPlaylist();
-	bList.PlayingNowID = Modulelist.GetActiveModule()->Playlist->Locate(Player.PlayingNow->Name);
+	if(Player.PlayingNow)
+		bList.PlayingNowID = Modulelist.GetActiveModule()->Playlist->Locate(Player.PlayingNow->Name);
 
 	UpdateWindow();
 	SetTimer(1, 500, NULL);
@@ -665,8 +673,10 @@ LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 					if (s != Modulelist.ActiveModuleName)
 					{
 						Modulelist.SetActiveModule(s);
+						Modulelist.RedrawWindow();
 						bList.Playlist = Modulelist.GetActiveModule()->Playlist;
 						bList.RedrawPlaylist();
+						RedrawWindow();
 					}
 				}
 			}
@@ -757,10 +767,7 @@ BOOL bTWin::OnCommand(WPARAM wParam, LPARAM lParam)
 		break;
 	case ID_FAVORITES_QUICKADDTOFAVORITES:
 	{
-		Modulelist.Modules[L"Favorites"]->Playlist->Stations.push_back(*Player.PlayingNow);
-		if (!Modulelist.Modules[L"Favorites"]->Playlist->SaveXSPF(L"bFavorites.xspf"))
-			bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
-		Modulelist.Modules[L"Favorites"]->UpdateStations();
+		Modulelist.Modules[L"Favorites"]->AddStation(*Player.PlayingNow);
 		if (Modulelist.ActiveModuleName == L"Favorites")
 			bList.RedrawPlaylist();
 		break;
@@ -865,10 +872,7 @@ INT_PTR bTWin::Diagproc(HWND h, UINT m, WPARAM w, LPARAM l)
 			}
 			if (!st.Name.size() || !st.Streams.size())
 				return 0;
-			Modulelist.Modules[L"Favorites"]->Playlist->Stations.push_back(st);
-			if (!Modulelist.Modules[L"Favorites"]->Playlist->SaveXSPF(L"bFavorites.xspf"))
-				bLog::AddLog(bLogEntry(L"Error Saving Favorites File [bFavorites.xspf]", L"bTWin", eLogType::Error));
-			Modulelist.Modules[L"Favorites"]->UpdateStations();
+			Modulelist.Modules[L"Favorites"]->AddStation(st);
 			if (Modulelist.ActiveModuleName == L"Favorites")
 				bList.RedrawPlaylist();
 			EndDialog(h, NULL);
@@ -934,9 +938,11 @@ void  bTWin::DrawPlayer(HDC dc)
 
 	//Play Stop Button
 
-	brush=CreateSolidBrush(RGB(45, 45, 45));
+	
 	if (Hover == bHover::Play)
 		brush=CreateSolidBrush(RGB(62, 62, 64));
+	else
+		brush = CreateSolidBrush(RGB(45, 45, 45));
 	SelectObject(dc, brush);
 	SetRect(&r, 160, cr.bottom - 70, 250, cr.bottom - 30);
 	RoundRect(dc, r.left,r.top,r.right,r.bottom, 8, 8);
@@ -990,8 +996,7 @@ void  bTWin::DrawPlayer(HDC dc)
 		DeleteObject(brush);
 		DeleteObject(pen);
 	}
-
-	if (Player.status != eStatus::Stopped)
+	else
 	{
 		TextOut(dc, 195, cr.bottom - 65, L"Stop", 4);
 		
@@ -1045,13 +1050,10 @@ void  bTWin::DrawPlayer(HDC dc)
 		brush = CreateSolidBrush(RGB(0, 0, 0));
 		FillRect(dc, &r, brush);
 
-
-
 		TextOut(dc, cr.right - 70 - (sv.cx / 2), cr.bottom - 57 - 20, bf, bf.GetLength());
 		DeleteObject(font);
 	}
 
-	
 
 	//Playing Now info
 
@@ -1074,12 +1076,12 @@ void  bTWin::DrawPlayer(HDC dc)
 	if (Player.status == eStatus::Buffering)
 	{
 		CString buf;
-		buf.Format(L"[%u %s] Buffering", v,L"%");
+		buf.Format(L"[%u%%] Buffering", Player.BuffProgress);
 		TextOut(dc, 155, cr.bottom - 20, buf.c_str(),buf.GetLength());
 	}
-	if (Player.status == eStatus::Connecting)
+	else if (Player.status == eStatus::Connecting)
 		TextOut(dc, 155, cr.bottom - 20, L"Connecting...", 13);
-	if (Player.status == eStatus::Stopped)
+	else if (Player.status == eStatus::Stopped)
 		TextOut(dc, 155, cr.bottom - 20, L"Not Connected", 13);
 	DeleteObject(font);
 

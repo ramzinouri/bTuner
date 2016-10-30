@@ -15,7 +15,6 @@ public:
 	bool Save();
 	int LastVolume;
 	CPoint LastWindowPos;
-	bStation LastPlayed;
 	bool LogWindow;
 private:
 	void Default();

@@ -3,7 +3,7 @@
 
 bFavorites::bFavorites()
 {
-
+	Name = L"Favorites";
 }
 
 bFavorites::~bFavorites()
@@ -16,5 +16,20 @@ bool bFavorites::UpdateStations()
 {
 	if (!Playlist)
 		Playlist = new bPlaylist;
-	return Playlist->LoadFile(L"bFavorites.xspf");
+	Playlist->LoadFile(L"bFavorites.xml");
+	return true;
+}
+
+bool bFavorites::AddStation(bStation & station)
+{
+	if (Playlist->Locate(station.Name)<0)
+		Playlist->Stations.push_back(station);
+	SaveStations();
+	UpdateStations();
+	return true;
+}
+
+bool bFavorites::SaveStations()
+{
+	return Playlist->SaveFile(L"bFavorites.xml");
 }

@@ -9,6 +9,8 @@ public:
 	bFavorites();
 	~bFavorites();
 	bool UpdateStations();
+	bool AddStation(bStation& station);
+	bool SaveStations();
 };
 
 

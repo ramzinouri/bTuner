@@ -98,6 +98,8 @@ void bPlayer::OpenURL(wstring URL)
 }
 void bPlayer::OpenStation(const bStation& Station)
 {
+	if (!PlayingNow)
+		PlayingNow=new bStation;
 	if (PlayingNow->ID != Station.ID || status == eStatus::Stopped || PlayingNow->PlayedStreamID != Station.PlayedStreamID)
 	{
 		PlayingNow->Name = Station.Name;
@@ -129,7 +131,6 @@ unsigned __stdcall bPlayer::StaticThreadEntry(void* c)
 
 void bPlayer::OpenThread()
 {
-	BASS_ChannelStop(chan);
 	BASS_StreamFree(chan);
 	BASS_Free();
 	InitBass();
@@ -141,7 +142,7 @@ void bPlayer::OpenThread()
 
 	KillTimer(hwnd, 0);	
 
-	chan = BASS_StreamCreateURL(PlayingNow->Streams[PlayingNow->PlayedStreamID].Url.c_str(), 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);
+	chan = BASS_StreamCreateURL(PlayingNow->Streams[PlayingNow->PlayedStreamID].Url.c_str(), 0,BASS_STREAM_BLOCK |BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, g_DownloadProc, 0);
 	if (!chan)
 	{
 		bLog::AddLog(bLogEntry(L"Can't Open Stream : " + PlayingNow->Streams[PlayingNow->PlayedStreamID].Url, L"bPlayer", eLogType::Error));
@@ -304,13 +305,13 @@ void bPlayer::ProcessTags(const char * buffer)
 				char *stype = (char*)buffer + 14;
 				if (!strnicmp(stype, "audio/mp3", 9))
 					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
-				if (!strnicmp(stype, "audio/aac", 9))
+				else if (!strnicmp(stype, "audio/aac", 9))
 					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::AAC;
-				if (!strnicmp(stype, "audio/aacp", 10))
+				else if (!strnicmp(stype, "audio/aacp", 10))
 					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::AACP;
-				if (!strnicmp(stype, "audio/mpeg", 10))
+				else if (!strnicmp(stype, "audio/mpeg", 10))
 					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::MP3;
-				if (!strnicmp(stype, "video/nsv", 9))
+				else if (!strnicmp(stype, "video/nsv", 9))
 					PlayingNow->Streams[PlayingNow->PlayedStreamID].Encoding = eCodecs::NSV;
 
 			}
@@ -366,6 +367,7 @@ void bPlayer::InitBass()
 	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1);
 	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0);
 	BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, (void*)NULL);
+	BASS_SetConfig(BASS_CONFIG_NET_BUFFER,10000);
 }
 void bPlayer::MetaSync(HSYNC handle, DWORD channel, DWORD data, void *user)
 {	

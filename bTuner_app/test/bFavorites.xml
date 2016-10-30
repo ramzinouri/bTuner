@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<bTuner>
+	<playlist>
+		<name>Favorites</name>
+		<stations>
+			<station LastPlayedStream="0">
+				<name>I Love Radio</name>
+				<website>http://www.iloveradio.de/</website>
+				<image>http://liveradio.de/station-images/b9c2242f-f5b4-4aba-b846-2bd18ef5c5f3/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://stream12.iloveradio.de/iloveradio1-aac.mp3</stream>
+					<stream bitrate="0" type="7">http://stream01.iloveradio.de/iloveradio1.mp3</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>I Love 2 Dance</name>
+				<website>http://www.iloveradio.de/</website>
+				<image>http://liveradio.de/station-images/4658b52b-7d4a-45fb-b919-2e23ad521bfe/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://stream12.iloveradio.de/iloveradio2-aac.mp3</stream>
+					<stream bitrate="0" type="7">http://stream01.iloveradio.de/iloveradio2.mp3</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>I Love The Battle</name>
+				<website>http://www.iloveradio.de/</website>
+				<image>http://liveradio.de/station-images/ec3f5b38-bd5c-4f04-b12a-5301fe9688f8/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://stream12.iloveradio.de/iloveradio3-aac.mp3</stream>
+					<stream bitrate="0" type="7">http://stream01.iloveradio.de/iloveradio3.mp3</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>I Love Mashup</name>
+				<website>http://www.iloveradio.de/</website>
+				<image>http://liveradio.de/station-images/6839db35-5831-4fdb-8b6b-d4dc1484b3f5/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://stream12.iloveradio.de/iloveradio5-aac.mp3</stream>
+					<stream bitrate="0" type="7">http://stream01.iloveradio.de/iloveradio5.mp3</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>I Love Bravo Charts</name>
+				<website>http://www.iloveradio.de/</website>
+				<image>http://liveradio.de/station-images/b562ca55-0183-47a1-b6a0-de3f8af661e1/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://stream12.iloveradio.de/iloveradio9-aac.mp3</stream>
+					<stream bitrate="0" type="7">http://stream01.iloveradio.de/iloveradio9.mp3</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>I Love BRAVO TubeStars</name>
+				<website>http://www.iloveradio.de/</website>
+				<image>http://liveradio.de/station-images/0ecf2952-3935-4c0e-8b9b-5df5e920115f/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://stream12.iloveradio.de/iloveradio4-aac.mp3</stream>
+					<stream bitrate="0" type="7">http://stream01.iloveradio.de/iloveradio9.mp3</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>I Love Bravo Love</name>
+				<website>http://www.iloveradio.de/</website>
+				<image>http://liveradio.de/station-images/ec3f5b38-bd5c-4f04-b12a-5301fe9688f8/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://stream12.iloveradio.de/iloveradio10-aac.mp3</stream>
+					<stream bitrate="0" type="7">http://stream01.iloveradio.de/iloveradio10.mp3</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>.977 Today's Hits</name>
+				<website>http://www.977music.com/</website>
+				<image>http://liveradio.de/station-images/692923e7-2944-488a-bd23-937845c4755d/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://provisioning.streamtheworld.com/pls/977_HITSAAC.pls</stream>
+					<stream bitrate="0" type="7">http://provisioning.streamtheworld.com/pls/977_HITS.pls</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>#Pophits</name>
+				<website>http://pophitsradio.weebly.com/</website>
+				<image>http://liveradio.de/station-images/c7f485f0-9cc2-4ed1-bdc3-abd8af3618a8/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://streaming207.radionomy.com:80/-Pophits</stream>
+					<stream bitrate="0" type="7">http://streaming214.radionomy.com:80/-Pophits</stream>
+					<stream bitrate="0" type="7">http://streaming208.radionomy.com:80/-Pophits</stream>
+					<stream bitrate="0" type="7">http://streaming210.radionomy.com:80/-Pophits</stream>
+					<stream bitrate="0" type="7">http://streaming202.radionomy.com:80/-Pophits</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>ClubHits</name>
+				<website>http://clubhits.playtheradio.com</website>
+				<image>https://i3.radionomy.com/radios/145/88d7f515-c183-4dba-b679-0cf9b3d7e451.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://streaming211.radionomy.com:80/ClubHits</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>[AnimeNexus]</name>
+				<website>http://www.animenexus.mx</website>
+				<image>https://i3.radionomy.com/radios/145/55dd6735-731f-45ef-9640-9682923ef368.png</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://www.nexusnet.com.mx:8000/animenexus</stream>
+					<stream bitrate="0" type="7">http://www.nexusnet.com.mx:8000/animenexus-relay</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>AnimeNfo Radio</name>
+				<website>http://www.animenfo.com/radio</website>
+				<image>http://liveradio.de/station-images/f5135003-dce4-4fd5-8c3f-ad6f893dd488/fit-145x145.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://emaru.animenfo.com:443/</stream>
+					<stream bitrate="0" type="7">http://momori.animenfo.com:8000</stream>
+					<stream bitrate="0" type="7">http://itori.animenfo.com:443</stream>
+					<stream bitrate="0" type="7">http://momori.animenfo.com:8080</stream>
+				</streams>
+			</station>
+			<station LastPlayedStream="0">
+				<name>Hits24</name>
+				<website>http://hits-24.playtheradio.com</website>
+				<image>http://i.radionomy.com/radio/145/ab95b35a-56c0-45ee-a172-03563fbd4162.jpg</image>
+				<genre></genre>
+				<streams>
+					<stream bitrate="0" type="7">http://streaming207.radionomy.com:80/Hits-24</stream>
+					<stream bitrate="0" type="7">http://streaming214.radionomy.com:80/Hits-24</stream>
+					<stream bitrate="0" type="7">http://streaming211.radionomy.com:80/Hits-24</stream>
+					<stream bitrate="0" type="7">http://streaming208.radionomy.com:80/Hits-24</stream>
+					<stream bitrate="0" type="7">http://streaming210.radionomy.com:80/Hits-24</stream>
+				</streams>
+			</station>
+		</stations>
+	</playlist>
+</bTuner>

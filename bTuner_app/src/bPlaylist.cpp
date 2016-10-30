@@ -121,7 +121,7 @@ bool bPlaylist::ParsePLS(std::wstringstream* data)
 
 bool bPlaylist::LoadFile(std::wstring path)
 {
-	int s = Stations.size();
+	size_t s = Stations.size();
 	if (s)
 		Stations.erase(Stations.begin(), Stations.end());
 	bool result = false;
@@ -149,6 +149,8 @@ bool bPlaylist::LoadFile(std::wstring path)
 		std::getline(data, line);
 		if (line.find(L"<playlist") != std::wstring::npos)
 			return ParseXSPF(new std::wstringstream(buffer));
+		if (line.find(L"<bTuner") != std::wstring::npos)
+			return ParseXML(new std::wstringstream(buffer));
 	}
 
 
@@ -157,9 +159,6 @@ bool bPlaylist::LoadFile(std::wstring path)
 
 bool bPlaylist::ParseXSPF(std::wstringstream* data)
 {
-	std::wstring line;
-	std::getline(*data, line);
-
 	xml_document doc;
 	xml_parse_result result = doc.load_string(data->str().c_str());
 
@@ -200,10 +199,50 @@ bool bPlaylist::ParseXSPF(std::wstringstream* data)
 	return true;
 }
 
+bool bPlaylist::ParseXML(std::wstringstream* data)
+{
+	xml_document doc;
+	xml_parse_result result = doc.load_string(data->str().c_str());
+
+	if (!result)
+		return false;
+
+	xml_node nPlayList = doc.child(L"bTuner").child(L"playlist");
+	title = nPlayList.child(L"name").text().as_string();
+	int i = 0;
+	for (xml_node nStation = nPlayList.child(L"stations").child(L"station"); nStation; nStation = nStation.next_sibling(L"station"))
+	{
+		bStation st;
+		st.Name = nStation.child(L"name").text().as_string();
+		st.Url = nStation.child(L"website").text().as_string();
+		st.Image = nStation.child(L"image").text().as_string();
+
+		st.ID = i;
+		st.PlayedStreamID = nStation.attribute(L"LastPlayedStream").as_int();
+
+		for (xml_node nStream = nStation.child(L"streams").first_child(); nStream; nStream = nStream.next_sibling())
+		{
+			bStream s(nStream.text().as_string());
+			s.Bitrate = nStream.attribute(L"bitrate").as_int();
+			s.Encoding = (eCodecs)(nStream.attribute(L"type").as_int());
+			st.Streams.push_back(s);
+		}
+		Stations.push_back(st);
+		i++;
+	}
+
+	return true;
+}
+
 bool bPlaylist::SaveFile(std::wstring path)
 {
 	bool result = false;
-
+	if (path.find(L".xspf") != std::wstring::npos)
+		result = SaveXSPF(path);
+	if (path.find(L".xml") != std::wstring::npos)
+		result = SaveXML(path);
+	if (path.find(L".pls") != std::wstring::npos)
+		result = SavePLS(path);
 
 	return result;
 }
@@ -262,3 +301,74 @@ bool bPlaylist::SaveXSPF(std::wstring path)
 	return result;
 }
 
+bool bPlaylist::SaveXML(std::wstring path)
+{
+	bool result = true;
+	if (!Stations.size())
+		return false;
+	xml_document doc;
+	doc.append_child(L"bTuner");
+	xml_node playlist = doc.child(L"bTuner").append_child(L"playlist");
+
+	if (title.size())
+	{
+		playlist.append_child(L"name");
+		playlist.child(L"name").append_child(pugi::node_pcdata);
+		playlist.child(L"name").text() = title.c_str();
+	}
+
+
+	xml_node stations = playlist.append_child(L"stations");
+
+	for (unsigned int i = 0; i < Stations.size(); i++)
+	{
+		xml_node station = stations.append_child(L"station");
+		station.append_attribute(L"LastPlayedStream");
+		station.attribute(L"LastPlayedStream")=Stations.at(i).PlayedStreamID;
+		station.append_child(L"name");
+		station.child(L"name").append_child(pugi::node_pcdata);
+		station.child(L"name").text() = Stations.at(i).Name.c_str();
+
+		if (Stations.at(i).Url.size())
+		{
+			station.append_child(L"website");
+			station.child(L"website").append_child(pugi::node_pcdata);
+			station.child(L"website").text() = Stations.at(i).Url.c_str();
+		}
+		if (Stations.at(i).Image.size())
+		{
+			station.append_child(L"image");
+			station.child(L"image").append_child(pugi::node_pcdata);
+			station.child(L"image").text() = Stations.at(i).Image.c_str();
+		}
+		if (Stations.at(i).Image.size())
+		{
+			station.append_child(L"genre");
+			station.child(L"genre").append_child(pugi::node_pcdata);
+			station.child(L"genre").text() = Stations.at(i).Genre.c_str();
+		}
+		station.append_child(L"streams");
+		for (unsigned int j = 0; j < Stations.at(i).Streams.size(); j++)
+		{
+			xml_node stream = station.child(L"streams").append_child(L"stream");;
+			stream.append_child(pugi::node_pcdata);
+			stream.text() = Stations.at(i).Streams.at(j).Url.c_str();
+			stream.append_attribute(L"bitrate");
+			stream.attribute(L"bitrate") = Stations.at(i).Streams.at(j).Bitrate;
+			stream.append_attribute(L"type");
+			stream.attribute(L"type") = (int)(Stations.at(i).Streams.at(j).Encoding);
+		}
+	}
+
+	result = doc.save_file(path.c_str(), L"\t", 1U, pugi::encoding_utf8);
+
+	return result;
+}
+
+bool bPlaylist::SavePLS(std::wstring path)
+{
+	bool result = false;
+
+
+	return result;
+}
