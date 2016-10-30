@@ -85,7 +85,7 @@ void  bTWin::OnTimer(int TimerID)
 
 	if (TimerID == 2) // Search Timer
 	{
-		::KillTimer(GetHwnd(), 2);
+		KillTimer(2);
 		if (searchbox.GetWindowTextLength() > 0 && searchbox.GetWindowText() != L"Search")
 		{
 			std::wstring q = searchbox.GetWindowText();
@@ -97,6 +97,16 @@ void  bTWin::OnTimer(int TimerID)
 		}
 		else if (bList.Playlist&&searchbox.GetWindowTextLength() == 0 && searchbox.GetWindowText() != L"Search")
 			bList.RedrawPlaylist();
+	}
+	if (TimerID == 3)
+	{
+		if (!Modulelist.GetActiveModule()->Loading)
+		{
+			KillTimer(3);
+			bList.Playlist = Modulelist.GetActiveModule()->Playlist;
+			bList.RedrawPlaylist();
+			RedrawWindow();
+		}
 	}
 
 }
@@ -371,57 +381,6 @@ int bTWin::OnCreate(CREATESTRUCT& cs)
 	searchbox.SetWindowTextW(L"Search");
 	searchbox.SetMargins(10, 10);
 
-//#define TESTSWITCH
-
-#ifdef TESTSWITCH
-	
-	bLog::AddLog(bLogEntry(L"Start Downloading .... [http://dir.xiph.org/yp.xml]", L"bTuner Win", eLogType::Info));
-	if (bHttp::DownloadFile(L"http://dir.xiph.org/yp.xml", L"yp.xml"))
-	{
-		bLog::AddLog(bLogEntry(L"Finish Downloading [http://dir.xiph.org/yp.xml]", L"bTuner Win", eLogType::Info));
-		xml_document doc;
-		bLog::AddLog(bLogEntry(L"Loading .... yp.xml", L"bTuner Win", eLogType::Info));
-		xml_parse_result result = doc.load_file("yp.xml");
-
-		if (result)
-		{
-			xml_node nDir = doc.child(L"directory");
-			Playlist = new bPlaylist;
-			Playlist->title = L"dir.xiph.org/yp.xml";
-			int i = 0;
-			for (xml_node nEntry = nDir.first_child(); nEntry; nEntry = nEntry.next_sibling())
-			{
-				
-				int pos=Playlist->Locate(nEntry.child(L"server_name").text().as_string());
-				if (pos > 0)
-				{
-					bStream s(nEntry.child(L"listen_url").text().as_string());
-					s.Bitrate = nEntry.child(L"bitrate").text().as_int();
-					Playlist->Stations.at(pos).Streams.push_back(s);
-					continue;
-				}
-				
-				bStation st;
-				st.Name = nEntry.child(L"server_name").text().as_string();
-				st.Genre = nEntry.child(L"genre").text().as_string();
-				bStream s(nEntry.child(L"listen_url").text().as_string());
-				s.Bitrate = nEntry.child(L"bitrate").text().as_int();
-				st.Streams.push_back(s);
-				st.ID = i;
-				Playlist->Stations.push_back(st);
-
-				i++;
-			}
-
-			CString msg;
-			msg.Format(L"[ %u ] Station Loaded From yp.xml", Playlist->Stations.size());
-			bLog::AddLog(bLogEntry(msg.c_str(), L"bTuner Win", eLogType::Info));
-		}
-	}
-
-#endif
-	
-
 	bList.Playlist = Modulelist.GetActiveModule()->Playlist;
 	bList.RedrawPlaylist();
 	if(Player.PlayingNow)
@@ -674,6 +633,10 @@ LRESULT bTWin::OnNotify(WPARAM wParam, LPARAM lParam)
 					{
 						Modulelist.SetActiveModule(s);
 						Modulelist.RedrawWindow();
+						if (Modulelist.GetActiveModule()->Loading)
+							SetTimer(3, 500, NULL);
+						else
+							KillTimer(3);
 						bList.Playlist = Modulelist.GetActiveModule()->Playlist;
 						bList.RedrawPlaylist();
 						RedrawWindow();

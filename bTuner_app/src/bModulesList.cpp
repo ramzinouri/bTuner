@@ -47,8 +47,9 @@ void bModulesList::OnCreate()
 	SetTextColor(RGB(255, 255, 255));
 	SetTextBkColor(RGB(30, 30, 30));
 
-	Modules.emplace(std::make_pair(std::wstring(L"Favorites"), new bFavorites));
-	Modules.emplace(std::make_pair(std::wstring(L"History"), new bHistory));
+	Modules.insert(std::make_pair(std::wstring(L"Favorites"), new bFavorites));
+	Modules.insert(std::make_pair(std::wstring(L"Xiph.org"), new bXiphorg));
+	Modules.insert(std::make_pair(std::wstring(L"History"), new bHistory));
 	
 	
 	SetActiveModule(L"Favorites");

@@ -1,6 +1,6 @@
 #include "bModule.h"
 
-bModule::bModule() : Playlist(NULL)
+bModule::bModule() : Playlist(NULL), Loading(true)
 {
 }
 
@@ -10,6 +10,7 @@ bModule::~bModule()
 
 bool bModule::UpdateStations()
 {
+	Loading = false;
 	return false;
 }
 

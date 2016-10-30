@@ -69,7 +69,7 @@ void bRadioList::RedrawPlaylist()
 void bRadioList::T_RedrawPlaylist()
 {
 	DeleteAllItems();
-	for (unsigned int i = 0; i < Playlist->Stations.size(); i++)
+	for (unsigned int i = 0; i < Playlist->Stations.size()&&i<1000; i++)
 	{
 		AddStation(Playlist->Stations.at(i));
 		std::unique_lock<std::mutex> lk(m);
@@ -155,7 +155,7 @@ void bRadioList::DrawItem(WPARAM wParam, LPARAM lParam)
 			::SetTextColor(pdis->hDC, RGB(140, 255, 140));
 
 		SetBkMode(pdis->hDC, TRANSPARENT);
-		TextOut(pdis->hDC, 20, pdis->rcItem.top + 7, text.c_str(), text.GetLength());
+		TextOut(pdis->hDC, 20, pdis->rcItem.top + 12, text.c_str(), text.GetLength());
 		DeleteObject(font);
 }
 

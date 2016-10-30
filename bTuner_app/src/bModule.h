@@ -15,6 +15,7 @@ public:
 	virtual std::vector<unsigned int> Search(std::wstring query);
 	std::wstring Name;
 	bPlaylist *Playlist;
+	bool Loading;
 };
 
 
