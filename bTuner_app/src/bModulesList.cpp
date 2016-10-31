@@ -1,4 +1,5 @@
 #include "bModulesList.h"
+#include <gdiplus.h>
 
 bModulesList::bModulesList()
 {
@@ -36,6 +37,42 @@ void bModulesList::DrawItem(WPARAM wParam, LPARAM lParam)
 	SetBkMode(pdis->hDC, TRANSPARENT);
 	TextOut(pdis->hDC, 45, pdis->rcItem.top+10, ms, ms.GetLength());
 	DeleteObject(font);
+
+	Gdiplus::Graphics graphics(pdis->hDC);
+	Gdiplus::Bitmap *bitmap;
+
+	HRSRC hResource = ::FindResourceW(::GetModuleHandle(0), MAKEINTRESOURCE(IDB_MODULES), L"PNG");
+	DWORD imageSize = ::SizeofResource(::GetModuleHandle(0), hResource);
+	const void* pResourceData = ::LockResource(::LoadResource(::GetModuleHandle(0),hResource));
+	HGLOBAL m_hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, imageSize);
+	if (m_hBuffer)
+	{
+		void* pBuffer = ::GlobalLock(m_hBuffer);
+		if (pBuffer)
+		{
+			CopyMemory(pBuffer, pResourceData, imageSize);
+
+			IStream* pStream = NULL;
+			if (::CreateStreamOnHGlobal(m_hBuffer, FALSE, &pStream) == S_OK)
+			{
+				bitmap = Gdiplus::Bitmap::FromStream(pStream);
+				pStream->Release();
+
+			}
+			::GlobalUnlock(m_hBuffer);
+		}
+		::GlobalFree(m_hBuffer);
+		m_hBuffer = NULL;
+	}
+
+
+	Gdiplus::Rect r;
+	r.X = pdis->rcItem.left;
+	r.Y = pdis->rcItem.top;
+	r.Width = pdis->rcItem.bottom-pdis->rcItem.top;
+	r.Height = pdis->rcItem.bottom - pdis->rcItem.top;
+	graphics.DrawImage(bitmap,r, pdis->itemID*(pdis->rcItem.bottom - pdis->rcItem.top),0, pdis->rcItem.bottom - pdis->rcItem.top, pdis->rcItem.bottom - pdis->rcItem.top, Gdiplus::UnitPixel);
+	delete bitmap;
 }
 
 void bModulesList::OnCreate()
@@ -63,6 +100,7 @@ void bModulesList::OnCreate()
 			it->pszText = (LPWSTR)pair.first.c_str();
 			it->iItem = i;
 			InsertItem(*it);
+			delete it;
 		}
 		else
 			bLog::AddLog(bLogEntry(L"Error Loading Module:"+pair.first, L"Module list", eLogType::Error));

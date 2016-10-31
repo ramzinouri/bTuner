@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\res\bTuner.ico" />
+    <Image Include="src\res\Modules.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\bTuner.rc" />

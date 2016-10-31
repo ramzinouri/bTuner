@@ -6,6 +6,8 @@
 #define IDD_DIALOG_ABOUT                101
 #define IDD_DIALOG_OPENURL              103
 #define IDD_ADDTOFAVORITES              104
+#define IDB_PNG1                        108
+#define IDB_MODULES                     108
 #define IDR_MENU1                       139
 #define IDC_SYSLINK2                    1001
 #define IDC_LINK                        1002
@@ -33,7 +35,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        106
+#define _APS_NEXT_RESOURCE_VALUE        109
 #define _APS_NEXT_COMMAND_VALUE         40007
 #define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
